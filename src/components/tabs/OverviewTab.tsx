@@ -235,14 +235,51 @@ function SectorHeat() {
   );
 }
 
-/* ── Heatmap ── */
+/* ── Heatmap (LIVE from CoinGecko) ── */
+interface HeatCoin { sym: string; chg: number; mcap: number }
 function Heatmap() {
-  const coins = [
-    { sym: 'BTC', chg: 0.82, size: 5 }, { sym: 'ETH', chg: -1.24, size: 4 }, { sym: 'XRP', chg: 1.87, size: 3.5 },
-    { sym: 'SOL', chg: -0.41, size: 3 }, { sym: 'HBAR', chg: 1.44, size: 2 }, { sym: 'ADA', chg: -2.1, size: 2 },
-    { sym: 'AVAX', chg: -3.8, size: 1.8 }, { sym: 'LINK', chg: 0.92, size: 1.8 }, { sym: 'DOT', chg: -1.5, size: 1.5 },
-    { sym: 'QNT', chg: 2.31, size: 1.2 }, { sym: 'ALGO', chg: -0.8, size: 1 }, { sym: 'XLM', chg: -0.62, size: 1.3 },
-  ];
+  const [coins, setCoins] = useState<HeatCoin[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchHeatmap() {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false');
+        if (!res.ok) throw new Error('CoinGecko API error');
+        const data = await res.json();
+        const mapped: HeatCoin[] = data.map((c: any) => ({
+          sym: (c.symbol as string).toUpperCase(),
+          chg: c.price_change_percentage_24h ?? 0,
+          mcap: c.market_cap ?? 0,
+        }));
+        setCoins(mapped);
+      } catch {
+        // Fallback to static data if API fails
+        setCoins([
+          { sym: 'BTC', chg: 0.82, mcap: 1.4e12 }, { sym: 'ETH', chg: -1.24, mcap: 2.7e11 },
+          { sym: 'XRP', chg: 1.87, mcap: 8e10 }, { sym: 'SOL', chg: -0.41, mcap: 4.8e10 },
+          { sym: 'HBAR', chg: 1.44, mcap: 1.1e10 }, { sym: 'ADA', chg: -2.1, mcap: 8.8e9 },
+          { sym: 'AVAX', chg: -3.8, mcap: 6.5e9 }, { sym: 'LINK', chg: 0.92, mcap: 6.5e9 },
+          { sym: 'DOT', chg: -1.5, mcap: 5.9e9 }, { sym: 'QNT', chg: 2.31, mcap: 1e9 },
+          { sym: 'ALGO', chg: -0.8, mcap: 1.3e9 }, { sym: 'XLM', chg: -0.62, mcap: 3e9 },
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchHeatmap();
+    const id = setInterval(fetchHeatmap, 120000); // refresh every 2 min
+    return () => clearInterval(id);
+  }, []);
+
+  // Determine grid span based on relative market cap ranking
+  function getSpan(idx: number): { row?: string; col?: string } {
+    if (idx === 0) return { row: 'span 2', col: 'span 2' }; // BTC biggest
+    if (idx === 1) return { row: 'span 2' }; // ETH
+    if (idx < 5) return {}; // top 5 normal
+    return {};
+  }
+
   return (
     <div className="panel">
       <div className="ph">
@@ -252,23 +289,30 @@ function Heatmap() {
           <div className="tag tag-live">Live · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a></div>
         </div>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2 }}>
-        {coins.map(c => (
-          <div key={c.sym} style={{
-            background: c.chg >= 0 ? `rgba(16,185,129,${0.06 + Math.abs(c.chg) * 0.04})` : `rgba(239,68,68,${0.06 + Math.abs(c.chg) * 0.04})`,
-            border: `1px solid ${c.chg >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-            padding: '8px 6px',
-            textAlign: 'center',
-            gridRow: c.size >= 4 ? 'span 2' : undefined,
-            gridColumn: c.size >= 5 ? 'span 2' : undefined,
-          }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600, color: 'var(--text)' }}>{c.sym}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: c.chg >= 0 ? 'var(--green)' : 'var(--red)' }}>
-              {c.chg >= 0 ? '+' : ''}{c.chg.toFixed(2)}%
-            </div>
-          </div>
-        ))}
-      </div>
+      {loading ? (
+        <div style={{ padding: '20px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Loading live market data...</div>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2 }}>
+          {coins.map((c, i) => {
+            const span = getSpan(i);
+            return (
+              <div key={c.sym} style={{
+                background: c.chg >= 0 ? `rgba(16,185,129,${Math.min(0.06 + Math.abs(c.chg) * 0.04, 0.4)})` : `rgba(239,68,68,${Math.min(0.06 + Math.abs(c.chg) * 0.04, 0.4)})`,
+                border: `1px solid ${c.chg >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+                padding: '8px 6px',
+                textAlign: 'center',
+                gridRow: span.row,
+                gridColumn: span.col,
+              }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600, color: 'var(--text)' }}>{c.sym}</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: c.chg >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                  {c.chg >= 0 ? '+' : ''}{c.chg.toFixed(2)}%
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChainIntel Terminal — Promo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060a11;--white:#fff;--teal:#00d4aa;--gold:#f0b429;--green:#22d68a;--red:#ef4444;--muted:#4a5e82;
+  --font-display:'DM Serif Display',Georgia,serif;
+  --font-mono:'JetBrains Mono','Courier New',monospace;
+  --ease-pop:cubic-bezier(0.16,1,0.3,1);
+  --ease-smooth:cubic-bezier(0.4,0,0.2,1);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--white);font-family:var(--font-mono)}
+body{display:flex;align-items:center;justify-content:center}
+
+/* === GLOBAL SCENE CONTAINER === */
+#stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.scene{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:0;pointer-events:none;transition:opacity 0.5s var(--ease-smooth);padding:1.5rem}
+.scene.active{opacity:1;pointer-events:auto}
+
+/* === PROGRESS BAR === */
+#progress-bar{position:fixed;bottom:0;left:0;height:3px;background:var(--teal);z-index:100;transition:width 0.1s linear;width:0}
+
+/* === CONTROLS === */
+#controls{position:fixed;top:1rem;right:1rem;z-index:100;display:flex;gap:0.5rem;opacity:0.4;transition:opacity 0.3s}
+#controls:hover{opacity:1}
+#controls button{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.15);color:var(--white);font-family:var(--font-mono);font-size:0.7rem;padding:0.35rem 0.7rem;border-radius:4px;cursor:pointer;transition:background 0.2s}
+#controls button:hover{background:rgba(255,255,255,0.2)}
+#pause-indicator{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:var(--font-mono);font-size:0.9rem;color:rgba(255,255,255,0.5);opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:99}
+#pause-indicator.show{opacity:1}
+
+/* === REPLAY === */
+#replay-btn{position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:var(--teal);color:var(--bg);font-family:var(--font-mono);font-weight:700;font-size:1rem;padding:0.8rem 2rem;border:none;border-radius:6px;cursor:pointer;opacity:0;pointer-events:none;transition:opacity 0.5s,transform 0.3s var(--ease-pop);z-index:100}
+#replay-btn.show{opacity:1;pointer-events:auto}
+#replay-btn:hover{transform:translateX(-50%) scale(1.05)}
+
+/* === SCENE 1: COLD OPEN === */
+#s1 .typewriter{font-size:clamp(1.2rem,2.5vw,2rem);font-family:var(--font-display);line-height:1.6;text-align:center;min-height:5em}
+#s1 .typewriter span{opacity:0}
+#s1 .typewriter span.vis{opacity:1}
+#s1 .cursor-blink{display:inline-block;width:2px;height:1.2em;background:var(--teal);vertical-align:text-bottom;animation:blink 0.6s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* === SCENE 2: BLIND SPOT === */
+#s2{gap:2.5rem}
+.stat-block{text-align:center;opacity:0;transform:scale(0.3);transition:all 0.5s var(--ease-pop)}
+.stat-block.pop{opacity:1;transform:scale(1)}
+.stat-num{font-family:var(--font-mono);font-size:clamp(3rem,8vw,6rem);font-weight:700;line-height:1}
+.stat-label{font-family:var(--font-mono);font-size:clamp(0.75rem,1.5vw,1rem);color:var(--muted);margin-top:0.5rem;letter-spacing:0.05em}
+
+/* === SCENE 3: TERMINAL BOOT === */
+#s3{align-items:flex-start;justify-content:flex-start;padding:2rem clamp(1rem,5vw,4rem)}
+#terminal-lines{font-family:var(--font-mono);font-size:clamp(0.7rem,1.4vw,1rem);line-height:2;color:var(--green);width:100%;max-width:700px}
+#terminal-lines .line{opacity:0;white-space:nowrap;overflow:hidden}
+#terminal-lines .line.typed{opacity:1}
+#terminal-lines .check{color:var(--green);font-weight:700}
+#terminal-lines .val{color:var(--teal)}
+#terminal-lines .warn{color:var(--gold)}
+
+/* Terminal UI flash */
+#terminal-ui{position:absolute;inset:0;opacity:0;transition:opacity 0.3s;display:flex;flex-direction:column;padding:0}
+#terminal-ui.flash{opacity:1}
+.tui-header{background:rgba(0,212,170,0.08);border-bottom:1px solid rgba(0,212,170,0.2);padding:0.8rem 1.5rem;display:flex;justify-content:space-between;align-items:center;font-family:var(--font-mono);font-size:0.75rem}
+.tui-header span{color:var(--teal)}
+.tui-body{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(0,212,170,0.1);padding:1px}
+.tui-cell{background:var(--bg);padding:1rem;display:flex;flex-direction:column;gap:0.5rem}
+.tui-cell-title{font-family:var(--font-mono);font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em}
+.tui-cell-val{font-family:var(--font-mono);font-size:clamp(1.2rem,3vw,2rem);font-weight:700;color:var(--teal)}
+
+/* === SCENE 4: FEATURES === */
+#s4{position:relative}
+.feature-panel{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1.5rem;opacity:0;transition:opacity 0.4s var(--ease-smooth);padding:1.5rem}
+.feature-panel.active{opacity:1}
+.feature-title{font-family:var(--font-display);font-size:clamp(1.5rem,3.5vw,2.5rem);text-align:center}
+.feature-subtitle{font-family:var(--font-mono);font-size:clamp(0.7rem,1.2vw,0.9rem);color:var(--muted);text-align:center;letter-spacing:0.05em;white-space:nowrap}
+
+/* MVRV Counter */
+.mvrv-display{font-family:var(--font-mono);font-size:clamp(3rem,10vw,7rem);font-weight:700;color:var(--teal)}
+.mvrv-label{background:var(--green);color:var(--bg);font-family:var(--font-mono);font-size:0.8rem;font-weight:700;padding:0.3rem 0.8rem;border-radius:4px;opacity:0;transform:translateY(10px);transition:all 0.4s var(--ease-pop)}
+.mvrv-label.show{opacity:1;transform:translateY(0)}
+
+/* Whale Alert */
+.whale-alert{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:1.2rem 1.8rem;font-family:var(--font-mono);max-width:600px;width:100%;transform:translateX(100%);opacity:0;transition:all 0.6s var(--ease-pop)}
+.whale-alert.slide{transform:translateX(0);opacity:1}
+.whale-amt{font-size:clamp(1.5rem,4vw,2.5rem);font-weight:700;color:var(--gold)}
+.whale-detail{font-size:clamp(0.65rem,1.2vw,0.85rem);color:var(--muted);margin-top:0.5rem}
+.whale-btc{color:var(--teal);font-weight:700}
+
+/* ETF Bars */
+.etf-container{display:flex;align-items:flex-end;gap:clamp(4px,1vw,10px);height:150px}
+.etf-bar{width:clamp(16px,3vw,32px);background:var(--green);border-radius:3px 3px 0 0;transition:height 0.5s var(--ease-pop);height:0}
+.etf-total{font-family:var(--font-mono);font-size:clamp(1.2rem,3vw,2rem);font-weight:700;color:var(--green);margin-top:1rem;opacity:0;transition:opacity 0.4s}
+.etf-total.show{opacity:1}
+
+/* ChainScore Arc */
+.chainscore-wrap{position:relative;width:clamp(160px,30vw,240px);height:clamp(100px,18vw,150px)}
+.chainscore-wrap svg{width:100%;height:100%}
+.chainscore-val{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-family:var(--font-mono);font-size:clamp(2rem,5vw,3.5rem);font-weight:700}
+.sub-scores{display:flex;gap:1rem;margin-top:1rem}
+.sub-bar-wrap{display:flex;flex-direction:column;gap:0.3rem;align-items:center}
+.sub-bar-label{font-family:var(--font-mono);font-size:0.6rem;color:var(--muted);text-transform:uppercase}
+.sub-bar{width:60px;height:6px;background:rgba(255,255,255,0.1);border-radius:3px;overflow:hidden}
+.sub-bar-fill{height:100%;background:var(--teal);border-radius:3px;width:0;transition:width 0.8s var(--ease-pop)}
+
+/* === SCENE 5: COMPARISON === */
+#s5{flex-direction:row;gap:clamp(1rem,3vw,3rem);padding:1.5rem}
+.compare-col{flex:1;max-width:420px;display:flex;flex-direction:column;gap:0.8rem}
+.compare-header{text-align:center;margin-bottom:0.5rem}
+.compare-name{font-family:var(--font-display);font-size:clamp(1rem,2.2vw,1.6rem)}
+.compare-price{font-family:var(--font-mono);font-size:clamp(0.8rem,1.5vw,1.1rem);color:var(--muted);margin-top:0.25rem}
+.compare-item{display:flex;align-items:center;gap:0.6rem;font-family:var(--font-mono);font-size:clamp(0.65rem,1.2vw,0.85rem);opacity:0;transform:translateY(8px);transition:all 0.4s var(--ease-pop);padding:0.5rem 0.7rem;border-radius:6px;background:rgba(255,255,255,0.02)}
+.compare-item.pop{opacity:1;transform:translateY(0)}
+.icon-x{color:var(--red);font-weight:700;font-size:1.1em}
+.icon-check{color:var(--green);font-weight:700;font-size:1.1em}
+
+/* === SCENE 6: PRICING === */
+#s6{gap:1.5rem}
+.pricing-row{display:flex;gap:clamp(0.8rem,2vw,1.5rem);justify-content:center;flex-wrap:wrap}
+.price-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:clamp(1rem,2vw,1.8rem);text-align:center;width:clamp(140px,22vw,200px);opacity:0;transform:translateY(30px);transition:all 0.5s var(--ease-pop)}
+.price-card.pop{opacity:1;transform:translateY(0)}
+.price-card.featured{border-color:var(--teal);box-shadow:0 0 30px rgba(0,212,170,0.15)}
+.price-tier{font-family:var(--font-display);font-size:clamp(1rem,1.8vw,1.3rem);margin-bottom:0.5rem}
+.price-amount{font-family:var(--font-mono);font-size:clamp(1.5rem,3.5vw,2.5rem);font-weight:700}
+.price-period{font-family:var(--font-mono);font-size:0.7rem;color:var(--muted)}
+.price-badge{font-family:var(--font-mono);font-size:0.6rem;background:var(--teal);color:var(--bg);padding:0.2rem 0.6rem;border-radius:99px;margin-top:0.6rem;display:inline-block;font-weight:700}
+.bloomberg-compare{font-family:var(--font-mono);font-size:clamp(0.75rem,1.4vw,1rem);color:var(--muted);opacity:0;transform:translateY(15px);transition:all 0.5s var(--ease-pop);margin-top:0.5rem;text-align:center}
+.bloomberg-compare.pop{opacity:1;transform:translateY(0)}
+.bloomberg-compare span{color:var(--red);text-decoration:line-through}
+
+/* === SCENE 7: CLOSE === */
+#s7{gap:1.5rem}
+.close-line{font-family:var(--font-display);font-size:clamp(1.2rem,2.8vw,2.2rem);text-align:center;line-height:1.4;opacity:0;transition:opacity 0.6s}
+.close-line.show{opacity:1}
+.close-line.teal{color:var(--teal);font-size:clamp(1.5rem,3.5vw,2.8rem)}
+.close-word{display:inline-block;opacity:0;transform:translateY(12px);transition:all 0.35s var(--ease-pop);margin-right:0.3em}
+.close-word.show{opacity:1;transform:translateY(0)}
+
+/* Logo */
+.ci-logo{opacity:0;transform:scale(0.5);transition:all 0.6s var(--ease-pop)}
+.ci-logo.show{opacity:1;transform:scale(1)}
+.ci-url{font-family:var(--font-mono);font-size:clamp(0.7rem,1.2vw,0.9rem);color:var(--teal);letter-spacing:0.1em;opacity:0;transition:opacity 0.5s}
+.ci-url.show{opacity:1}
+.build-tag{font-family:var(--font-mono);font-size:clamp(0.6rem,1vw,0.75rem);color:var(--muted);letter-spacing:0.15em;text-transform:uppercase;opacity:0;transition:opacity 0.5s}
+.build-tag.show{opacity:1}
+
+/* Mobile adjustments */
+@media(max-width:640px){
+  .scene{overflow-y:auto;-webkit-overflow-scrolling:touch}
+  #s5{flex-direction:column;align-items:center;gap:0.5rem;justify-content:flex-start;padding-top:1rem}
+  .compare-col{max-width:100%}
+  .compare-header{margin-bottom:0.2rem}
+  .compare-item{padding:0.3rem 0.5rem;font-size:0.7rem}
+  .tui-body{grid-template-columns:1fr}
+  .etf-container{height:100px}
+  .pricing-row{flex-direction:column;align-items:center}
+  .price-card{width:80%}
+  .stat-num{font-size:clamp(2.5rem,12vw,4rem)}
+  #s2{gap:1.5rem}
+}
+</style>
+</head>
+<body>
+<a href="index.html" style="position:fixed;top:1rem;left:1.5rem;z-index:9999;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:#4a5e82;text-decoration:none;letter-spacing:.06em;transition:color .2s" onmouseover="this.style.color='#00d4aa'" onmouseout="this.style.color='#4a5e82'">← TERMINAL</a>
+<div id="stage">
+
+  <!-- SCENE 1: Cold Open -->
+  <div class="scene" id="s1">
+    <div class="typewriter" id="tw1"></div>
+  </div>
+
+  <!-- SCENE 2: Blind Spot Stats -->
+  <div class="scene" id="s2">
+    <div class="stat-block" id="stat1">
+      <div class="stat-num" style="color:var(--white)">50</div>
+      <div class="stat-label">crypto assets covered</div>
+    </div>
+    <div class="stat-block" id="stat2">
+      <div class="stat-num" style="color:var(--red)">$0</div>
+      <div class="stat-label">on-chain analytics</div>
+    </div>
+    <div class="stat-block" id="stat3">
+      <div class="stat-num" style="color:var(--gold)">85%</div>
+      <div class="stat-label">of Bloomberg clients want data Bloomberg cannot deliver</div>
+    </div>
+  </div>
+
+  <!-- SCENE 3: Terminal Boot -->
+  <div class="scene" id="s3">
+    <div id="terminal-lines"></div>
+    <div id="terminal-ui">
+      <div class="tui-header">
+        <span>CHAININTEL TERMINAL v5.15</span>
+        <span>89 SOURCES LIVE</span>
+      </div>
+      <div class="tui-body">
+        <div class="tui-cell"><div class="tui-cell-title">Bitcoin MVRV-Z</div><div class="tui-cell-val">2.14</div></div>
+        <div class="tui-cell"><div class="tui-cell-title">ETF Net Flow (7d)</div><div class="tui-cell-val">+$1.04B</div></div>
+        <div class="tui-cell"><div class="tui-cell-title">DeFi TVL</div><div class="tui-cell-val">$189.4B</div></div>
+        <div class="tui-cell"><div class="tui-cell-title">Fear &amp; Greed</div><div class="tui-cell-val" style="color:var(--red)">15 — EXTREME FEAR</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 4: Feature Showcase -->
+  <div class="scene" id="s4">
+    <!-- Feature 1: MVRV -->
+    <div class="feature-panel" id="f1">
+      <div class="feature-title">On-Chain Matrix</div>
+      <div class="feature-subtitle">MVRV-Z SCORE</div>
+      <div class="mvrv-display" id="mvrv-counter">0.00</div>
+      <div class="mvrv-label" id="mvrv-label">Fair Value</div>
+    </div>
+    <!-- Feature 2: Whale Alerts -->
+    <div class="feature-panel" id="f2">
+      <div class="feature-title">Whale Alerts</div>
+      <div class="feature-subtitle">REAL-TIME LARGE TRANSACTION MONITORING</div>
+      <div class="whale-alert" id="whale-card">
+        <div class="whale-amt">$312M</div>
+        <div class="whale-detail">Cold wallet → OTC desk · <span class="whale-btc">1,749 BTC</span></div>
+      </div>
+    </div>
+    <!-- Feature 3: ETF Flows -->
+    <div class="feature-panel" id="f3">
+      <div class="feature-title">ETF Flows</div>
+      <div class="feature-subtitle">DAILY NET INFLOWS — SPOT BITCOIN ETFs</div>
+      <div class="etf-container" id="etf-bars"></div>
+      <div class="etf-total" id="etf-total">+$1.04B net 7-day</div>
+    </div>
+    <!-- Feature 4: ChainScore -->
+    <div class="feature-panel" id="f4">
+      <div class="feature-title">ChainScore</div>
+      <div class="feature-subtitle">COMPOSITE ON-CHAIN HEALTH INDEX</div>
+      <div class="chainscore-wrap">
+        <svg viewBox="0 0 200 120">
+          <path d="M20 110 A80 80 0 0 1 180 110" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="12" stroke-linecap="round"/>
+          <path id="score-arc" d="M20 110 A80 80 0 0 1 180 110" fill="none" stroke="var(--teal)" stroke-width="12" stroke-linecap="round" stroke-dasharray="251" stroke-dashoffset="251"/>
+        </svg>
+        <div class="chainscore-val" id="chain-score-val">0</div>
+      </div>
+      <div class="sub-scores">
+        <div class="sub-bar-wrap"><div class="sub-bar"><div class="sub-bar-fill" id="sub1"></div></div><div class="sub-bar-label">Liquidity</div></div>
+        <div class="sub-bar-wrap"><div class="sub-bar"><div class="sub-bar-fill" id="sub2"></div></div><div class="sub-bar-label">Activity</div></div>
+        <div class="sub-bar-wrap"><div class="sub-bar"><div class="sub-bar-fill" id="sub3"></div></div><div class="sub-bar-label">Sentiment</div></div>
+        <div class="sub-bar-wrap"><div class="sub-bar"><div class="sub-bar-fill" id="sub4"></div></div><div class="sub-bar-label">Valuation</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 5: Bloomberg vs ChainIntel -->
+  <div class="scene" id="s5">
+    <div class="compare-col" id="col-bb">
+      <div class="compare-header">
+        <div class="compare-name">Bloomberg Terminal</div>
+        <div class="compare-price">$31,980/yr</div>
+      </div>
+      <div class="compare-item" data-i="0"><span class="icon-x">✗</span> On-chain analytics</div>
+      <div class="compare-item" data-i="1"><span class="icon-x">✗</span> DeFi TVL tracking</div>
+      <div class="compare-item" data-i="2"><span class="icon-x">✗</span> Whale tracking</div>
+      <div class="compare-item" data-i="3"><span class="icon-x">✗</span> Token unlocks</div>
+      <div class="compare-item" data-i="4"><span class="icon-x">✗</span> AI synthesis with crypto context</div>
+    </div>
+    <div class="compare-col" id="col-ci">
+      <div class="compare-header">
+        <div class="compare-name" style="color:var(--teal)">ChainIntel</div>
+        <div class="compare-price">$7,188/yr</div>
+      </div>
+      <div class="compare-item" data-i="0"><span class="icon-check">✓</span> On-chain analytics</div>
+      <div class="compare-item" data-i="1"><span class="icon-check">✓</span> DeFi TVL tracking</div>
+      <div class="compare-item" data-i="2"><span class="icon-check">✓</span> Whale tracking</div>
+      <div class="compare-item" data-i="3"><span class="icon-check">✓</span> Token unlocks</div>
+      <div class="compare-item" data-i="4"><span class="icon-check">✓</span> AI synthesis with crypto context</div>
+    </div>
+  </div>
+
+  <!-- SCENE 6: Pricing -->
+  <div class="scene" id="s6">
+    <div class="pricing-row">
+      <div class="price-card" id="pc1">
+        <div class="price-tier">Analyst</div>
+        <div class="price-amount">$299</div>
+        <div class="price-period">/mo</div>
+      </div>
+      <div class="price-card featured" id="pc2">
+        <div class="price-tier">Professional</div>
+        <div class="price-amount" style="color:var(--teal)">$599</div>
+        <div class="price-period">/mo</div>
+        <div class="price-badge">Most Popular</div>
+      </div>
+      <div class="price-card" id="pc3">
+        <div class="price-tier">Enterprise</div>
+        <div class="price-amount">$999</div>
+        <div class="price-period">/mo</div>
+      </div>
+    </div>
+    <div class="bloomberg-compare" id="bb-compare">Bloomberg: <span>$2,665/mo</span> · Zero on-chain data.</div>
+  </div>
+
+  <!-- SCENE 7: Close -->
+  <div class="scene" id="s7">
+    <div class="close-line" id="cl1"></div>
+    <div class="close-line teal" id="cl2"></div>
+    <div class="ci-logo" id="ci-logo">
+      <svg width="80" height="90" viewBox="0 0 80 90" fill="none">
+        <polygon points="40,2 75,22 75,68 40,88 5,68 5,22" stroke="var(--teal)" stroke-width="2.5" fill="none"/>
+        <text x="40" y="58" text-anchor="middle" font-family="'DM Serif Display',Georgia,serif" font-size="32" fill="var(--teal)">CI</text>
+      </svg>
+    </div>
+    <div class="ci-url" id="ci-url">chainintelterminal.com</div>
+    <div class="build-tag" id="build-tag">Perplexity Billion Dollar Build · 2026</div>
+  </div>
+
+</div>
+
+<!-- Progress Bar -->
+<div id="progress-bar"></div>
+
+<!-- Controls -->
+<div id="controls">
+  <button id="btn-pause" title="Space to pause/play">⏸</button>
+  <button id="btn-restart" title="R to restart">↻</button>
+</div>
+<div id="pause-indicator">PAUSED</div>
+
+<!-- Replay -->
+<button id="replay-btn">Replay ↻</button>
+
+<script>
+(function(){
+  const TOTAL_DURATION = 70000; // 70 seconds
+  let startTime = 0;
+  let elapsed = 0;
+  let pausedAt = 0;
+  let isPaused = false;
+  let isFinished = false;
+  let timers = [];
+  let rafId = null;
+  let animFrames = [];
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+
+  // -- Utility: schedule a timeout relative to video start --
+  function at(ms, fn) {
+    const id = setTimeout(fn, ms);
+    timers.push(id);
+    return id;
+  }
+
+  function clearAllTimers() {
+    timers.forEach(t => clearTimeout(t));
+    timers = [];
+    animFrames.forEach(a => cancelAnimationFrame(a));
+    animFrames = [];
+    if (rafId) cancelAnimationFrame(rafId);
+  }
+
+  // -- Progress bar --
+  function updateProgress() {
+    if (isPaused || isFinished) return;
+    const now = performance.now();
+    elapsed = now - startTime;
+    const pct = Math.min(elapsed / TOTAL_DURATION * 100, 100);
+    $('#progress-bar').style.width = pct + '%';
+    if (pct < 100) {
+      rafId = requestAnimationFrame(updateProgress);
+    }
+  }
+
+  // -- Scene management --
+  function showScene(id) {
+    $$('.scene').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+  }
+
+  // -- Typewriter effect --
+  function typewriter(container, text, speed, cb) {
+    container.innerHTML = '';
+    let i = 0;
+    const cursor = document.createElement('span');
+    cursor.className = 'cursor-blink';
+    cursor.textContent = '';
+    function type() {
+      if (isPaused) { at(50, type); return; }
+      if (i < text.length) {
+        const span = document.createElement('span');
+        span.textContent = text[i];
+        span.className = 'vis';
+        container.insertBefore(span, cursor);
+        i++;
+        at(speed, type);
+      } else {
+        container.appendChild(cursor);
+        if (cb) at(200, cb);
+      }
+    }
+    container.appendChild(cursor);
+    type();
+  }
+
+  // -- Counter animation --
+  function animateCounter(el, start, end, duration, decimals, cb) {
+    const s = performance.now();
+    function tick() {
+      const now = performance.now();
+      const p = Math.min((now - s) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // ease-out cubic
+      const val = start + (end - start) * eased;
+      el.textContent = val.toFixed(decimals);
+      if (p < 1) {
+        const id = requestAnimationFrame(tick);
+        animFrames.push(id);
+      } else {
+        el.textContent = end.toFixed(decimals);
+        if (cb) cb();
+      }
+    }
+    tick();
+  }
+
+  // -- Terminal lines --
+  const termLines = [
+    { text: '> Connecting to CoinGecko...', check: ' ✓', cls: '' },
+    { text: '> Loading Glassnode on-chain data...', check: ' ✓', cls: '' },
+    { text: '> DefiLlama TVL sync...', val: ' $189.4B', check: ' ✓', cls: '' },
+    { text: '> Farside ETF flows...', val: ' +$438M', check: ' ✓', cls: '' },
+    { text: '> Whale Alert stream...', val: ' active', check: ' ✓', cls: '' },
+    { text: '> Fear & Greed Index...', val: ' 15/100', warn: ' EXTREME FEAR', check: ' ✓', cls: '' },
+    { text: '> 84 sources connected. All systems live.', check: '', cls: '' }
+  ];
+
+  function buildTerminalLines() {
+    const container = $('#terminal-lines');
+    container.innerHTML = '';
+    termLines.forEach((l, idx) => {
+      const div = document.createElement('div');
+      div.className = 'line';
+      div.dataset.idx = idx;
+      let html = l.text;
+      if (l.val) html += `<span class="val">${l.val}</span>`;
+      if (l.warn) html += `<span class="warn">${l.warn}</span>`;
+      if (l.check) html += `<span class="check">${l.check}</span>`;
+      div.innerHTML = html;
+      container.appendChild(div);
+    });
+  }
+
+  // -- ETF Bars --
+  function buildETFBars() {
+    const container = $('#etf-bars');
+    container.innerHTML = '';
+    const heights = [60, 45, 80, 35, 90, 70, 55, 95, 40, 75, 85, 65]; // percentages
+    heights.forEach((h) => {
+      const bar = document.createElement('div');
+      bar.className = 'etf-bar';
+      bar.dataset.h = h;
+      container.appendChild(bar);
+    });
+  }
+
+  // -- Main timeline --
+  function runTimeline() {
+    clearAllTimers();
+    isFinished = false;
+    $('#replay-btn').classList.remove('show');
+
+    // Reset all states
+    $$('.scene').forEach(s => s.classList.remove('active'));
+    $$('.stat-block').forEach(s => { s.classList.remove('pop'); });
+    $$('.compare-item').forEach(s => { s.classList.remove('pop'); });
+    $$('.price-card').forEach(s => { s.classList.remove('pop'); });
+    $('#bb-compare').classList.remove('pop');
+    $('#terminal-ui').classList.remove('flash');
+    $('#mvrv-label').classList.remove('show');
+    $('#whale-card').classList.remove('slide');
+    $('#etf-total').classList.remove('show');
+    $('#ci-logo').classList.remove('show');
+    $('#ci-url').classList.remove('show');
+    $('#build-tag').classList.remove('show');
+    $$('.close-line').forEach(l => { l.classList.remove('show'); l.innerHTML = ''; });
+    $$('.feature-panel').forEach(f => f.classList.remove('active'));
+    $('#mvrv-counter').textContent = '0.00';
+    $('#chain-score-val').textContent = '0';
+    $('#score-arc').style.strokeDashoffset = '251';
+    ['sub1','sub2','sub3','sub4'].forEach(id => { document.getElementById(id).style.width = '0'; });
+
+    buildTerminalLines();
+    buildETFBars();
+
+    startTime = performance.now();
+    elapsed = 0;
+    updateProgress();
+
+    // =====================
+    // SCENE 1: 0 - 5s
+    // =====================
+    showScene('s1');
+    const tw = $('#tw1');
+
+    // Line 1: typewriter
+    at(300, () => {
+      typewriter(tw, 'Bloomberg Terminal. $10 billion per year. Built in 1981.', 42, () => {
+        // Pause 1s then second line
+        at(1000, () => {
+          // Clear and type second line
+          const br = document.createElement('div');
+          br.style.height = '1.2em';
+          tw.appendChild(br);
+          const line2 = document.createElement('div');
+          line2.style.cssText = 'font-size:clamp(1rem,2vw,1.5rem);color:var(--muted)';
+          tw.appendChild(line2);
+          typewriter(line2, 'It has one blind spot.', 50);
+        });
+      });
+    });
+
+    // =====================
+    // SCENE 2: 5 - 10s
+    // =====================
+    at(5000, () => showScene('s2'));
+    at(5400, () => $('#stat1').classList.add('pop'));
+    at(6400, () => $('#stat2').classList.add('pop'));
+    at(7400, () => $('#stat3').classList.add('pop'));
+
+    // =====================
+    // SCENE 3: 10 - 18s
+    // =====================
+    at(10000, () => {
+      showScene('s3');
+      const lines = $$('#terminal-lines .line');
+      lines.forEach((line, i) => {
+        at(i * 900 + 400, () => {
+          line.classList.add('typed');
+        });
+      });
+      // Flash terminal UI at end of boot
+      at(7200, () => {
+        $('#terminal-lines').style.opacity = '0';
+        $('#terminal-ui').classList.add('flash');
+      });
+    });
+
+    // =====================
+    // SCENE 4: 18 - 30s (4 features, 3s each)
+    // =====================
+    // Feature 1: MVRV (18-21s)
+    at(18000, () => {
+      showScene('s4');
+      $('#f1').classList.add('active');
+      at(400, () => {
+        animateCounter($('#mvrv-counter'), 0, 2.14, 1800, 2, () => {
+          $('#mvrv-label').classList.add('show');
+        });
+      });
+    });
+
+    // Feature 2: Whale Alert (21-24s)
+    at(21000, () => {
+      $$('.feature-panel').forEach(f => f.classList.remove('active'));
+      $('#f2').classList.add('active');
+      at(500, () => $('#whale-card').classList.add('slide'));
+    });
+
+    // Feature 3: ETF Flows (24-27s)
+    at(24000, () => {
+      $$('.feature-panel').forEach(f => f.classList.remove('active'));
+      $('#f3').classList.add('active');
+      const bars = $$('.etf-bar');
+      bars.forEach((bar, i) => {
+        at(200 + i * 150, () => {
+          bar.style.height = bar.dataset.h + '%';
+        });
+      });
+      at(2200, () => $('#etf-total').classList.add('show'));
+    });
+
+    // Feature 4: ChainScore (27-30s)
+    at(27000, () => {
+      $$('.feature-panel').forEach(f => f.classList.remove('active'));
+      $('#f4').classList.add('active');
+      // Animate arc
+      const arc = $('#score-arc');
+      const totalLen = 251;
+      const target = 88 / 100;
+      const targetOffset = totalLen * (1 - target);
+      at(300, () => {
+        arc.style.transition = 'stroke-dashoffset 1.5s cubic-bezier(0.16,1,0.3,1)';
+        arc.style.strokeDashoffset = targetOffset;
+        animateCounter($('#chain-score-val'), 0, 88, 1500, 0);
+      });
+      // Sub-score bars
+      at(800, () => { $('#sub1').style.width = '82%'; });
+      at(1000, () => { $('#sub2').style.width = '91%'; });
+      at(1200, () => { $('#sub3').style.width = '74%'; });
+      at(1400, () => { $('#sub4').style.width = '88%'; });
+    });
+
+    // =====================
+    // SCENE 5: 30 - 42s
+    // =====================
+    at(30000, () => {
+      showScene('s5');
+      const bbItems = $$('#col-bb .compare-item');
+      const ciItems = $$('#col-ci .compare-item');
+      // Pop Bloomberg items (red X)
+      bbItems.forEach((item, i) => {
+        at(600 + i * 700, () => item.classList.add('pop'));
+      });
+      // Pop ChainIntel items (green check) — staggered after Bloomberg
+      ciItems.forEach((item, i) => {
+        at(800 + i * 700, () => item.classList.add('pop'));
+      });
+    });
+
+    // =====================
+    // SCENE 6: 42 - 52s
+    // =====================
+    at(42000, () => {
+      showScene('s6');
+      at(400, () => $('#pc1').classList.add('pop'));
+      at(800, () => $('#pc2').classList.add('pop'));
+      at(1200, () => $('#pc3').classList.add('pop'));
+      at(3000, () => $('#bb-compare').classList.add('pop'));
+    });
+
+    // =====================
+    // SCENE 7: 52 - 65s + end
+    // =====================
+    at(52000, () => {
+      showScene('s7');
+      const line1Words = 'Bloomberg Terminal was built for yesterday\'s markets.'.split(' ');
+      const cl1 = $('#cl1');
+      cl1.innerHTML = line1Words.map(w => `<span class="close-word">${w} </span>`).join('');
+      cl1.classList.add('show');
+      const wordEls1 = cl1.querySelectorAll('.close-word');
+      wordEls1.forEach((w, i) => {
+        at(300 + i * 280, () => w.classList.add('show'));
+      });
+
+      // Second line after pause
+      const line2Delay = 300 + line1Words.length * 280 + 1500;
+      at(line2Delay, () => {
+        const line2Words = 'ChainIntel was built for the on-chain economy.'.split(' ');
+        const cl2 = $('#cl2');
+        cl2.innerHTML = line2Words.map(w => `<span class="close-word">${w} </span>`).join('');
+        cl2.classList.add('show');
+        const wordEls2 = cl2.querySelectorAll('.close-word');
+        wordEls2.forEach((w, i) => {
+          at(200 + i * 250, () => w.classList.add('show'));
+        });
+      });
+
+      // Logo + URL
+      at(9000, () => $('#ci-logo').classList.add('show'));
+      at(9800, () => $('#ci-url').classList.add('show'));
+      at(10500, () => $('#build-tag').classList.add('show'));
+    });
+
+    // =====================
+    // END: Show replay
+    // =====================
+    at(67000, () => {
+      isFinished = true;
+      $('#progress-bar').style.width = '100%';
+      at(1500, () => {
+        $('#replay-btn').classList.add('show');
+      });
+    });
+  }
+
+  // -- Pause/Play --
+  function togglePause() {
+    if (isFinished) return;
+    isPaused = !isPaused;
+    const indicator = $('#pause-indicator');
+    const btn = $('#btn-pause');
+    if (isPaused) {
+      pausedAt = performance.now();
+      indicator.classList.add('show');
+      btn.textContent = '▶';
+    } else {
+      const pauseDuration = performance.now() - pausedAt;
+      startTime += pauseDuration;
+      // Shift all remaining timers — we can't easily, so we rely on the simple approach
+      indicator.classList.remove('show');
+      btn.textContent = '⏸';
+      updateProgress();
+    }
+  }
+
+  function restart() {
+    isPaused = false;
+    $('#pause-indicator').classList.remove('show');
+    $('#btn-pause').textContent = '⏸';
+    runTimeline();
+  }
+
+  // -- Keyboard controls --
+  document.addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); togglePause(); }
+    if (e.code === 'KeyR') { e.preventDefault(); restart(); }
+  });
+
+  // -- Button controls --
+  $('#btn-pause').addEventListener('click', togglePause);
+  $('#btn-restart').addEventListener('click', restart);
+  $('#replay-btn').addEventListener('click', restart);
+
+  // -- Auto-start --
+  // Wait for fonts to load
+  document.fonts.ready.then(() => {
+    at(200, runTimeline);
+  });
+
+})();
+</script>
+</body>
+</html>

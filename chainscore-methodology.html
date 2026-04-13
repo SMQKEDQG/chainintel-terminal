@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChainScore Methodology — ChainIntel</title>
+<meta name="description" content="ChainScore: a transparent, multi-dimensional digital asset rating framework. Full methodology published. 6 dimensions, 0-100 composite score.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060a11;--surface:#0d1420;--border:#1a2d42;
+  --accent:#00d4aa;--text:#e2e8f2;--muted:#8ba8c4;
+  --font-heading:'DM Serif Display',serif;
+  --font-body:'Inter',sans-serif;
+  --font-data:'JetBrains Mono',monospace;
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(6,10,17,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+nav .nav-inner{max-width:800px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px}
+nav .logo{font-family:var(--font-data);font-weight:600;font-size:.875rem;color:var(--accent);letter-spacing:.06em;text-decoration:none}
+nav .logo span{color:var(--text)}
+nav .links{display:flex;gap:1.5rem}
+nav .links a{font-size:.8125rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color .2s}
+nav .links a:hover,nav .links a.active{color:var(--accent)}
+
+/* LAYOUT */
+.container{max-width:800px;margin:0 auto;padding:3rem 2rem 4rem}
+
+/* HERO */
+.hero{padding:4rem 0 3rem;border-bottom:1px solid var(--border)}
+.hero h1{font-family:var(--font-heading);font-size:2.5rem;line-height:1.2;color:var(--text);margin-bottom:.5rem}
+.hero .subtitle{font-size:1rem;color:var(--muted);margin-bottom:0}
+.hero .tagline{font-size:.75rem;font-family:var(--font-data);color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
+
+/* SECTIONS */
+section{padding:3rem 0;border-bottom:1px solid var(--border)}
+section:last-of-type{border-bottom:none}
+section h2{font-family:var(--font-heading);font-size:1.75rem;color:var(--text);margin-bottom:1.5rem;line-height:1.3}
+section p{color:var(--text);margin-bottom:1rem;font-size:.9375rem;line-height:1.75}
+.muted{color:var(--muted)}
+
+/* DIMENSION CARD */
+.dimension{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.75rem;margin-bottom:1.25rem}
+.dimension-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.dimension-title{display:flex;align-items:center;gap:.75rem}
+.dimension-num{font-family:var(--font-data);font-size:.6875rem;font-weight:600;color:var(--bg);background:var(--accent);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.dimension-name{font-family:var(--font-body);font-size:1.0625rem;font-weight:600;color:var(--text)}
+.dimension-weight{font-family:var(--font-data);font-size:.8125rem;color:var(--accent);font-weight:600}
+
+.dimension h4{font-size:.75rem;font-family:var(--font-data);color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.5rem;margin-top:1rem}
+.dimension h4:first-of-type{margin-top:0}
+.dimension p{font-size:.875rem;color:var(--muted);margin-bottom:.5rem;line-height:1.65}
+.dimension .sources{font-size:.75rem;color:var(--muted);font-style:italic}
+
+/* SCORING RULE */
+.scoring-rule{display:flex;gap:.5rem;align-items:baseline;margin-bottom:.375rem;font-size:.8125rem;color:var(--muted);line-height:1.5}
+.scoring-rule .score-val{font-family:var(--font-data);color:var(--accent);font-weight:500;min-width:36px;flex-shrink:0}
+
+/* FORMULA */
+.formula-block{background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:1.5rem 2rem;margin:1.5rem 0;text-align:center}
+.formula-block code{font-family:var(--font-data);font-size:.875rem;color:var(--accent);line-height:2}
+
+/* WEIGHT BAR */
+.weight-bar{display:flex;border-radius:6px;overflow:hidden;height:32px;margin:1.5rem 0;border:1px solid var(--border)}
+.weight-seg{display:flex;align-items:center;justify-content:center;font-family:var(--font-data);font-size:.625rem;font-weight:600;color:var(--bg);letter-spacing:.02em}
+.weight-seg:nth-child(1){background:#00d4aa;flex:20}
+.weight-seg:nth-child(2){background:#00b894;flex:20}
+.weight-seg:nth-child(3){background:#009b7d;flex:15}
+.weight-seg:nth-child(4){background:#007f66;flex:20}
+.weight-seg:nth-child(5){background:#006650;flex:15}
+.weight-seg:nth-child(6){background:#004d3b;flex:10}
+
+/* RATING BANDS */
+.bands{margin:1.5rem 0}
+.band{display:flex;align-items:center;gap:1rem;padding:.75rem 1rem;border-bottom:1px solid var(--border)}
+.band:last-child{border-bottom:none}
+.band-range{font-family:var(--font-data);font-size:.875rem;font-weight:600;min-width:72px;color:var(--accent)}
+.band-label{font-size:.9375rem;font-weight:600;color:var(--text)}
+.band-bar{flex:1;height:6px;border-radius:3px;background:var(--border)}
+.band-bar .fill{height:100%;border-radius:3px}
+.band:nth-child(1) .fill{width:100%;background:#00d4aa}
+.band:nth-child(2) .fill{width:82%;background:#00b894}
+.band:nth-child(3) .fill{width:67%;background:#009b7d}
+.band:nth-child(4) .fill{width:50%;background:#c0a020}
+.band:nth-child(5) .fill{width:30%;background:#e05050}
+
+/* CALLOUT */
+.callout{background:var(--surface);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:1.5rem 2rem;margin:1.5rem 0}
+.callout p{font-size:.9375rem;color:var(--text);line-height:1.75;margin:0}
+
+/* DISCLAIMER */
+.disclaimer{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin:1.5rem 0}
+.disclaimer p{font-size:.8125rem;color:var(--muted);line-height:1.65;margin:0}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 0;text-align:center}
+footer p{font-size:.75rem;color:var(--muted);font-family:var(--font-data);line-height:1.8}
+footer a{color:var(--accent);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+/* MOBILE */
+@media(max-width:640px){
+  .hero h1{font-size:1.75rem}
+  section h2{font-size:1.375rem}
+  .container{padding:2rem 1.25rem 3rem}
+  .dimension{padding:1.25rem}
+  .formula-block code{font-size:.6875rem}
+  nav .links{gap:.875rem}
+  nav .links a{font-size:.75rem}
+  .weight-seg{font-size:.5rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">CHAIN<span>INTEL</span></a>
+    <div class="links">
+      <a href="index.html">Terminal</a>
+      <a href="why-chainintel.html">Why ChainIntel</a>
+      <a href="deck.html">Deck</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="chainscore-methodology.html" class="active">ChainScore</a>
+      <a href="promo.html">Promo</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="tagline">Methodology v1.0 · April 2026</div>
+    <h1>ChainScore Methodology</h1>
+    <p class="subtitle">A transparent, multi-dimensional digital asset rating framework</p>
+  </div>
+
+  <!-- OVERVIEW -->
+  <section>
+    <h2>Overview</h2>
+    <p>ChainScore is ChainIntel's proprietary composite rating for digital assets, scored 0–100. It evaluates every asset across six weighted dimensions using real-time and historical on-chain, fundamental, and market data.</p>
+    <p>Unlike opaque institutional ratings, ChainIntel publishes its full methodology. Bloomberg hides methodology. We publish ours.</p>
+    <p class="muted">Every sub-dimension score is visible in the terminal. Every data source is attributed. Every methodology revision is logged in the <a href="changelog.html" style="color:var(--accent)">changelog</a>.</p>
+  </section>
+
+  <!-- THE 6 DIMENSIONS -->
+  <section>
+    <h2>The 6 Dimensions</h2>
+    <p class="muted" style="margin-bottom:1.5rem">Each dimension is scored 0–100 independently, then combined using the weights below.</p>
+
+    <div class="weight-bar">
+      <div class="weight-seg">On-Chain 20%</div>
+      <div class="weight-seg">Fundamentals 20%</div>
+      <div class="weight-seg">Regulatory 15%</div>
+      <div class="weight-seg">Smart Money 20%</div>
+      <div class="weight-seg">Technicals 15%</div>
+      <div class="weight-seg">Adoption 10%</div>
+    </div>
+
+    <!-- Dimension 1 -->
+    <div class="dimension">
+      <div class="dimension-header">
+        <div class="dimension-title">
+          <span class="dimension-num">1</span>
+          <span class="dimension-name">On-Chain Health</span>
+        </div>
+        <span class="dimension-weight">20%</span>
+      </div>
+      <h4>Metrics</h4>
+      <p>Active addresses (30-day trend), transaction volume, network value-to-transactions ratio (NVT), hash rate or validator count.</p>
+      <h4>Scoring</h4>
+      <div class="scoring-rule"><span class="score-val">90+</span> &gt;90th percentile of 12-month range</div>
+      <div class="scoring-rule"><span class="score-val">50</span> 50th percentile (median baseline)</div>
+      <div class="scoring-rule"><span class="score-val">&lt;20</span> &lt;10th percentile — network activity decline</div>
+      <h4>Sources</h4>
+      <p class="sources">Glassnode, CryptoQuant, Etherscan</p>
+    </div>
+
+    <!-- Dimension 2 -->
+    <div class="dimension">
+      <div class="dimension-header">
+        <div class="dimension-title">
+          <span class="dimension-num">2</span>
+          <span class="dimension-name">Protocol Fundamentals</span>
+        </div>
+        <span class="dimension-weight">20%</span>
+      </div>
+      <h4>Metrics</h4>
+      <p>Protocol revenue (30-day), TVL if applicable, developer commits (GitHub), fee generation.</p>
+      <h4>Scoring</h4>
+      <div class="scoring-rule"><span class="score-val">80+</span> Revenue growth &gt;20% MoM</div>
+      <div class="scoring-rule"><span class="score-val">50</span> Flat revenue — stable but no growth signal</div>
+      <div class="scoring-rule"><span class="score-val">&lt;30</span> Declining revenue and developer activity</div>
+      <h4>Sources</h4>
+      <p class="sources">Token Terminal, DefiLlama, GitHub API</p>
+    </div>
+
+    <!-- Dimension 3 -->
+    <div class="dimension">
+      <div class="dimension-header">
+        <div class="dimension-title">
+          <span class="dimension-num">3</span>
+          <span class="dimension-name">Regulatory Exposure</span>
+        </div>
+        <span class="dimension-weight">15%</span>
+      </div>
+      <h4>Metrics</h4>
+      <p>SEC classification status, ETF approval status, MiCA compliance, FATF travel rule status.</p>
+      <h4>Scoring</h4>
+      <div class="scoring-rule"><span class="score-val">90+</span> Classified commodity + ETF approved</div>
+      <div class="scoring-rule"><span class="score-val">50</span> Pending classification or partial compliance</div>
+      <div class="scoring-rule"><span class="score-val">&lt;20</span> Active enforcement action</div>
+      <h4>Sources</h4>
+      <p class="sources">SEC EDGAR, EU MiCA registry, ChainIntel regulatory database</p>
+    </div>
+
+    <!-- Dimension 4 -->
+    <div class="dimension">
+      <div class="dimension-header">
+        <div class="dimension-title">
+          <span class="dimension-num">4</span>
+          <span class="dimension-name">Smart Money Position</span>
+        </div>
+        <span class="dimension-weight">20%</span>
+      </div>
+      <h4>Metrics</h4>
+      <p>Whale wallet accumulation/distribution (30-day), exchange reserve changes, Nansen-labeled institutional flows.</p>
+      <h4>Scoring</h4>
+      <div class="scoring-rule"><span class="score-val">85+</span> Net accumulation &gt;2x distribution</div>
+      <div class="scoring-rule"><span class="score-val">50</span> Neutral — balanced accumulation and distribution</div>
+      <div class="scoring-rule"><span class="score-val">&lt;30</span> Net distribution — smart money exiting</div>
+      <h4>Sources</h4>
+      <p class="sources">Whale Alert, Glassnode, CryptoQuant</p>
+    </div>
+
+    <!-- Dimension 5 -->
+    <div class="dimension">
+      <div class="dimension-header">
+        <div class="dimension-title">
+          <span class="dimension-num">5</span>
+          <span class="dimension-name">Technicals Risk</span>
+        </div>
+        <span class="dimension-weight">15%</span>
+      </div>
+      <h4>Metrics</h4>
+      <p>MVRV Z-Score, funding rates, open interest ratio, 200-day moving average position.</p>
+      <h4>Scoring</h4>
+      <div class="scoring-rule"><span class="score-val">80+</span> MVRV &lt;1.5 + positive funding + above 200d MA</div>
+      <div class="scoring-rule"><span class="score-val">50</span> Mixed signals across indicators</div>
+      <div class="scoring-rule"><span class="score-val">&lt;30</span> Overextended — high MVRV, negative funding</div>
+      <h4>Sources</h4>
+      <p class="sources">CoinGlass, CoinGecko, Glassnode</p>
+    </div>
+
+    <!-- Dimension 6 -->
+    <div class="dimension">
+      <div class="dimension-header">
+        <div class="dimension-title">
+          <span class="dimension-num">6</span>
+          <span class="dimension-name">Adoption Metrics</span>
+        </div>
+        <span class="dimension-weight">10%</span>
+      </div>
+      <h4>Metrics</h4>
+      <p>Unique address growth (90-day), DEX volume share, institutional custody availability, exchange listing count.</p>
+      <h4>Scoring</h4>
+      <div class="scoring-rule"><span class="score-val">85+</span> &gt;15% address growth + top-10 DEX volume</div>
+      <div class="scoring-rule"><span class="score-val">50</span> Stable adoption — no significant growth or decline</div>
+      <div class="scoring-rule"><span class="score-val">&lt;30</span> Declining unique addresses and volume share</div>
+      <h4>Sources</h4>
+      <p class="sources">CoinGecko, DefiLlama, IntoTheBlock</p>
+    </div>
+  </section>
+
+  <!-- COMPOSITE CALCULATION -->
+  <section>
+    <h2>Composite Calculation</h2>
+    <div class="formula-block">
+      <code>ChainScore = (OnChain × 0.20) + (Fundamentals × 0.20) + (Regulatory × 0.15)<br>+ (SmartMoney × 0.20) + (Technicals × 0.15) + (Adoption × 0.10)</code>
+    </div>
+    <p>Each sub-dimension score is calculated independently using the metrics and thresholds defined above, then combined using fixed weights. The composite score is updated in real time as new data arrives.</p>
+  </section>
+
+  <!-- RATING BANDS -->
+  <section>
+    <h2>Rating Bands</h2>
+    <div class="bands">
+      <div class="band">
+        <span class="band-range">90 – 100</span>
+        <span class="band-label">Institutional Grade</span>
+        <div class="band-bar"><div class="fill"></div></div>
+      </div>
+      <div class="band">
+        <span class="band-range">75 – 89</span>
+        <span class="band-label">Strong</span>
+        <div class="band-bar"><div class="fill"></div></div>
+      </div>
+      <div class="band">
+        <span class="band-range">60 – 74</span>
+        <span class="band-label">Moderate</span>
+        <div class="band-bar"><div class="fill"></div></div>
+      </div>
+      <div class="band">
+        <span class="band-range">40 – 59</span>
+        <span class="band-label">Caution</span>
+        <div class="band-bar"><div class="fill"></div></div>
+      </div>
+      <div class="band">
+        <span class="band-range">0 – 39</span>
+        <span class="band-label">High Risk</span>
+        <div class="band-bar"><div class="fill"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TRANSPARENCY COMMITMENT -->
+  <section>
+    <h2>Transparency Commitment</h2>
+    <div class="callout">
+      <p>Every ChainScore sub-dimension is visible in the terminal. Every data source is attributed. Every methodology change is logged in our changelog. This is how institutional-grade analytics should work.</p>
+    </div>
+  </section>
+
+  <!-- DISCLAIMER -->
+  <section>
+    <h2>Disclaimer</h2>
+    <div class="disclaimer">
+      <p>ChainScore is an analytical framework, not investment advice. Past performance and current metrics do not guarantee future results. Always conduct independent research. ChainIntel and its operators are not registered investment advisors.</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="container" style="padding-top:0;padding-bottom:0">
+    <p>
+      <a href="https://chainintelterminal.com">ChainIntel</a> · <a href="https://chainintelterminal.com">chainintelterminal.com</a> · Methodology v1.0 · April 2026
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

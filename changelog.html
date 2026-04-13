@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChainIntel Changelog</title>
+<meta name="description" content="ChainIntel Terminal changelog. Built in public. Shipping daily.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#060a11;--surface:#0d1420;--border:#1a2d42;
+  --accent:#00d4aa;--text:#e2e8f2;--muted:#8ba8c4;
+  --font-heading:'DM Serif Display',serif;
+  --font-body:'Inter',sans-serif;
+  --font-data:'JetBrains Mono',monospace;
+}
+html{font-size:16px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);line-height:1.7;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:100;background:rgba(6,10,17,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+nav .nav-inner{max-width:800px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px}
+nav .logo{font-family:var(--font-data);font-weight:600;font-size:.875rem;color:var(--accent);letter-spacing:.06em;text-decoration:none}
+nav .logo span{color:var(--text)}
+nav .links{display:flex;gap:1.5rem}
+nav .links a{font-size:.8125rem;color:var(--muted);text-decoration:none;font-weight:500;transition:color .2s}
+nav .links a:hover,nav .links a.active{color:var(--accent)}
+
+/* LAYOUT */
+.container{max-width:800px;margin:0 auto;padding:3rem 2rem 4rem}
+
+/* HERO */
+.hero{padding:4rem 0 3rem;border-bottom:1px solid var(--border)}
+.hero h1{font-family:var(--font-heading);font-size:2.5rem;line-height:1.2;color:var(--text);margin-bottom:.5rem}
+.hero .subtitle{font-size:1rem;color:var(--muted);margin-bottom:0}
+.hero .tagline{font-size:.75rem;font-family:var(--font-data);color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:1rem}
+
+/* TIMELINE */
+.timeline{padding-top:2rem}
+.entry{position:relative;padding:2rem 0;border-bottom:1px solid var(--border)}
+.entry:last-child{border-bottom:none}
+
+.entry-header{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap}
+.version-badge{font-family:var(--font-data);font-size:.8125rem;font-weight:600;color:var(--bg);background:var(--accent);padding:3px 12px;border-radius:4px;letter-spacing:.03em;white-space:nowrap}
+.entry-date{font-family:var(--font-data);font-size:.8125rem;color:var(--muted)}
+.entry-label{font-size:.8125rem;color:var(--muted);font-style:italic}
+
+.entry h3{font-family:var(--font-body);font-size:.9375rem;font-weight:600;color:var(--text);margin-bottom:.75rem}
+
+.entry ul{list-style:none;padding:0;margin:0}
+.entry ul li{position:relative;padding-left:1.25rem;margin-bottom:.5rem;font-size:.875rem;color:var(--muted);line-height:1.6}
+.entry ul li::before{content:'';position:absolute;left:0;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+
+/* LINE COUNT */
+.line-count{display:inline-block;font-family:var(--font-data);font-size:.6875rem;color:var(--accent);background:rgba(0,212,170,.1);padding:2px 8px;border-radius:3px;margin-left:.5rem;vertical-align:middle}
+
+/* FOOTER */
+footer{border-top:1px solid var(--border);padding:2rem 0;text-align:center}
+footer p{font-size:.75rem;color:var(--muted);font-family:var(--font-data);line-height:1.8}
+footer a{color:var(--accent);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+/* MOBILE */
+@media(max-width:640px){
+  .hero h1{font-size:1.75rem}
+  .entry-header{gap:.5rem}
+  .container{padding:2rem 1.25rem 3rem}
+  nav .links{gap:.875rem}
+  nav .links a{font-size:.75rem}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">CHAIN<span>INTEL</span></a>
+    <div class="links">
+      <a href="index.html">Terminal</a>
+      <a href="why-chainintel.html">Why ChainIntel</a>
+      <a href="deck.html">Deck</a>
+      <a href="changelog.html" class="active">Changelog</a>
+      <a href="chainscore-methodology.html">ChainScore</a>
+      <a href="promo.html">Promo</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="tagline">Development Log</div>
+    <h1>ChainIntel Changelog</h1>
+    <p class="subtitle">Built in public. Shipping daily.</p>
+  </div>
+
+  <div class="timeline">
+
+    <!-- v5.15 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.15</span>
+        <span class="entry-date">Apr 13, 2026</span>
+        <span class="entry-label">Competition submission build</span>
+      </div>
+      <ul>
+        <li>Promo video production and final cut</li>
+        <li>Pitch deck creation and export</li>
+        <li>Write-up page: "Why ChainIntel Is a Billion-Dollar Build"</li>
+        <li>Changelog page with full version history</li>
+        <li>ChainScore methodology documentation published</li>
+        <li>Final copy polish across all pages</li>
+        <li>SEO meta tags and Open Graph optimization</li>
+      </ul>
+    </div>
+
+    <!-- v5.12 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.12</span>
+        <span class="entry-date">Apr 11, 2026</span>
+        <span class="line-count">5,410 lines</span>
+      </div>
+      <ul>
+        <li>Live price feed integrated into morning intelligence brief</li>
+        <li>Supabase watchlist cloud sync across devices</li>
+        <li>Portfolio P&L vs BTC benchmark comparison widget</li>
+        <li>Morning brief personalization based on watchlist</li>
+        <li>ETH and SOL TPS live feeds added to On-Chain Matrix</li>
+        <li>Custom domain canonical URL configuration</li>
+        <li>Open Graph and Twitter Card meta tags</li>
+        <li>Command palette with fuzzy search</li>
+      </ul>
+    </div>
+
+    <!-- v5.11 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.11</span>
+        <span class="entry-date">Apr 11, 2026</span>
+      </div>
+      <ul>
+        <li>Live Fear &amp; Greed API feed with gauge visualization</li>
+        <li>Share Analysis button on CI Ask responses</li>
+        <li>Whale alert unread badge with count indicator</li>
+        <li>Regulation filter count badges with localStorage persistence</li>
+        <li>CI Ask history expanded to 10 entries with timestamps</li>
+        <li>Share URL generation fix for cross-browser compatibility</li>
+        <li>Whale feed timestamp display fix</li>
+        <li>Competition banner auto-state management</li>
+      </ul>
+    </div>
+
+    <!-- v5.10 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.10</span>
+        <span class="entry-date">Apr 11, 2026</span>
+      </div>
+      <ul>
+        <li>Full mobile responsive CSS with 768px and 480px breakpoints</li>
+        <li>Share button added to top navigation bar</li>
+        <li>Live whale alert stream — new alerts prepend every 22 seconds</li>
+        <li>CI Ask response history panel with session persistence</li>
+        <li>Regulation sentiment filter buttons (bullish/bearish/neutral)</li>
+        <li>Live block counter across monitored chains</li>
+        <li>Markets row click-to-expand asset modal with detailed view</li>
+        <li>Pricing countdown timer to April 14 launch</li>
+      </ul>
+    </div>
+
+    <!-- v5.9 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.9</span>
+        <span class="entry-date">Apr 11, 2026</span>
+      </div>
+      <ul>
+        <li>Keyboard navigation: keys 1–9 switch tabs, ? opens help overlay</li>
+        <li>X/Twitter trending topics grid in Market Intelligence</li>
+        <li>Price alerts builder with custom threshold configuration</li>
+        <li>Macro correlation timestamps on heatmap data points</li>
+        <li>Token unlock calendar expansion with additional tokens</li>
+        <li>Interactive onboarding tour for new users</li>
+        <li>CI Ask suggestion chips auto-fire on click</li>
+      </ul>
+    </div>
+
+    <!-- v5.8 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.8</span>
+        <span class="entry-date">Apr 11, 2026</span>
+        <span class="entry-label">12 major fixes</span>
+      </div>
+      <ul>
+        <li>DeFi TVL chart rendering and data binding fix</li>
+        <li>Stablecoin pie chart correct proportional display</li>
+        <li>ChainScore arc animation smooth interpolation</li>
+        <li>Derivatives funding rate chart axis scaling</li>
+        <li>Morning brief rotation timer and content cycling</li>
+        <li>ISO 20022 bank adoption table data accuracy</li>
+        <li>Portfolio chart canvas sizing and responsive fix</li>
+        <li>Macro heatmap color gradient calibration</li>
+        <li>Token unlock calendar date sorting</li>
+        <li>Governance DAO tracker vote count display</li>
+        <li>Alerts tab consolidation — single unified view</li>
+        <li>Status bar live source count and indicator accuracy</li>
+      </ul>
+    </div>
+
+    <!-- v5.7 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.7</span>
+        <span class="entry-date">Apr 10, 2026</span>
+      </div>
+      <ul>
+        <li>Supabase live regulation feed with real-time updates</li>
+        <li>Stripe checkout links for Pro and Enterprise tiers</li>
+        <li>Real block explorer links: Blockchain.com, Etherscan, XRPScan, Solscan, CardanoScan</li>
+      </ul>
+    </div>
+
+    <!-- v5.6 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.6</span>
+        <span class="entry-date">Apr 10, 2026</span>
+        <span class="entry-label">Backend wiring</span>
+      </div>
+      <ul>
+        <li>Supabase database tables provisioned and schema defined</li>
+        <li>Vercel deployment pipeline configured</li>
+        <li>Stripe product and price objects created</li>
+      </ul>
+    </div>
+
+    <!-- v5.0–5.5 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v5.0 – 5.5</span>
+        <span class="entry-date">Apr 10, 2026</span>
+        <span class="entry-label">Major feature buildout</span>
+      </div>
+      <ul>
+        <li>All 12 tab modules implemented and wired</li>
+        <li>CoinGecko API integration for live price data</li>
+        <li>Whale alert monitoring system with feed display</li>
+        <li>ChainScore composite rating system with six dimensions</li>
+        <li>AI synthesis engine with CI Ask natural language interface</li>
+        <li>ETF flow tracking with cumulative inflow/outflow charts</li>
+        <li>Morning intelligence brief with automated content generation</li>
+      </ul>
+    </div>
+
+    <!-- v4.0–4.3 -->
+    <div class="entry">
+      <div class="entry-header">
+        <span class="version-badge">v4.0 – 4.3</span>
+        <span class="entry-date">Apr 10, 2026</span>
+        <span class="entry-label">Foundation</span>
+      </div>
+      <ul>
+        <li>Dark terminal aesthetic established — color system and typography</li>
+        <li>Chart.js integration for all data visualizations</li>
+        <li>Ticker tape component with live scrolling prices</li>
+        <li>84-source attribution system across all data modules</li>
+        <li>Responsive grid layout for multi-panel terminal view</li>
+      </ul>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>
+  <div class="container" style="padding-top:0;padding-bottom:0">
+    <p>Every version built entirely with <a href="https://perplexity.ai">Perplexity Computer</a>.</p>
+  </div>
+</footer>
+
+</body>
+</html>

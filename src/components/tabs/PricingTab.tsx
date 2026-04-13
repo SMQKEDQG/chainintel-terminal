@@ -263,45 +263,32 @@ export default function PricingTab() {
 
       {/* vs Bloomberg Table */}
       <div className="panel" id="vsBloombergTable" style={{ marginTop: 0 }}>
-        <div className="ph"><div className="pt">Bloomberg Terminal vs ChainIntel — Why We Win</div></div>
+        <div className="ph"><div className="pt">Bloomberg Terminal vs ChainIntel — Feature-by-Feature</div></div>
         <table className="vs-table">
           <thead>
             <tr>
-              <th className="vs-dim">Dimension</th>
-              <th>Bloomberg Terminal</th>
-              <th>ChainIntel v5.18</th>
+              <th className="vs-dim">Capability</th>
+              <th style={{ color: 'var(--red)' }}>Bloomberg Terminal</th>
+              <th style={{ color: 'var(--cyan)' }}>ChainIntel</th>
             </tr>
           </thead>
           <tbody>
-            <tr><td className="vs-dim">Annual Cost</td><td>$24,000/seat + 2-yr lock-in</td><td>$49/mo Pro · $499/mo Enterprise</td></tr>
-            <tr><td className="vs-dim">Crypto Asset Coverage</td><td>~50 assets only</td><td>500+ at launch · expanding quarterly</td></tr>
-            <tr><td className="vs-dim">On-Chain Analytics</td><td>None — structural gap</td><td>Native · MVRV, exchange flows, whale tracking</td></tr>
-            <tr><td className="vs-dim"><span data-glossary="ISO 20022">ISO 20022</span> Intelligence</td><td>None — doesn't exist</td><td>Dedicated module · 8 assets tracked</td></tr>
-            <tr><td className="vs-dim"><span data-glossary="TVL">DeFi / TVL</span> Data</td><td>None</td><td>6,400+ protocols · 469 chains</td></tr>
-            <tr><td className="vs-dim">Protocol P/E Ratios</td><td>None — doesn't exist</td><td>Live P/E vs FDV per protocol</td></tr>
-            <tr><td className="vs-dim">ETF Flow Dashboard</td><td>Not a primary module</td><td>Primary module · all ETFs daily</td></tr>
-            <tr><td className="vs-dim">AI Layer</td><td>ASKB — no on-chain context</td><td>Ask CI + AI Brief + AI Synthesis per module</td></tr>
-            <tr><td className="vs-dim">Learning Curve</td><td>86-page manual · weeks</td><td>Beginner-friendly · Quick Guide built-in</td></tr>
-            <tr><td className="vs-dim">Live Price Feed</td><td>Vendor-locked</td><td>CoinGecko API · updates every 60s</td></tr>
-            <tr>
-              <td className="vs-dim">AI Layer</td>
-              <td style={{ color: 'var(--red)', fontFamily: 'var(--mono)', fontSize: '9px' }}>ASKB — no on-chain context, beaten by GPT-4</td>
-              <td style={{ color: 'var(--green)', fontFamily: 'var(--mono)', fontSize: '9px' }}>Ask CI + ambient AI synthesis on every tab</td>
-            </tr>
-            <tr>
-              <td className="vs-dim">Asset Coverage</td>
-              <td style={{ color: 'var(--red)', fontFamily: 'var(--mono)', fontSize: '9px' }}>~50 crypto assets (requires institutional custody)</td>
-              <td style={{ color: 'var(--green)', fontFamily: 'var(--mono)', fontSize: '9px' }}>Top 100 live · 500+ on roadmap</td>
-            </tr>
-            <tr>
-              <td className="vs-dim">Source Transparency</td>
-              <td style={{ color: 'var(--red)', fontFamily: 'var(--mono)', fontSize: '9px' }}>Black box — sources undisclosed</td>
-              <td style={{ color: 'var(--green)', fontFamily: 'var(--mono)', fontSize: '9px' }}>89 verified sources, all named and linked</td>
-            </tr>
+            <tr><td className="vs-dim">Annual Cost</td><td style={{ color: 'var(--red)' }}>$24,000–$31,980/seat · 2-yr lock-in</td><td style={{ color: 'var(--green)' }}>$0 Free · $588/yr Pro · $5,988/yr Enterprise</td></tr>
+            <tr><td className="vs-dim">Crypto Coverage</td><td style={{ color: 'var(--red)' }}>~50 assets · institutional custody required</td><td style={{ color: 'var(--green)' }}>Top 100 live · 500+ planned</td></tr>
+            <tr><td className="vs-dim">On-Chain Analytics</td><td style={{ color: 'var(--red)' }}>❌ None — structural gap</td><td style={{ color: 'var(--green)' }}>✓ MVRV, NVT, exchange flows, whale tracking</td></tr>
+            <tr><td className="vs-dim">DeFi / TVL Data</td><td style={{ color: 'var(--red)' }}>❌ None</td><td style={{ color: 'var(--green)' }}>✓ 6,400+ protocols · 469 chains · DefiLlama</td></tr>
+            <tr><td className="vs-dim">Derivatives Intelligence</td><td style={{ color: 'var(--text2)' }}>Basic futures data</td><td style={{ color: 'var(--green)' }}>✓ Live funding rates · OI · cross-exchange</td></tr>
+            <tr><td className="vs-dim">ISO 20022 Intelligence</td><td style={{ color: 'var(--red)' }}>❌ Not available</td><td style={{ color: 'var(--green)' }}>✓ Dedicated module · 8 compliant assets tracked</td></tr>
+            <tr><td className="vs-dim">ETF Flow Dashboard</td><td style={{ color: 'var(--text2)' }}>Secondary module</td><td style={{ color: 'var(--green)' }}>✓ Primary module · all US BTC/ETH ETFs daily</td></tr>
+            <tr><td className="vs-dim">AI Analysis Layer</td><td style={{ color: 'var(--red)' }}>ASKB — no crypto context, beaten by GPT-4</td><td style={{ color: 'var(--green)' }}>✓ Ask CI + ambient AI synthesis on every tab</td></tr>
+            <tr><td className="vs-dim">Whale / Smart Money</td><td style={{ color: 'var(--red)' }}>❌ Not available</td><td style={{ color: 'var(--green)' }}>✓ Real-time whale alerts + smart money tracking</td></tr>
+            <tr><td className="vs-dim">Source Transparency</td><td style={{ color: 'var(--red)' }}>Black box — sources undisclosed</td><td style={{ color: 'var(--green)' }}>89 verified sources, all named and linked</td></tr>
+            <tr><td className="vs-dim">Learning Curve</td><td style={{ color: 'var(--red)' }}>86-page manual · weeks of training</td><td style={{ color: 'var(--green)' }}>Beginner-friendly · Quick Guide built-in</td></tr>
+            <tr><td className="vs-dim">Live Price Feed</td><td style={{ color: 'var(--text2)' }}>Vendor-locked proprietary feed</td><td style={{ color: 'var(--green)' }}>CoinMarketCap + CoinGecko · 60s refresh</td></tr>
           </tbody>
         </table>
         <div style={{ paddingTop: '10px', fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', textAlign: 'center', letterSpacing: '0.08em' }}>
-          Bloomberg's own survey: 85% of institutional clients explicitly requested on-chain data. Bloomberg still cannot deliver it natively. ChainIntel is the answer.
+          Bloomberg surveyed institutional clients: 85% requested on-chain data. Bloomberg still cannot deliver it. ChainIntel is purpose-built for this gap.
         </div>
       </div>
 

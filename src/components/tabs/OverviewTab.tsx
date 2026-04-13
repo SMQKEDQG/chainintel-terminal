@@ -16,51 +16,243 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler);
 
-const BTC_DATASETS: Record<string, { labels: string[]; prices: number[]; vols: number[] }> = {
-  btc30: { labels: ['Mar 10','Mar 13','Mar 16','Mar 19','Mar 22','Mar 25','Mar 28','Mar 31','Apr 3','Apr 6','Apr 9'], prices: [82000,79000,76000,74000,71000,73000,75000,74000,72000,73200,73000], vols: [38,35,42,39,44,41,36,38,40,37,38] },
-  btc90: { labels: ['Jan 9','Jan 23','Feb 6','Feb 20','Mar 6','Mar 20','Apr 3','Apr 9'], prices: [95000,88000,84000,80000,76000,74000,72000,73000], vols: [50,48,44,42,40,38,37,38] },
-  btc1y: { labels: ['Apr 25','Jun 25','Aug 25','Oct 25','Dec 25','Feb 26','Apr 26'], prices: [63000,68000,72000,81000,96000,84000,73000], vols: [30,34,36,42,55,48,38] },
-};
+/* ── Helpers for live chart data ── */
+const TF_DAYS: Record<string, number> = { '30D': 30, '90D': 90, '1Y': 365 };
+const TF_LABELS = ['30D', '90D', '1Y'] as const;
+type TfKey = typeof TF_LABELS[number];
 
-function buildBtcData(key: string) {
-  const d = BTC_DATASETS[key];
+function fmtDate(ts: number): string {
+  const d = new Date(ts);
+  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  return `${months[d.getMonth()]} ${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function downsample<T>(arr: T[], target: number): T[] {
+  if (arr.length <= target) return arr;
+  const step = Math.floor(arr.length / target);
+  return arr.filter((_, i) => i % step === 0).slice(0, target);
+}
+
+function buildChartData(
+  labels: string[],
+  prices: number[],
+  vols: number[],
+  lineColor: string,
+  lineFill: string,
+) {
   return {
-    labels: d.labels,
+    labels,
     datasets: [
-      { type: 'bar' as const, label: 'Volume ($B)', data: d.vols, backgroundColor: 'rgba(59,130,246,0.35)', borderColor: 'transparent', yAxisID: 'vol', order: 2 },
-      { type: 'line' as const, label: 'Price ($)', data: d.prices, borderColor: '#00d4aa', backgroundColor: 'rgba(0,212,170,0.08)', borderWidth: 2, pointRadius: 0, tension: 0.4, fill: true, yAxisID: 'price', order: 1 },
+      {
+        type: 'bar' as const,
+        label: 'Volume ($B)',
+        data: vols,
+        backgroundColor: 'rgba(74,106,140,0.3)',
+        borderColor: 'transparent',
+        yAxisID: 'vol',
+        order: 2,
+      },
+      {
+        type: 'line' as const,
+        label: 'Price ($)',
+        data: prices,
+        borderColor: lineColor,
+        backgroundColor: lineFill,
+        borderWidth: 2,
+        pointRadius: 0,
+        tension: 0.4,
+        fill: true,
+        yAxisID: 'price',
+        order: 1,
+      },
     ],
   };
 }
 
-const BTC_CHART_OPTS: any = {
-  responsive: true,
-  maintainAspectRatio: false,
-  plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } },
-  scales: {
-    price: { type: 'linear', position: 'left', grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#4a6a8c', font: { size: 9 }, callback: (v: any) => `$${(v/1000).toFixed(0)}K` } },
-    vol: { type: 'linear', position: 'right', grid: { display: false }, ticks: { color: '#4a6a8c', font: { size: 9 }, callback: (v: any) => `$${v}B` } },
-    x: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#4a6a8c', font: { size: 9 } } },
-  },
-};
+function makeChartOpts(priceLabel: string): any {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      tooltip: { mode: 'index' as const, intersect: false },
+    },
+    scales: {
+      price: {
+        type: 'linear',
+        position: 'left',
+        grid: { color: 'rgba(255,255,255,0.04)' },
+        ticks: {
+          color: '#4a6a8c',
+          font: { size: 9 },
+          callback: (v: any) =>
+            v >= 1000 ? `$${(v / 1000).toFixed(0)}K` : `$${v.toFixed(0)}`,
+        },
+        title: { display: false },
+      },
+      vol: {
+        type: 'linear',
+        position: 'right',
+        grid: { display: false },
+        ticks: {
+          color: '#4a6a8c',
+          font: { size: 9 },
+          callback: (v: any) => `$${v.toFixed(0)}B`,
+        },
+      },
+      x: {
+        grid: { color: 'rgba(255,255,255,0.03)' },
+        ticks: { color: '#4a6a8c', font: { size: 9 } },
+      },
+    },
+  };
+}
 
+interface LiveChartData {
+  labels: string[];
+  prices: number[];
+  vols: number[];
+}
+
+function useLiveCoinChart(coinId: string) {
+  const [tf, setTf] = useState<TfKey>('30D');
+  const [data, setData] = useState<LiveChartData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(false);
+    const days = TF_DAYS[tf];
+    fetch(
+      `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
+    )
+      .then(r => {
+        if (!r.ok) throw new Error('API error');
+        return r.json();
+      })
+      .then((json: { prices: [number, number][]; total_volumes: [number, number][] }) => {
+        if (cancelled) return;
+        const TARGET = 13;
+        const rawPrices = json.prices;
+        const rawVols = json.total_volumes;
+        const sampled = downsample(rawPrices, TARGET);
+        const sampledVols = downsample(rawVols, TARGET);
+        setData({
+          labels: sampled.map(p => fmtDate(p[0])),
+          prices: sampled.map(p => p[1]),
+          vols: sampledVols.map(v => parseFloat((v[1] / 1e9).toFixed(2))),
+        });
+        setLoading(false);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(true);
+          setLoading(false);
+        }
+      });
+    return () => { cancelled = true; };
+  }, [coinId, tf]);
+
+  return { tf, setTf, data, loading, error };
+}
+
+/* ── Shared chart skeleton / error state ── */
+function ChartSkeleton() {
+  return (
+    <div style={{
+      height: '145px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'var(--mono)',
+      fontSize: 9,
+      color: 'var(--muted)',
+      background: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.03) 0,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 30px)',
+    }}>
+      <span style={{ animation: 'pulse 1.5s ease-in-out infinite', opacity: 0.7 }}>Loading live data...</span>
+    </div>
+  );
+}
+
+function ChartError() {
+  return (
+    <div style={{
+      height: '145px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontFamily: 'var(--mono)',
+      fontSize: 9,
+      color: 'var(--red)',
+    }}>
+      Data unavailable
+    </div>
+  );
+}
+
+/* ── Live BTC Chart ── */
 function BtcChart() {
-  const [tf, setTf] = useState<'btc30' | 'btc90' | 'btc1y'>('btc30');
+  const { tf, setTf, data, loading, error } = useLiveCoinChart('bitcoin');
+  const opts = makeChartOpts('BTC Price');
+  const chartData = data
+    ? buildChartData(data.labels, data.prices, data.vols, '#00d4aa', 'rgba(0,212,170,0.08)')
+    : { labels: [], datasets: [] };
+
   return (
     <div className="panel">
       <div className="ph">
-        <div className="pt">BTC Price &amp; Volume — 90 Day</div>
-        <div style={{ display: 'flex', gap: '4px' }}>
+        <div className="pt">BTC Price &amp; Volume</div>
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
           <div className="tf-toggle">
-            {(['btc30','btc90','btc1y'] as const).map((t, i) => (
-              <div key={t} className={`tf-btn${tf === t ? ' active' : ''}`} onClick={() => setTf(t)} style={{ cursor: 'pointer' }}>{['30D','90D','1Y'][i]}</div>
+            {TF_LABELS.map(t => (
+              <div key={t} className={`tf-btn${tf === t ? ' active' : ''}`} onClick={() => setTf(t)} style={{ cursor: 'pointer' }}>{t}</div>
             ))}
           </div>
-          <div className="tag tag-live"><a className="src-link" href="https://coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a></div>
+          <div className="tag tag-live">
+            <span style={{ marginRight: 4, color: 'var(--green)', fontSize: 7 }}>●</span>
+            LIVE · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a>
+          </div>
         </div>
       </div>
       <div className="chart-wrap" style={{ height: '145px' }}>
-        <Bar id="btcChart" data={buildBtcData(tf) as any} options={BTC_CHART_OPTS} />
+        {loading ? <ChartSkeleton /> : error ? <ChartError /> : (
+          <Bar id="btcChart" data={chartData as any} options={opts} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ── Live ETH Chart ── */
+function EthChart() {
+  const { tf, setTf, data, loading, error } = useLiveCoinChart('ethereum');
+  const opts = makeChartOpts('ETH Price');
+  const chartData = data
+    ? buildChartData(data.labels, data.prices, data.vols, '#3b82f6', 'rgba(59,130,246,0.08)')
+    : { labels: [], datasets: [] };
+
+  return (
+    <div className="panel">
+      <div className="ph">
+        <div className="pt">ETH Price &amp; Volume</div>
+        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+          <div className="tf-toggle">
+            {TF_LABELS.map(t => (
+              <div key={t} className={`tf-btn${tf === t ? ' active' : ''}`} onClick={() => setTf(t)} style={{ cursor: 'pointer' }}>{t}</div>
+            ))}
+          </div>
+          <div className="tag tag-live">
+            <span style={{ marginRight: 4, color: 'var(--green)', fontSize: 7 }}>●</span>
+            LIVE · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a>
+          </div>
+        </div>
+      </div>
+      <div className="chart-wrap" style={{ height: '145px' }}>
+        {loading ? <ChartSkeleton /> : error ? <ChartError /> : (
+          <Bar id="ethChart" data={chartData as any} options={opts} />
+        )}
       </div>
     </div>
   );
@@ -508,7 +700,10 @@ export default function OverviewTab() {
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <Heatmap />
-        <BtcChart />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <BtcChart />
+          <EthChart />
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>

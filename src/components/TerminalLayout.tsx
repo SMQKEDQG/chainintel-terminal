@@ -145,11 +145,13 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
           <span>89 SOURCES</span>
           <span>12 MODULES</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <a href="/deck" className="hover:text-[var(--cyan)] transition-colors">PITCH DECK</a>
           <a href="/why-chainintel" className="hover:text-[var(--cyan)] transition-colors">WHY CHAININTEL</a>
           <a href="/promo" className="hover:text-[var(--cyan)] transition-colors">PROMO</a>
-          <span>chainintelterminal.com</span>
+          <a href="/tos" className="hover:text-[var(--cyan)] transition-colors">TERMS</a>
+          <a href="/privacy" className="hover:text-[var(--cyan)] transition-colors">PRIVACY</a>
+          <span className="hidden sm:inline">chainintelterminal.com</span>
         </div>
       </footer>
     </div>

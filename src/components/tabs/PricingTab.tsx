@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/lib/auth-context';
 
 const COMPETITION_DEADLINE = new Date('2026-06-02T23:59:59Z');
 
@@ -44,10 +45,12 @@ const faqs: FAQItem[] = [
 ];
 
 export default function PricingTab() {
+  const { user } = useAuth();
   const [countdown, setCountdown] = useState(getCountdown());
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
   const [openFaqs, setOpenFaqs] = useState<Record<number, boolean>>({});
+  const [checkoutLoading, setCheckoutLoading] = useState<'pro' | 'ent' | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCountdown(getCountdown()), 1000);
@@ -65,6 +68,43 @@ export default function PricingTab() {
 
   const scrollToComparison = () => {
     document.getElementById('vsBloombergTable')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleCheckout = async (tier: 'pro' | 'ent') => {
+    const priceId = tier === 'pro'
+      ? 'price_1TL36uLb8GrBRxdXWMHCqJrP'
+      : 'price_1TL36uLb8GrBRxdXz92Wem2T';
+
+    setCheckoutLoading(tier);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId,
+          email: user?.email || undefined,
+          returnUrl: window.location.origin,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else if (data.fallback) {
+        // Stripe not configured — fall back to payment links
+        const fallbackUrl = tier === 'pro'
+          ? 'https://buy.stripe.com/dRm6oI94hf428Sq7pgbwk01'
+          : 'https://buy.stripe.com/eVqfZi2FT1dc8Sq9xobwk00';
+        window.open(fallbackUrl, '_blank');
+      }
+    } catch {
+      // Fallback to direct payment links on error
+      const fallbackUrl = tier === 'pro'
+        ? 'https://buy.stripe.com/dRm6oI94hf428Sq7pgbwk01'
+        : 'https://buy.stripe.com/eVqfZi2FT1dc8Sq9xobwk00';
+      window.open(fallbackUrl, '_blank');
+    } finally {
+      setCheckoutLoading(null);
+    }
   };
 
   return (
@@ -183,15 +223,14 @@ export default function PricingTab() {
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">500+ asset coverage</div></div>
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Protocol Revenue P/E ratios</div></div>
           </div>
-          <a
-            href="https://buy.stripe.com/dRm6oI94hf428Sq7pgbwk01"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => handleCheckout('pro')}
             className="tier-cta tier-cta-pro"
-            style={{ textDecoration: 'none' }}
+            style={{ textDecoration: 'none', cursor: checkoutLoading === 'pro' ? 'wait' : 'pointer' }}
+            disabled={checkoutLoading === 'pro'}
           >
-            SUBSCRIBE — $49/MO
-          </a>
+            {checkoutLoading === 'pro' ? 'REDIRECTING...' : 'SUBSCRIBE — $49/MO'}
+          </button>
         </div>
 
         {/* Enterprise Tier */}
@@ -211,15 +250,14 @@ export default function PricingTab() {
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Institutional tracker custom feeds</div></div>
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text"><span data-glossary="ISO 20022">ISO 20022</span> watchlist alerts</div></div>
           </div>
-          <a
-            href="https://buy.stripe.com/eVqfZi2FT1dc8Sq9xobwk00"
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            onClick={() => handleCheckout('ent')}
             className="tier-cta tier-cta-ent"
-            style={{ textDecoration: 'none' }}
+            style={{ textDecoration: 'none', cursor: checkoutLoading === 'ent' ? 'wait' : 'pointer' }}
+            disabled={checkoutLoading === 'ent'}
           >
-            SUBSCRIBE — $499/MO
-          </a>
+            {checkoutLoading === 'ent' ? 'REDIRECTING...' : 'SUBSCRIBE — $499/MO'}
+          </button>
         </div>
       </div>
 

@@ -794,3 +794,105 @@ canvas { max-height: 180px !important; }
 .tour-btn{font-family:var(--mono);font-size:8px;background:var(--cyan);color:#000;border:none;padding:4px 12px;cursor:pointer;font-weight:600;letter-spacing:0.08em;}
 .tour-skip{font-family:var(--mono);font-size:7px;color:var(--muted);cursor:pointer;text-decoration:underline;}
 .tour-highlight{outline:2px solid var(--cyan)!important;outline-offset:2px;position:relative;z-index:9999;}
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   NEXT.JS MOBILE RESPONSIVE OVERRIDES
+   Targets the Tailwind-based component structure used in the Next.js build
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Tablet (≤768px) ─────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  /* All inline grids → single column */
+  [style*="display: grid"],
+  [style*="display:grid"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Pricing grid */
+  .pricing-grid {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  /* Panel max width */
+  .panel, .chart-wrap {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden;
+  }
+
+  /* Chart containers */
+  canvas {
+    max-width: 100% !important;
+  }
+
+  /* Tables scroll */
+  .vs-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* KPI grids */
+  .kpi-row {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Heatmap */
+  .hmap-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+/* ── Phone (≤480px) ──────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  /* All grids single column */
+  [style*="display: grid"],
+  [style*="display:grid"],
+  .kpi-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hmap-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Tier cards */
+  .price-tier {
+    padding: 10px !important;
+  }
+
+  /* Competition banner flex wrap */
+  [id="competitionBanner"] {
+    flex-direction: column !important;
+    gap: 6px !important;
+    text-align: center !important;
+  }
+
+  /* vs-bloomberg table */
+  #vsBloombergTable {
+    overflow-x: auto;
+  }
+  #vsBloombergTable table {
+    min-width: 500px;
+  }
+
+  /* FAQ buttons */
+  .page button {
+    font-size: 8px !important;
+  }
+
+  /* Section headers */
+  .section-h-label {
+    font-size: 8px !important;
+  }
+
+  /* AI context strips */
+  .ai-context-strip {
+    flex-direction: column !important;
+    gap: 4px !important;
+  }
+  .acs-body {
+    font-size: 8px !important;
+  }
+}

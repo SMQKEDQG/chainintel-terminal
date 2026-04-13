@@ -12,17 +12,12 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // Sentry build options
   org: "chainintel",
   project: "chainintel-terminal",
-  
-  // Suppress source map upload logs
-  silent: !process.env.CI,
-  
-  // Upload source maps for better stack traces
+  silent: true,
   widenClientFileUpload: true,
-  
-  // Automatically tree-shake debug logging
+  // Skip source map upload if no auth token (prevents Vercel build failures)
+  authToken: process.env.SENTRY_AUTH_TOKEN || '',
   bundleSizeOptimizations: {
     excludeDebugStatements: true,
   },

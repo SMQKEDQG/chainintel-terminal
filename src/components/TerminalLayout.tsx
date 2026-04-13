@@ -50,10 +50,25 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
       >
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <svg width="28" height="32" viewBox="0 0 40 46" fill="none">
-            <polygon points="20,2 37,11 37,35 20,44 3,35 3,11" stroke="var(--cyan)" strokeWidth="1.8" fill="none"/>
-            <polygon points="20,8 30,14 30,32 20,38 10,32 10,14" stroke="var(--cyan)" strokeWidth="0.8" fill="none" opacity="0.5"/>
-            <circle cx="20" cy="20" r="3" fill="var(--cyan)"/>
+          <svg width="30" height="30" viewBox="0 0 36 36" fill="none" aria-label="ChainIntel Logo">
+            {/* Hexagonal node network — data intelligence mark */}
+            {/* Outer hexagon */}
+            <path d="M18 3 L31 10.5 L31 25.5 L18 33 L5 25.5 L5 10.5 Z" 
+              stroke="var(--cyan)" strokeWidth="1.5" fill="none" />
+            {/* Inner data paths — three connecting lines through center */}
+            <line x1="18" y1="3" x2="18" y2="33" stroke="var(--cyan)" strokeWidth="1" opacity="0.3" />
+            <line x1="5" y1="10.5" x2="31" y2="25.5" stroke="var(--cyan)" strokeWidth="1" opacity="0.3" />
+            <line x1="31" y1="10.5" x2="5" y2="25.5" stroke="var(--cyan)" strokeWidth="1" opacity="0.3" />
+            {/* Center filled hexagon */}
+            <path d="M18 13 L23 16 L23 22 L18 25 L13 22 L13 16 Z" 
+              fill="var(--cyan)" opacity="0.9" />
+            {/* Node dots at vertices */}
+            <circle cx="18" cy="3" r="1.8" fill="var(--cyan)" />
+            <circle cx="31" cy="10.5" r="1.8" fill="var(--cyan)" />
+            <circle cx="31" cy="25.5" r="1.8" fill="var(--cyan)" />
+            <circle cx="18" cy="33" r="1.8" fill="var(--cyan)" />
+            <circle cx="5" cy="25.5" r="1.8" fill="var(--cyan)" />
+            <circle cx="5" cy="10.5" r="1.8" fill="var(--cyan)" />
           </svg>
           <div>
             <div className="font-mono text-xs font-semibold tracking-wider" style={{ color: 'var(--cyan)' }}>

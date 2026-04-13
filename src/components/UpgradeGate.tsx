@@ -16,20 +16,55 @@ const TIER_RANK: Record<SubscriptionTier, number> = {
   enterprise: 2,
 };
 
-const TIER_META: Record<'pro' | 'enterprise', { icon: string; label: string; price: string; value: string }> = {
+// Feature highlights per gated tab
+const TAB_PREVIEWS: Record<string, string[]> = {
+  'On-Chain': [
+    'MVRV Ratio — real-time fair value assessment',
+    'Exchange Flow Tracker — accumulation signals',
+    'Long-Term Holder % — conviction metrics',
+    'Hash Rate — network security health',
+    'NVT Ratio — on-chain P/E equivalent',
+  ],
+  'DeFi': [
+    'Live TVL across 6,400+ protocols',
+    'Protocol revenue & P/E ratios',
+    'Stablecoin supply distribution',
+    'Yield farming opportunities',
+    'Cross-chain liquidity analysis',
+  ],
+  'Derivatives': [
+    'Funding rates — perpetual swap sentiment',
+    'Open interest heatmap by exchange',
+    'Liquidation cascade tracking',
+    'Options flow & max pain analysis',
+    'Futures basis arbitrage signals',
+  ],
+  'Whales': [
+    'Real-time whale transaction alerts',
+    'Smart money wallet tracking',
+    'Exchange deposit/withdrawal spikes',
+    'Dormant wallet reactivation alerts',
+    'Top 100 wallet movement analysis',
+  ],
+  'Sentiment': [
+    'Social volume & weighted sentiment',
+    'Crypto Twitter trend analysis',
+    'Reddit community pulse metrics',
+    'News sentiment aggregation (NLP)',
+    'Crowd vs. smart money divergence',
+  ],
+};
+
+const TIER_META: Record<'pro' | 'enterprise', { label: string; price: string; color: string }> = {
   pro: {
-    icon: '⚡',
-    label: 'Pro',
+    label: 'PRO',
     price: '$49/mo',
-    value:
-      'Get real-time on-chain intelligence, DeFi analytics, derivatives flow, whale tracking, and sentiment signals — everything a professional crypto desk needs in one terminal.',
+    color: 'var(--cyan)',
   },
   enterprise: {
-    icon: '🔒',
-    label: 'Enterprise',
+    label: 'ENTERPRISE',
     price: '$499/mo',
-    value:
-      'Unlock institutional-grade access: custom data feeds, dedicated API limits, priority support, and multi-seat licensing for your trading desk.',
+    color: 'var(--gold)',
   },
 };
 
@@ -46,139 +81,196 @@ export default function UpgradeGate({
   }
 
   const meta = TIER_META[requiredTier];
+  const features = TAB_PREVIEWS[tabName] || [
+    'Premium analytics & intelligence',
+    'Real-time data feeds',
+    'Advanced charting & metrics',
+    'AI-powered insights',
+    'Professional-grade tools',
+  ];
 
   return (
-    <div style={styles.wrapper}>
-      <div style={styles.card}>
-        {/* Top rule */}
-        <div style={styles.rule} />
+    <div style={{ position: 'relative', minHeight: '600px', overflow: 'hidden' }}>
+      {/* Blurred sneak peek of actual tab content */}
+      <div
+        style={{
+          filter: 'blur(6px)',
+          opacity: 0.4,
+          pointerEvents: 'none',
+          userSelect: 'none',
+          position: 'absolute',
+          inset: 0,
+          overflow: 'hidden',
+        }}
+        aria-hidden="true"
+      >
+        {children}
+      </div>
 
-        {/* Header row */}
-        <div style={styles.header}>
-          <span style={styles.icon}>{meta.icon}</span>
-          <div>
-            <div style={styles.label}>ACCESS RESTRICTED</div>
-            <div style={styles.title}>
-              Unlock <span style={styles.accent}>{tabName}</span> with {meta.label}
-            </div>
-          </div>
-        </div>
+      {/* Gradient overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(8,13,22,0.3) 0%, rgba(8,13,22,0.85) 40%, rgba(8,13,22,0.95) 100%)',
+          zIndex: 1,
+        }}
+      />
 
-        {/* Value prop */}
-        <p style={styles.body}>{meta.value}</p>
+      {/* Upgrade card */}
+      <div style={styles.overlay}>
+        <div style={styles.card}>
+          {/* Top accent line */}
+          <div style={{ ...styles.accentLine, background: `linear-gradient(90deg, ${meta.color}, transparent)` }} />
 
-        {/* Tier badge + CTA row */}
-        <div style={styles.footer}>
-          <div style={styles.badge}>
-            <span style={styles.badgeDot} />
+          {/* Badge */}
+          <div style={{ ...styles.badge, borderColor: meta.color, color: meta.color }}>
             {meta.label} — {meta.price}
           </div>
-          <a href="/pricing" style={styles.cta}>
-            View Plans →
-          </a>
-        </div>
 
-        {/* Bottom rule */}
-        <div style={styles.rule} />
+          {/* Title */}
+          <h2 style={styles.title}>
+            Unlock <span style={{ color: meta.color }}>{tabName}</span>
+          </h2>
+
+          {/* Description */}
+          <p style={styles.description}>
+            This module requires {meta.label} access. Upgrade to unlock real-time intelligence
+            that institutional desks pay thousands for.
+          </p>
+
+          {/* Feature preview list */}
+          <div style={styles.featureSection}>
+            <div style={styles.featureLabel}>WHAT YOU GET</div>
+            {features.map((feat, i) => (
+              <div key={i} style={styles.featureRow}>
+                <span style={{ ...styles.featureCheck, color: meta.color }}>◆</span>
+                <span style={styles.featureText}>{feat}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA */}
+          <div style={styles.ctaRow}>
+            <a
+              href="/?tab=pricing"
+              onClick={(e) => {
+                e.preventDefault();
+                const event = new CustomEvent('goPage', { detail: 'pricing' });
+                window.dispatchEvent(event);
+              }}
+              style={{ ...styles.cta, background: meta.color }}
+            >
+              UPGRADE TO {meta.label} →
+            </a>
+            <span style={styles.ctaSub}>Cancel anytime · No contracts</span>
+          </div>
+
+          {/* Bottom accent line */}
+          <div style={{ ...styles.accentLine, background: `linear-gradient(90deg, ${meta.color} 0%, transparent 60%)` }} />
+        </div>
       </div>
     </div>
   );
 }
 
-// ─── Inline styles using CSS vars ────────────────────────────────────────────
+// ─── Inline styles ────────────────────────────────────────────────────────────
 const styles: Record<string, React.CSSProperties> = {
-  wrapper: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minHeight: '420px',
-    padding: '32px 24px',
-  },
-  card: {
-    maxWidth: '560px',
-    width: '100%',
-    background: 'var(--s1)',
-    border: '1px solid var(--b2)',
-    padding: '32px 36px',
+  overlay: {
     position: 'relative',
-  },
-  rule: {
-    height: '1px',
-    background: 'linear-gradient(90deg, var(--cyan) 0%, var(--b2) 60%, transparent 100%)',
-    marginBottom: '0',
-  },
-  header: {
+    zIndex: 2,
     display: 'flex',
     alignItems: 'flex-start',
-    gap: '20px',
-    marginTop: '28px',
-    marginBottom: '20px',
+    justifyContent: 'center',
+    paddingTop: '60px',
+    paddingBottom: '40px',
+    minHeight: '500px',
   },
-  icon: {
-    fontSize: '28px',
-    lineHeight: '1',
-    marginTop: '2px',
-    flexShrink: 0,
+  card: {
+    maxWidth: '520px',
+    width: '100%',
+    background: 'rgba(13,20,32,0.95)',
+    border: '1px solid var(--b2)',
+    backdropFilter: 'blur(12px)',
+    padding: '0',
   },
-  label: {
+  accentLine: {
+    height: '2px',
+    width: '100%',
+  },
+  badge: {
     fontFamily: 'var(--mono)',
     fontSize: '10px',
-    letterSpacing: '0.12em',
-    color: 'var(--cyan)',
-    marginBottom: '6px',
-    textTransform: 'uppercase' as const,
+    letterSpacing: '0.14em',
+    border: '1px solid',
+    display: 'inline-block',
+    padding: '4px 12px',
+    margin: '24px 28px 16px',
   },
   title: {
     fontFamily: 'var(--mono)',
-    fontSize: '18px',
+    fontSize: '20px',
     color: 'var(--text)',
     fontWeight: 600,
     lineHeight: '1.3',
+    margin: '0 28px 12px',
   },
-  accent: {
-    color: 'var(--cyan)',
-  },
-  body: {
+  description: {
     fontFamily: 'var(--sans)',
     fontSize: '13px',
     color: 'var(--text2)',
     lineHeight: '1.65',
-    margin: '0 0 28px 0',
+    margin: '0 28px 24px',
   },
-  footer: {
+  featureSection: {
+    margin: '0 28px 24px',
+    padding: '16px 0',
+    borderTop: '1px solid var(--b1)',
+  },
+  featureLabel: {
+    fontFamily: 'var(--mono)',
+    fontSize: '9px',
+    letterSpacing: '0.14em',
+    color: 'var(--muted)',
+    marginBottom: '12px',
+  },
+  featureRow: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '16px',
-    marginBottom: '28px',
+    gap: '10px',
+    padding: '5px 0',
   },
-  badge: {
+  featureCheck: {
+    fontSize: '8px',
+    flexShrink: 0,
+  },
+  featureText: {
     fontFamily: 'var(--mono)',
     fontSize: '11px',
     color: 'var(--text2)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    letterSpacing: '0.06em',
+    letterSpacing: '0.04em',
   },
-  badgeDot: {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    background: 'var(--cyan)',
-    display: 'inline-block',
-    flexShrink: 0,
+  ctaRow: {
+    margin: '0 28px 24px',
+    textAlign: 'center' as const,
   },
   cta: {
     fontFamily: 'var(--mono)',
-    fontSize: '12px',
-    letterSpacing: '0.08em',
-    color: 'var(--bg)',
-    background: 'var(--cyan)',
-    padding: '9px 20px',
+    fontSize: '11px',
+    letterSpacing: '0.1em',
+    color: '#000',
+    padding: '11px 28px',
     textDecoration: 'none',
     fontWeight: 700,
+    display: 'inline-block',
     transition: 'opacity 0.15s',
-    whiteSpace: 'nowrap' as const,
+  },
+  ctaSub: {
+    display: 'block',
+    fontFamily: 'var(--mono)',
+    fontSize: '8px',
+    color: 'var(--muted)',
+    marginTop: '8px',
+    letterSpacing: '0.06em',
   },
 };

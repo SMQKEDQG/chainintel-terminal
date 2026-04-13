@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import TerminalLayout from '@/components/TerminalLayout';
 import { type TabId } from '@/lib/constants';
 import OverviewTab from '@/components/tabs/OverviewTab';
@@ -59,6 +59,19 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('mktovr');
   const tier = useSubscription();
   const ActiveComponent = TAB_COMPONENTS[activeTab];
+
+  // Listen for goPage events from UpgradeGate and PricingTab CTAs
+  const handleGoPage = useCallback((e: Event) => {
+    const tabId = (e as CustomEvent).detail as TabId;
+    if (tabId && TAB_COMPONENTS[tabId]) {
+      setActiveTab(tabId);
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('goPage', handleGoPage);
+    return () => window.removeEventListener('goPage', handleGoPage);
+  }, [handleGoPage]);
 
   const renderTab = () => {
     if (ENTERPRISE_TABS.has(activeTab)) {

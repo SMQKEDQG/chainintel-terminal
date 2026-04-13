@@ -195,14 +195,32 @@ body{display:flex;align-items:center;justify-content:center}
     <div id="terminal-lines"></div>
     <div id="terminal-ui">
       <div class="tui-header">
-        <span>CHAININTEL TERMINAL v5.15</span>
+        <span>CHAININTEL TERMINAL v5.18</span>
         <span>89 SOURCES LIVE</span>
       </div>
+      <div class="tui-tabs" style="display:flex;gap:0;border-bottom:1px solid rgba(0,212,170,0.15);background:rgba(0,0,0,0.3)">
+        <div style="padding:6px 14px;font-family:var(--font-mono);font-size:0.55rem;color:var(--teal);border-bottom:2px solid var(--teal);letter-spacing:0.08em">OVERVIEW</div>
+        <div style="padding:6px 14px;font-family:var(--font-mono);font-size:0.55rem;color:var(--muted);letter-spacing:0.08em">MARKETS</div>
+        <div style="padding:6px 14px;font-family:var(--font-mono);font-size:0.55rem;color:var(--muted);letter-spacing:0.08em">ON-CHAIN</div>
+        <div style="padding:6px 14px;font-family:var(--font-mono);font-size:0.55rem;color:var(--muted);letter-spacing:0.08em">DEFI</div>
+        <div style="padding:6px 14px;font-family:var(--font-mono);font-size:0.55rem;color:var(--muted);letter-spacing:0.08em">WHALES</div>
+        <div style="padding:6px 14px;font-family:var(--font-mono);font-size:0.55rem;color:var(--muted);letter-spacing:0.08em">ETF</div>
+      </div>
       <div class="tui-body">
-        <div class="tui-cell"><div class="tui-cell-title">Bitcoin MVRV-Z</div><div class="tui-cell-val">2.14</div></div>
-        <div class="tui-cell"><div class="tui-cell-title">ETF Net Flow (7d)</div><div class="tui-cell-val">+$1.04B</div></div>
-        <div class="tui-cell"><div class="tui-cell-title">DeFi TVL</div><div class="tui-cell-val">$189.4B</div></div>
-        <div class="tui-cell"><div class="tui-cell-title">Fear &amp; Greed</div><div class="tui-cell-val" style="color:var(--red)">15 — EXTREME FEAR</div></div>
+        <div class="tui-cell"><div class="tui-cell-title">Bitcoin MVRV-Z</div><div class="tui-cell-val">2.14</div><div style="font-family:var(--font-mono);font-size:0.5rem;color:var(--green);margin-top:2px">Fair Value Zone</div></div>
+        <div class="tui-cell"><div class="tui-cell-title">ETF Net Flow (7d)</div><div class="tui-cell-val">+$1.04B</div><div style="font-family:var(--font-mono);font-size:0.5rem;color:var(--green);margin-top:2px">4 consecutive inflow days</div></div>
+        <div class="tui-cell"><div class="tui-cell-title">DeFi TVL</div><div class="tui-cell-val">$189.4B</div><div style="font-family:var(--font-mono);font-size:0.5rem;color:var(--muted);margin-top:2px">6,400+ protocols tracked</div></div>
+        <div class="tui-cell"><div class="tui-cell-title">Fear &amp; Greed</div><div class="tui-cell-val" style="color:var(--red)">15 — EXTREME FEAR</div><div style="font-family:var(--font-mono);font-size:0.5rem;color:var(--gold);margin-top:2px">Institutions buying into fear</div></div>
+      </div>
+      <div style="display:flex;gap:1px;background:rgba(0,212,170,0.1);padding:0 1px 1px">
+        <div style="flex:1;background:var(--bg);padding:8px 12px">
+          <div style="font-family:var(--font-mono);font-size:0.5rem;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px">WHALE ALERT</div>
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--gold)">$312M BTC → Cold Storage</div>
+        </div>
+        <div style="flex:1;background:var(--bg);padding:8px 12px">
+          <div style="font-family:var(--font-mono);font-size:0.5rem;color:var(--muted);letter-spacing:0.08em;margin-bottom:4px">◈ CI·AI SYNTHESIS</div>
+          <div style="font-family:var(--font-mono);font-size:0.65rem;color:var(--teal)">Accumulation signal: buy the fear</div>
+        </div>
       </div>
     </div>
   </div>
@@ -268,7 +286,7 @@ body{display:flex;align-items:center;justify-content:center}
     <div class="compare-col" id="col-ci">
       <div class="compare-header">
         <div class="compare-name" style="color:var(--teal)">ChainIntel</div>
-        <div class="compare-price">$7,188/yr</div>
+        <div class="compare-price">$588/yr</div>
       </div>
       <div class="compare-item" data-i="0"><span class="icon-check">✓</span> On-chain analytics</div>
       <div class="compare-item" data-i="1"><span class="icon-check">✓</span> DeFi TVL tracking</div>
@@ -432,7 +450,9 @@ body{display:flex;align-items:center;justify-content:center}
     { text: '> Farside ETF flows...', val: ' +$438M', check: ' ✓', cls: '' },
     { text: '> Whale Alert stream...', val: ' active', check: ' ✓', cls: '' },
     { text: '> Fear & Greed Index...', val: ' 15/100', warn: ' EXTREME FEAR', check: ' ✓', cls: '' },
-    { text: '> 84 sources connected. All systems live.', check: '', cls: '' }
+    { text: '> ChainScore engine...', val: ' 88/100', check: ' \u2713', cls: '' },
+    { text: '> ASK CI natural language...', val: ' ready', check: ' \u2713', cls: '' },
+    { text: '> 89 sources connected. All systems live.', check: '', cls: '' }
   ];
 
   function buildTerminalLines() {
@@ -540,7 +560,7 @@ body{display:flex;align-items:center;justify-content:center}
         });
       });
       // Flash terminal UI at end of boot
-      at(7200, () => {
+      at(8800, () => {
         $('#terminal-lines').style.opacity = '0';
         $('#terminal-ui').classList.add('flash');
       });

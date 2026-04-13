@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ChainIntel Terminal — Pitch Deck v5.15</title>
+<title>ChainIntel Terminal — Pitch Deck v5.18</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -75,10 +75,39 @@ body {
 }
 
 /* ── Slide Counter ── */
-.slide-counter {
+.slide-nav {
   position: fixed;
   bottom: 1.5rem;
   right: 2rem;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.slide-nav-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,212,170,0.25);
+  background: rgba(0,212,170,0.06);
+  color: var(--accent);
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-family: system-ui, sans-serif;
+}
+.slide-nav-btn:hover {
+  background: rgba(0,212,170,0.15);
+  border-color: rgba(0,212,170,0.5);
+  transform: scale(1.08);
+}
+.slide-nav-btn:active {
+  transform: scale(0.95);
+}
+.slide-counter {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--muted);
@@ -1034,7 +1063,7 @@ h3 { font-size: clamp(1.1rem, 0.8rem + 0.8vw, 1.4rem); }
         <line x1="20" y1="20" x2="11" y2="27" stroke="#3b82f6" stroke-width="0.4" opacity="0.35"/>
         <line x1="20" y1="20" x2="20" y2="32" stroke="#3b82f6" stroke-width="0.4" opacity="0.35"/>
       </svg>
-      <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">v5.15</span>
+      <span style="font-family:var(--font-mono);font-size:0.72rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">v5.18</span>
     </div>
 
     <h1 class="accent">ChainIntel</h1>
@@ -1696,11 +1725,11 @@ h3 { font-size: clamp(1.1rem, 0.8rem + 0.8vw, 1.4rem); }
     <h2>Built in Public. <span class="accent">Shipping Daily.</span></h2>
     <div class="two-col">
       <div>
-        <div class="col-label">What's Live (v5.15)</div>
+        <div class="col-label">What's Live (v5.18)</div>
         <div class="timeline" style="margin-bottom:0;">
           <div class="timeline-item">
             <div class="timeline-phase">Now</div>
-            <div class="timeline-content">v5.15 live · 12 modules · 89 data sources · Supabase + Stripe fully integrated · Clerk auth · Pro + Enterprise tiers active</div>
+            <div class="timeline-content">v5.18 live · 12 modules · 89 data sources · Supabase + Stripe fully integrated · Clerk auth · Pro + Enterprise tiers active</div>
           </div>
           <div class="timeline-item">
             <div class="timeline-phase">Built</div>
@@ -1776,7 +1805,7 @@ h3 { font-size: clamp(1.1rem, 0.8rem + 0.8vw, 1.4rem); }
        SLIDE 13 — TEAM
   ═══════════════════════════════════════════════════════ -->
   <div class="slide" data-slide="13">
-    <h2>The <span class="accent">Builder</span></h2>
+    <h2>The <span class="accent">Team</span></h2>
 
     <div style="display:flex;gap:clamp(2rem,4vw,5rem);flex-wrap:wrap;align-items:flex-start;margin-top:0.5rem;">
       <div class="team-card" style="flex:1.2;min-width:280px;">
@@ -1788,7 +1817,7 @@ h3 { font-size: clamp(1.1rem, 0.8rem + 0.8vw, 1.4rem); }
             <div class="team-stat-label">X followers</div>
           </div>
           <div class="team-stat">
-            <div class="team-stat-val">v5.15</div>
+            <div class="team-stat-val">v5.18</div>
             <div class="team-stat-label">shipped live</div>
           </div>
           <div class="team-stat">
@@ -1797,7 +1826,7 @@ h3 { font-size: clamp(1.1rem, 0.8rem + 0.8vw, 1.4rem); }
           </div>
         </div>
         <div class="team-creds">
-          <div class="team-cred">Built ChainIntel Terminal v1 through v5.15 — solo, in public</div>
+          <div class="team-cred">Built ChainIntel Terminal v1 through v5.18 — solo, in public</div>
           <div class="team-cred">Wyoming LLC (ChainIntel Inc.) incorporated</div>
           <div class="team-cred">Active crypto analyst and builder with large organic community</div>
           <div class="team-cred">Stripe billing, Supabase auth, Vercel Edge — all production-integrated</div>
@@ -1876,15 +1905,19 @@ h3 { font-size: clamp(1.1rem, 0.8rem + 0.8vw, 1.4rem); }
 
       <div class="close-big">This is ChainIntel.</div>
       <div class="close-url">chainintelterminal.com</div>
-      <div class="close-byline">ChainIntel Inc. · Perplexity Billion Dollar Build 2026 · v5.17</div>
+      <div class="close-byline">ChainIntel Inc. · Perplexity Billion Dollar Build 2026 · v5.18</div>
     </div>
     <div class="accent-line"></div>
   </div>
 
 </div>
 
-<!-- Slide Counter -->
-<div class="slide-counter" id="counter">01 / 14</div>
+<!-- Slide Nav -->
+<div class="slide-nav">
+  <button class="slide-nav-btn" id="prevBtn" onclick="window.deckPrev()" title="Previous slide">←</button>
+  <div class="slide-counter" id="counter">01 / 14</div>
+  <button class="slide-nav-btn" id="nextBtn" onclick="window.deckNext()" title="Next slide">→</button>
+</div>
 
 <script>
 (function () {
@@ -1893,6 +1926,9 @@ h3 { font-size: clamp(1.1rem, 0.8rem + 0.8vw, 1.4rem); }
   const total = slides.length;
   let current = 0;
   let transitioning = false;
+
+  window.deckPrev = function() { goTo(current - 1); };
+  window.deckNext = function() { goTo(current + 1); };
 
   function pad(n) { return String(n).padStart(2, '0'); }
 

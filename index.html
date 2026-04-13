@@ -26,7 +26,7 @@
 .fade-in{animation:fadeIn .3s ease-in}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 /* ============================================================
-   CHAININTEL TERMINAL v5.15 — AI-NATIVE BLOOMBERG KILLER
+   CHAININTEL TERMINAL v5.18 — AI-NATIVE BLOOMBERG KILLER
    #080b0f background · #00d4aa cyan · JetBrains Mono data
    © 2026 ChainIntel Inc. — chainintelterminal.com
    ============================================================ */
@@ -465,7 +465,7 @@ a.src-link:hover{color:var(--cyan);}
 .cs-val{font-family:var(--mono);font-size:10px;color:var(--cyan);flex:0 0 22px;text-align:right;}
 
 /* TOAST */
-.toast{position:fixed;bottom:44px;right:16px;z-index:9000;background:var(--s3);border:1px solid var(--cyan-border);padding:12px 16px;width:200px;transform:translateX(120%);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 8px 32px rgba(0,0,0,0.5);position:relative;}
+.toast{position:fixed;bottom:44px;right:16px;z-index:9000;background:var(--s3);border:1px solid var(--cyan-border);padding:12px 16px;width:200px;transform:translateX(120%);transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 8px 32px rgba(0,0,0,0.5);}
 .toast.show{transform:translateX(0);}
 .toast-label{font-family:var(--mono);font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:var(--cyan);margin-bottom:5px;display:flex;align-items:center;gap:5px;}
 .toast-label::before{content:'⚡';font-size:10px;}
@@ -828,11 +828,11 @@ a.src-link:hover{color:var(--cyan);}
 <!-- ONBOARDING OVERLAY -->
 <div class="onboard-overlay" id="onboardOverlay" style="display:none;">
   <div class="onboard-card">
-    <div class="onboard-logo">CHAININTEL v5.15</div>
+    <div class="onboard-logo">CHAININTEL v5.18</div>
     <div class="onboard-title">Welcome to ChainIntel Terminal</div>
     <div class="onboard-sub">Here's what you're looking at — the world's first AI-native digital asset intelligence terminal, built for both beginners and professionals.</div>
     <div class="onboard-list">
-      <div class="onboard-item"><div class="onboard-dot"></div><div><strong>11 tabs at the top</strong> — each covers a different intelligence area. Hover over any tab to see what it does. New in v5.15: Portfolio Tracker, Proactive AI Alerts, Natural Language Filters.</div></div>
+      <div class="onboard-item"><div class="onboard-dot"></div><div><strong>11 tabs at the top</strong> — each covers a different intelligence area. Hover over any tab to see what it does. New in v5.18: Portfolio Tracker, Proactive AI Alerts, Natural Language Filters.</div></div>
       <div class="onboard-item"><div class="onboard-dot"></div><div><strong>ASK CI</strong> — the AI bar in Overview lets you ask plain English questions like "Why is ETH down?" or "What does MVRV mean?"</div></div>
       <div class="onboard-item"><div class="onboard-dot"></div><div><strong>Live prices</strong> — ticker at top updates every 3 seconds. Price cards fetch real CoinGecko data every 60 seconds.</div></div>
       <div class="onboard-item"><div class="onboard-dot"></div><div><strong>⌘K (or Ctrl+K)</strong> — opens command modal to jump to any module instantly.</div></div>
@@ -941,7 +941,7 @@ a.src-link:hover{color:var(--cyan);}
         <line x1="20" y1="20" x2="20" y2="32" stroke="#3b82f6" stroke-width="0.4" opacity="0.35"/>
       </svg>
       <div class="logo-text">
-        <div class="logo-name" style="font-size:11px">CHAIN<span>INTEL</span> <span style="font-size:7px;color:var(--muted);font-weight:400">v5.15</span></div>
+        <div class="logo-name" style="font-size:11px">CHAIN<span>INTEL</span> <span style="font-size:7px;color:var(--muted);font-weight:400">v5.18</span></div>
       </div>
     </div>
     <div style="flex:1"></div>
@@ -990,10 +990,10 @@ a.src-link:hover{color:var(--cyan);}
   <!-- Quick Guide collapsible — moved near top for visibility -->
   <div class="quick-guide">
     <div class="qg-toggle" id="qgToggle" onclick="toggleQuickGuide()">
-      <span class="qg-arrow" id="qgArrow">▸</span>
+      <span class="qg-arrow" id="qgArrow">▾</span>
       HOW TO READ THIS DASHBOARD — BEGINNER GUIDE
     </div>
-    <div class="qg-body" id="qgBody">
+    <div class="qg-body open" id="qgBody">
       <div class="qg-grid">
         <div class="qg-item"><div class="qg-item-label">Fear &amp; Greed (0–100)</div><div class="qg-item-text">13 = Extreme Fear. Historically, fear extremes are where institutional accumulation happens quietly.</div></div>
         <div class="qg-item"><div class="qg-item-label">Exchange Outflows</div><div class="qg-item-text">Coins leaving exchanges = going to cold storage = holders not selling. Bullish long-term signal.</div></div>
@@ -2412,14 +2412,15 @@ a.src-link:hover{color:var(--cyan);}
         </tr>
       </thead>
       <tbody id="portTableBody">
-        <tr><td colspan="8" style="padding:0"><div id="portfolioEmptyState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;gap:12px">
-  <div style="font-size:28px">💼</div>
-  <div style="font-family:var(--mono);font-size:11px;color:var(--text);font-weight:600">Track your portfolio with AI precision</div>
-  <div style="font-family:var(--mono);font-size:9px;color:var(--muted)">Add assets manually or load a demo to explore</div>
-  <div style="display:flex;gap:8px;margin-top:4px">
-    <button onclick="loadDemoPortfolio()" style="background:var(--cyan);color:#000;font-family:var(--mono);font-size:8px;padding:6px 12px;border:none;border-radius:3px;cursor:pointer;font-weight:600">LOAD DEMO PORTFOLIO</button>
-    <button onclick="focusAddHolding()" style="background:transparent;color:var(--cyan);font-family:var(--mono);font-size:8px;padding:6px 12px;border:1px solid var(--cyan);border-radius:3px;cursor:pointer">+ ADD MANUALLY</button>
+        <tr><td colspan="8" style="padding:0"><div id="portfolioEmptyState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;gap:14px;background:linear-gradient(180deg,rgba(0,212,170,0.02) 0%,transparent 100%)">
+  <div style="width:52px;height:52px;border-radius:12px;background:rgba(0,212,170,0.08);border:1px solid rgba(0,212,170,0.15);display:flex;align-items:center;justify-content:center;font-size:22px">📊</div>
+  <div style="font-family:var(--mono);font-size:12px;color:var(--text);font-weight:600;letter-spacing:0.02em">AI-Powered Portfolio Intelligence</div>
+  <div style="font-family:var(--mono);font-size:9px;color:var(--text2);max-width:340px;line-height:1.5">Add your holdings to unlock personalized AI morning briefs, live P&amp;L tracking, and allocation analytics calibrated to your exact portfolio.</div>
+  <div style="display:flex;gap:10px;margin-top:6px">
+    <button onclick="loadDemoPortfolio()" style="background:var(--cyan);color:#000;font-family:var(--mono);font-size:8px;padding:8px 16px;border:none;border-radius:3px;cursor:pointer;font-weight:600;letter-spacing:0.06em;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">LOAD DEMO PORTFOLIO</button>
+    <button onclick="focusAddHolding()" style="background:transparent;color:var(--cyan);font-family:var(--mono);font-size:8px;padding:8px 16px;border:1px solid rgba(0,212,170,0.3);border-radius:3px;cursor:pointer;letter-spacing:0.06em;transition:all 0.15s" onmouseover="this.style.borderColor='rgba(0,212,170,0.6)'" onmouseout="this.style.borderColor='rgba(0,212,170,0.3)'">+ ADD MANUALLY</button>
   </div>
+  <div style="font-family:var(--mono);font-size:7px;color:var(--muted);margin-top:4px;letter-spacing:0.08em">BLOOMBERG: $80K/YR ANALYST &nbsp;·&nbsp; CHAININTEL: INSTANT &amp; FREE</div>
 </div></td></tr>
       </tbody>
     </table>
@@ -2444,7 +2445,7 @@ a.src-link:hover{color:var(--cyan);}
       <div style="font-family:var(--mono);font-size:8px;letter-spacing:0.14em;color:var(--muted);margin-bottom:10px">ALLOCATION BY ASSET</div>
       <div style="position:relative;height:180px;width:100%">
         <canvas id="portAllocationChart"></canvas>
-        <div id="portfolioChartEmpty" style="display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:20px">&#x1F4CA; Add holdings above to see allocation breakdown</div>
+        <div id="portfolioChartEmpty" style="display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:9px;color:var(--muted);text-align:center;padding:20px"><div><div style="font-size:18px;margin-bottom:6px;opacity:0.5">◐</div>Add holdings to see<br>allocation breakdown</div></div>
       </div>
       <div id="portAllocLegend" style="margin-top:8px;font-family:var(--mono);font-size:8px;color:var(--text2)"></div>
     </div>
@@ -2464,7 +2465,7 @@ a.src-link:hover{color:var(--cyan);}
     <span class="acs-body" id="acs-body-pricing">Bloomberg Terminal: $24,000–$31,980/year per seat, 2-year lock-in, one tier. 85% of Bloomberg's own institutional clients requested on-chain data — Bloomberg cannot deliver it. <strong>ChainIntel delivers it from $0. The gap is structural.</strong></span>
     <span class="acs-ts" id="acs-ts-pricing"></span>
   </div>
-  <div class="section-h"><div class="section-h-label">ChainIntel v5.15 Plans — Bloomberg charges $24,000/yr and hides it. We don't.</div><div class="section-h-line"></div></div>
+  <div class="section-h"><div class="section-h-label">ChainIntel v5.18 Plans — Bloomberg charges $24,000/yr and hides it. We don't.</div><div class="section-h-line"></div></div>
 
   <!-- Competition countdown -->
   <div id="competitionBanner" style="background:linear-gradient(135deg,rgba(59,130,246,0.08),rgba(0,212,170,0.06));border:1px solid rgba(59,130,246,0.25);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
@@ -2550,7 +2551,7 @@ a.src-link:hover{color:var(--cyan);}
   <div class="panel" id="vsBloombergTable" style="margin-top:0">
     <div class="ph"><div class="pt">Bloomberg Terminal vs ChainIntel — Why We Win</div></div>
     <table class="vs-table">
-      <thead><tr><th class="vs-dim">Dimension</th><th>Bloomberg Terminal</th><th>ChainIntel v5.15</th></tr></thead>
+      <thead><tr><th class="vs-dim">Dimension</th><th>Bloomberg Terminal</th><th>ChainIntel v5.18</th></tr></thead>
       <tbody>
         <tr><td class="vs-dim">Annual Cost</td><td>$24,000/seat + 2-yr lock-in</td><td>$49/mo Pro · $499/mo Enterprise</td></tr>
         <tr><td class="vs-dim">Crypto Asset Coverage</td><td>~50 assets only</td><td>500+ at launch · expanding quarterly</td></tr>
@@ -2611,7 +2612,7 @@ a.src-link:hover{color:var(--cyan);}
 
 <!-- STATUS BAR -->
 <div class="statusbar">
-  <div class="sb">CHAININTEL<span style="margin:0 4px;color:var(--b3)">·</span><span class="sb-val">v5.15</span></div>
+  <div class="sb">CHAININTEL<span style="margin:0 4px;color:var(--b3)">·</span><span class="sb-val">v5.18</span></div>
   <div class="sb" onclick="showSourcesOverlay()" style="cursor:pointer;text-decoration:underline;text-decoration-color:var(--muted)">89 SOURCES<span style="margin:0 4px;color:var(--b3)">·</span><span class="sb-val live">ACTIVE</span></div>
   <div class="sb">BLOCK <span class="sb-val" id="blockH">#894,234</span></div>
   <div class="sb">GAS <span class="sb-val">23 GWEI</span></div>
@@ -2619,9 +2620,9 @@ a.src-link:hover{color:var(--cyan);}
   <div class="sb">SOL TPS <span class="sb-val" id="solTpsVal">3,842</span></div>
   <div class="sb">PRICES <span class="sb-val" id="priceLastUpdated">updating...</span><span id="priceStaleWarn" style="display:none;font-family:var(--mono);font-size:7px;color:var(--red);margin-left:4px">STALE</span></div>
   <div class="sb">LATENCY <span class="sb-val up">12ms</span></div>
-  <span style="font-family:var(--mono);font-size:8px;color:var(--cyan);letter-spacing:0.1em;margin-left:auto">vs BLOOMBERG · WE WIN</span>
-  <div class="sb">© 2026 CHAININTEL INC. · chainintelterminal.com · <span class="sb-val">Perplexity Billion Dollar Build</span></div>
-  <span style="color:var(--muted);font-size:7px;margin-left:auto">🏆 Perplexity Billion Dollar Build · Entry #CI-2026 · Open Apr 14</span>
+  <span style="font-family:var(--mono);font-size:8px;color:var(--cyan);letter-spacing:0.1em;margin-left:auto">vs BLOOMBERG</span>
+  <div class="sb">© 2026 CHAININTEL INC. · chainintelterminal.com</div>
+  <span style="color:var(--muted);font-size:7px;margin-left:8px">Perplexity Billion Dollar Build 2026</span>
 </div>
 </div><!-- /terminal -->
 
@@ -2689,7 +2690,7 @@ a.src-link:hover{color:var(--cyan);}
       <div class="help-row"><span class="help-key">B / E / X / S</span><span class="help-desc">Quick-fill: BTC / ETH / XRP / SOL analysis (when not typing)</span></div>
     </div>
     <div class="help-section">
-      <div class="help-section-title">ABOUT CHAININTEL v5.15</div>
+      <div class="help-section-title">ABOUT CHAININTEL v5.18</div>
       <div class="help-row"><span class="help-key">89 Sources</span><span class="help-desc">CoinGecko · Glassnode · Farside · Santiment · LunarCrush · Messari · DeFiLlama · CryptoQuant</span></div>
       <div class="help-row"><span class="help-key">Live Data</span><span class="help-desc">Prices update every 60s · ETF flows daily · On-chain every 15m</span></div>
     </div>
@@ -2752,7 +2753,7 @@ a.src-link:hover{color:var(--cyan);}
         <line x1="20" y1="20" x2="11" y2="27" stroke="#3b82f6" stroke-width="0.4" opacity="0.35"/>
         <line x1="20" y1="20" x2="20" y2="32" stroke="#3b82f6" stroke-width="0.4" opacity="0.35"/>
       </svg>
-      <span style="font-family:var(--mono);font-size:14px;font-weight:600;color:#fff">CHAIN<span style="color:var(--cyan)">INTEL</span> v5.15</span>
+      <span style="font-family:var(--mono);font-size:14px;font-weight:600;color:#fff">CHAIN<span style="color:var(--cyan)">INTEL</span> v5.18</span>
     </div>
     <div class="welcome-title">Welcome to ChainIntel Terminal</div>
     <div class="welcome-sub">Here's what you're looking at:</div>
@@ -2772,7 +2773,7 @@ a.src-link:hover{color:var(--cyan);}
 
 <script>
 // ============================================================
-// CHAININTEL v5.15 -- JAVASCRIPT ENGINE
+// CHAININTEL v5.18 -- JAVASCRIPT ENGINE
 // Live prices · Glossary tooltips · Onboarding · AI upgrades
 // © 2026 ChainIntel Inc.
 // ============================================================
@@ -2784,7 +2785,7 @@ function dismissWelcome() {
   var ov = document.getElementById('welcomeOverlay');
   if(ov) { ov.style.opacity='0'; setTimeout(function(){ ov.style.display='none'; },400); }
   // Launch the stepped tour after welcome card fades
-  setTimeout(function(){ startTour(); }, 600);
+  /* Tour only starts via HELP button, not auto */
 }
 function dismissOnboard() {
   var ov = document.getElementById('onboardOverlay');
@@ -2793,6 +2794,9 @@ function dismissOnboard() {
 (function() {
   if(sessionWelcomed || sessionStorage.getItem('ciTourSeen')) {
     var ov = document.getElementById('welcomeOverlay'); if(ov) ov.style.display='none';
+  } else {
+    /* Auto-dismiss welcome after 4s so it never blocks the terminal */
+    setTimeout(function(){ if(!sessionWelcomed) dismissWelcome(); }, 4000);
   }
 })();
 
@@ -2844,7 +2848,7 @@ document.querySelectorAll('.tab').forEach(function(tab) {
 // ONBOARDING TOUR
 var tourSteps = [
   {
-    title:'Welcome to ChainIntel v5.15',
+    title:'Welcome to ChainIntel v5.18',
     body:'Your AI-native Bloomberg alternative for crypto intelligence. We will show you 4 key features in 30 seconds. Press Next to begin.',
     anchor:'.logo',
     position:'bottom-right'
@@ -3643,7 +3647,7 @@ window.addEventListener('load', function() {
           backgroundColor:'rgba(0,212,170,0.4)', borderColor:'#00d4aa', borderWidth:1
         }]
       },
-      options: Object.assign({},chartDefaults,{scales:{x:{grid:{color:'rgba(26,37,56,0.6)'},ticks:{color:'#344d66',font:{family:'JetBrains Mono',size:8}}},y:{grid:{color:'rgba(26,37,56,0.6)'},ticks:{color:'#344d66',font:{family:'JetBrains Mono',size:8},callback:function(v){return '$'+v+'B'}}}}})
+      options: Object.assign({},chartDefaults,{scales:{x:{grid:{color:'rgba(26,37,56,0.6)'},ticks:{color:'#344d66',font:{family:'JetBrains Mono',size:8}}},y:{min:50,max:110,grid:{color:'rgba(26,37,56,0.6)'},ticks:{color:'#344d66',font:{family:'JetBrains Mono',size:8},callback:function(v){return '$'+v+'B'}}}}})
     });
   }, 150);
 
@@ -4032,15 +4036,11 @@ setTimeout(function() {
   var body = document.getElementById('toastBody');
   if(toast && body) {
     toast.className = 'toast show buy';
-    body.innerHTML = '<span style="color:var(--cyan);font-weight:600">SYSTEM</span> ChainIntel Terminal v5.15 online<br><span style="color:var(--muted)">89 sources active · Live prices via CoinGecko · Hover underlined terms for explanations</span>';
+    body.innerHTML = '<span style="color:var(--cyan);font-weight:600">SYSTEM</span> ChainIntel Terminal v5.18 online<br><span style="color:var(--muted)">89 sources active · Live prices via CoinGecko · Hover underlined terms for explanations</span>';
     setTimeout(function(){ toast.className = 'toast'; }, 6000);
   }
 }, 800);
-// Tour auto-start only for return visitors (welcome already dismissed)
-setTimeout(function(){
-  var wo = document.getElementById('welcomeOverlay');
-  if(sessionWelcomed || (wo && wo.style.display==='none')) { startTour(); }
-}, 2500);
+/* Tour disabled from auto-start — only via HELP button */
 
 // ── TOP 100 MARKETS ──────────────────────────────────────────────────────────
 var top100Data = [];

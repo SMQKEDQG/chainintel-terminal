@@ -7,14 +7,16 @@ import {
   CategoryScale,
   LinearScale,
   BarElement,
+  BarController,
   PointElement,
   LineElement,
+  LineController,
   Tooltip,
   Legend,
   Filler,
 } from 'chart.js';
 
-ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LinearScale, BarElement, BarController, PointElement, LineElement, LineController, Tooltip, Legend, Filler);
 
 /* ── Helpers for live chart data ── */
 const TF_DAYS: Record<string, number> = { '30D': 30, '90D': 90, '1Y': 365 };

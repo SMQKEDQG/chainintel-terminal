@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -17,6 +17,207 @@ import {
 } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, BarController, PointElement, LineElement, LineController, Tooltip, Legend, Filler);
+
+/* ── CMC shared data context (single API call powers KPI, Heatmap, MarketTable) ── */
+interface CmcCoin {
+  id: number;
+  name: string;
+  symbol: string;
+  slug: string;
+  cmc_rank: number;
+  price: number;
+  market_cap: number;
+  volume_24h: number;
+  percent_change_24h: number;
+  percent_change_7d: number;
+  image: string;
+}
+
+interface CmcGlobal {
+  total_market_cap: number;
+  total_volume_24h: number;
+  btc_dominance: number;
+  eth_dominance: number;
+  active_cryptocurrencies: number;
+  total_market_cap_yesterday_percentage_change: number;
+}
+
+interface CmcData {
+  coins: CmcCoin[];
+  global: CmcGlobal | null;
+  source: 'live' | 'cached' | 'coingecko' | 'static';
+  loading: boolean;
+}
+
+const CmcContext = createContext<CmcData>({
+  coins: [],
+  global: null,
+  source: 'static',
+  loading: true,
+});
+
+/* Transform CMC listings response into our CmcCoin format */
+function cmcListingsToCoinData(data: any[]): CmcCoin[] {
+  return data.map((c: any) => ({
+    id: c.id,
+    name: c.name,
+    symbol: (c.symbol as string).toUpperCase(),
+    slug: c.slug,
+    cmc_rank: c.cmc_rank,
+    price: c.quote?.USD?.price ?? 0,
+    market_cap: c.quote?.USD?.market_cap ?? 0,
+    volume_24h: c.quote?.USD?.volume_24h ?? 0,
+    percent_change_24h: c.quote?.USD?.percent_change_24h ?? 0,
+    percent_change_7d: c.quote?.USD?.percent_change_7d ?? 0,
+    image: `https://s2.coinmarketcap.com/static/img/coins/64x64/${c.id}.png`,
+  }));
+}
+
+/* Transform CoinGecko /coins/markets response */
+function geckoToCoinData(data: any[]): CmcCoin[] {
+  return data.map((c: any, i: number) => ({
+    id: i,
+    name: c.name,
+    symbol: (c.symbol as string).toUpperCase(),
+    slug: c.id,
+    cmc_rank: c.market_cap_rank ?? i + 1,
+    price: c.current_price ?? 0,
+    market_cap: c.market_cap ?? 0,
+    volume_24h: c.total_volume ?? 0,
+    percent_change_24h: c.price_change_percentage_24h ?? 0,
+    percent_change_7d: c.price_change_percentage_7d_in_currency ?? 0,
+    image: c.image ?? '',
+  }));
+}
+
+/* Static fallback data */
+const FALLBACK_COINS: CmcCoin[] = [
+  { id: 1, name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', cmc_rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_24h: 0.82, percent_change_7d: -3.14, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png' },
+  { id: 1027, name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', cmc_rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_24h: -1.24, percent_change_7d: -8.32, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png' },
+  { id: 52, name: 'XRP', symbol: 'XRP', slug: 'xrp', cmc_rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_24h: 1.87, percent_change_7d: -4.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/52.png' },
+  { id: 5426, name: 'Solana', symbol: 'SOL', slug: 'solana', cmc_rank: 4, price: 81, market_cap: 6.72e10, volume_24h: 4.2e9, percent_change_24h: -0.41, percent_change_7d: -5.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png' },
+  { id: 1839, name: 'BNB', symbol: 'BNB', slug: 'bnb', cmc_rank: 5, price: 560, market_cap: 8.2e10, volume_24h: 1.8e9, percent_change_24h: 0.34, percent_change_7d: -1.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png' },
+  { id: 74, name: 'Dogecoin', symbol: 'DOGE', slug: 'dogecoin', cmc_rank: 6, price: 0.082, market_cap: 1.2e10, volume_24h: 0.8e9, percent_change_24h: -0.9, percent_change_7d: -6.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png' },
+  { id: 2010, name: 'Cardano', symbol: 'ADA', slug: 'cardano', cmc_rank: 7, price: 0.41, market_cap: 1.5e10, volume_24h: 0.5e9, percent_change_24h: -2.1, percent_change_7d: -5.4, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png' },
+  { id: 4687, name: 'HBAR', symbol: 'HBAR', slug: 'hedera', cmc_rank: 8, price: 0.17, market_cap: 6.7e9, volume_24h: 0.3e9, percent_change_24h: 1.44, percent_change_7d: 2.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4687.png' },
+  { id: 1975, name: 'Chainlink', symbol: 'LINK', slug: 'chainlink', cmc_rank: 9, price: 12.5, market_cap: 7.8e9, volume_24h: 0.6e9, percent_change_24h: 0.92, percent_change_7d: -2.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1975.png' },
+  { id: 5805, name: 'Avalanche', symbol: 'AVAX', slug: 'avalanche', cmc_rank: 10, price: 22, market_cap: 9e9, volume_24h: 0.4e9, percent_change_24h: -3.8, percent_change_7d: -7.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5805.png' },
+  { id: 3890, name: 'Polkadot', symbol: 'DOT', slug: 'polkadot', cmc_rank: 11, price: 4.2, market_cap: 5.9e9, volume_24h: 0.3e9, percent_change_24h: -1.5, percent_change_7d: -4.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3890.png' },
+  { id: 3408, name: 'Quant', symbol: 'QNT', slug: 'quant', cmc_rank: 12, price: 88, market_cap: 1.1e9, volume_24h: 44e6, percent_change_24h: 2.31, percent_change_7d: 1.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png' },
+  { id: 512, name: 'Stellar', symbol: 'XLM', slug: 'stellar', cmc_rank: 13, price: 0.27, market_cap: 8.3e9, volume_24h: 0.5e9, percent_change_24h: -0.62, percent_change_7d: -2.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/512.png' },
+  { id: 4030, name: 'Algorand', symbol: 'ALGO', slug: 'algorand', cmc_rank: 14, price: 0.18, market_cap: 1.3e9, volume_24h: 60e6, percent_change_24h: -0.8, percent_change_7d: -3.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4030.png' },
+  { id: 1720, name: 'IOTA', symbol: 'IOTA', slug: 'iota', cmc_rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_24h: 1.14, percent_change_7d: 0.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1720.png' },
+];
+
+const FALLBACK_GLOBAL: CmcGlobal = {
+  total_market_cap: 2.65e12,
+  total_volume_24h: 98.4e9,
+  btc_dominance: 63.0,
+  eth_dominance: 10.2,
+  active_cryptocurrencies: 10200,
+  total_market_cap_yesterday_percentage_change: 0.64,
+};
+
+function useCmcData(): CmcData {
+  const [coins, setCoins] = useState<CmcCoin[]>(FALLBACK_COINS);
+  const [global, setGlobal] = useState<CmcGlobal | null>(FALLBACK_GLOBAL);
+  const [source, setSource] = useState<CmcData['source']>('static');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchCmc() {
+      try {
+        // Try CMC proxy for listings
+        const listingsRes = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=50&sort=market_cap&convert=USD');
+        if (!listingsRes.ok) throw new Error('CMC listings failed');
+        const listingsJson = await listingsRes.json();
+        if (cancelled) return;
+
+        const cmcCoins = cmcListingsToCoinData(listingsJson.data?.data || []);
+        if (cmcCoins.length > 0) {
+          setCoins(cmcCoins);
+          setSource(listingsJson.source === 'live' ? 'live' : 'cached');
+        } else {
+          throw new Error('No CMC data returned');
+        }
+
+        // Also try global metrics
+        try {
+          const globalRes = await fetch('/api/cmc?endpoint=/v1/global-metrics/quotes/latest');
+          if (globalRes.ok) {
+            const globalJson = await globalRes.json();
+            const gd = globalJson.data?.data;
+            if (gd) {
+              setGlobal({
+                total_market_cap: gd.quote?.USD?.total_market_cap ?? FALLBACK_GLOBAL.total_market_cap,
+                total_volume_24h: gd.quote?.USD?.total_volume_24h ?? FALLBACK_GLOBAL.total_volume_24h,
+                btc_dominance: gd.btc_dominance ?? FALLBACK_GLOBAL.btc_dominance,
+                eth_dominance: gd.eth_dominance ?? FALLBACK_GLOBAL.eth_dominance,
+                active_cryptocurrencies: gd.active_cryptocurrencies ?? FALLBACK_GLOBAL.active_cryptocurrencies,
+                total_market_cap_yesterday_percentage_change: gd.quote?.USD?.total_market_cap_yesterday_percentage_change ?? FALLBACK_GLOBAL.total_market_cap_yesterday_percentage_change,
+              });
+            }
+          }
+        } catch { /* global metrics failure is non-critical */ }
+
+      } catch {
+        // Fallback to CoinGecko
+        if (cancelled) return;
+        try {
+          const geckoRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=7d');
+          if (!geckoRes.ok) throw new Error('CoinGecko failed');
+          const geckoData = await geckoRes.json();
+          if (cancelled) return;
+          const geckoCoins = geckoToCoinData(geckoData);
+          if (geckoCoins.length > 0) {
+            setCoins(geckoCoins);
+            setSource('coingecko');
+          }
+        } catch {
+          // Keep static fallback
+          if (!cancelled) setSource('static');
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    fetchCmc();
+    const interval = setInterval(fetchCmc, 120_000); // refresh every 2 min
+    return () => { cancelled = true; clearInterval(interval); };
+  }, []);
+
+  return { coins, global, source, loading };
+}
+
+/* ── Formatting helpers ── */
+function fmtUsd(n: number, decimals = 2): string {
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(decimals)}T`;
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(decimals)}B`;
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(decimals)}M`;
+  if (n >= 1) return `$${n.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals })}`;
+  return `$${n.toFixed(Math.max(4, decimals))}`;
+}
+
+function fmtPrice(n: number): string {
+  if (n >= 1000) return `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+  if (n >= 1) return `$${n.toFixed(2)}`;
+  return `$${n.toFixed(4)}`;
+}
+
+function sourceLabel(src: CmcData['source']): string {
+  switch (src) {
+    case 'live': return 'CMC Live';
+    case 'cached': return 'CMC Cached';
+    case 'coingecko': return 'CoinGecko';
+    default: return 'Fallback';
+  }
+}
+function sourceColor(src: CmcData['source']): string {
+  return src === 'live' ? 'var(--green)' : src === 'cached' ? 'var(--gold)' : src === 'coingecko' ? 'var(--blue)' : 'var(--muted)';
+}
 
 /* ── Helpers for live chart data ── */
 const TF_DAYS: Record<string, number> = { '30D': 30, '90D': 90, '1Y': 365 };
@@ -495,48 +696,14 @@ function SectorHeat() {
   );
 }
 
-/* ── Heatmap (LIVE from CoinGecko) ── */
-interface HeatCoin { sym: string; chg: number; mcap: number }
+/* ── Heatmap (powered by shared CMC data) ── */
 function Heatmap() {
-  const [coins, setCoins] = useState<HeatCoin[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { coins, source, loading } = useContext(CmcContext);
+  const topCoins = coins.slice(0, 20);
 
-  useEffect(() => {
-    async function fetchHeatmap() {
-      try {
-        const res = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=false');
-        if (!res.ok) throw new Error('CoinGecko API error');
-        const data = await res.json();
-        const mapped: HeatCoin[] = data.map((c: any) => ({
-          sym: (c.symbol as string).toUpperCase(),
-          chg: c.price_change_percentage_24h ?? 0,
-          mcap: c.market_cap ?? 0,
-        }));
-        setCoins(mapped);
-      } catch {
-        // Fallback to static data if API fails
-        setCoins([
-          { sym: 'BTC', chg: 0.82, mcap: 1.4e12 }, { sym: 'ETH', chg: -1.24, mcap: 2.7e11 },
-          { sym: 'XRP', chg: 1.87, mcap: 8e10 }, { sym: 'SOL', chg: -0.41, mcap: 4.8e10 },
-          { sym: 'HBAR', chg: 1.44, mcap: 1.1e10 }, { sym: 'ADA', chg: -2.1, mcap: 8.8e9 },
-          { sym: 'AVAX', chg: -3.8, mcap: 6.5e9 }, { sym: 'LINK', chg: 0.92, mcap: 6.5e9 },
-          { sym: 'DOT', chg: -1.5, mcap: 5.9e9 }, { sym: 'QNT', chg: 2.31, mcap: 1e9 },
-          { sym: 'ALGO', chg: -0.8, mcap: 1.3e9 }, { sym: 'XLM', chg: -0.62, mcap: 3e9 },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchHeatmap();
-    const id = setInterval(fetchHeatmap, 120000); // refresh every 2 min
-    return () => clearInterval(id);
-  }, []);
-
-  // Determine grid span based on relative market cap ranking
   function getSpan(idx: number): { row?: string; col?: string } {
-    if (idx === 0) return { row: 'span 2', col: 'span 2' }; // BTC biggest
-    if (idx === 1) return { row: 'span 2' }; // ETH
-    if (idx < 5) return {}; // top 5 normal
+    if (idx === 0) return { row: 'span 2', col: 'span 2' };
+    if (idx === 1) return { row: 'span 2' };
     return {};
   }
 
@@ -546,27 +713,31 @@ function Heatmap() {
         <div className="pt">Market Heatmap — 24h Performance</div>
         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>▪ size = market cap</span>
-          <div className="tag tag-live">Live · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a></div>
+          <div className="tag tag-live">
+            <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
+            {sourceLabel(source)} · <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CoinMarketCap</a>
+          </div>
         </div>
       </div>
       {loading ? (
         <div style={{ padding: '20px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Loading live market data...</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2 }}>
-          {coins.map((c, i) => {
+          {topCoins.map((c, i) => {
+            const chg = c.percent_change_24h;
             const span = getSpan(i);
             return (
-              <div key={c.sym} style={{
-                background: c.chg >= 0 ? `rgba(16,185,129,${Math.min(0.06 + Math.abs(c.chg) * 0.04, 0.4)})` : `rgba(239,68,68,${Math.min(0.06 + Math.abs(c.chg) * 0.04, 0.4)})`,
-                border: `1px solid ${c.chg >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              <div key={c.symbol} style={{
+                background: chg >= 0 ? `rgba(16,185,129,${Math.min(0.06 + Math.abs(chg) * 0.04, 0.4)})` : `rgba(239,68,68,${Math.min(0.06 + Math.abs(chg) * 0.04, 0.4)})`,
+                border: `1px solid ${chg >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
                 padding: '8px 6px',
                 textAlign: 'center',
                 gridRow: span.row,
                 gridColumn: span.col,
               }}>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600, color: 'var(--text)' }}>{c.sym}</div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: c.chg >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                  {c.chg >= 0 ? '+' : ''}{c.chg.toFixed(2)}%
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600, color: 'var(--text)' }}>{c.symbol}</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: chg >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                  {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
                 </div>
               </div>
             );
@@ -649,23 +820,27 @@ function ChainScore() {
   );
 }
 
-/* ── Market Table ── */
+/* ── Market Table (powered by shared CMC data) ── */
 function MarketTable() {
-  const assets = [
-    { rank: 1, name: 'Bitcoin', sym: 'BTC', price: '$73,000', d1: '+0.82%', d7: '−3.14%', mcap: '$1.64T', vol: '$38.4B', signal: 'ACCUMULATE', sigColor: 'var(--green)' },
-    { rank: 2, name: 'Ethereum', sym: 'ETH', price: '$2,210', d1: '−1.24%', d7: '−8.32%', mcap: '$190.2B', vol: '$14.8B', signal: 'HOLD', sigColor: 'var(--gold)' },
-    { rank: 3, name: 'XRP', sym: 'XRP', price: '$1.32', d1: '+1.87%', d7: '−4.20%', mcap: '$121.0B', vol: '$7.8B', signal: 'ACCUMULATE', sigColor: 'var(--green)' },
-    { rank: 4, name: 'Solana', sym: 'SOL', price: '$81.00', d1: '−0.41%', d7: '−5.80%', mcap: '$67.2B', vol: '$4.2B', signal: 'HOLD', sigColor: 'var(--gold)' },
-    { rank: 5, name: 'HBAR', sym: 'HBAR', price: '$0.170', d1: '+1.44%', d7: '+2.10%', mcap: '$6.7B', vol: '$0.3B', signal: 'ACCUMULATE', sigColor: 'var(--green)' },
-    { rank: 6, name: 'QNT', sym: 'QNT', price: '$88.00', d1: '+2.31%', d7: '+1.80%', mcap: '$1.1B', vol: '$44M', signal: 'HOLD', sigColor: 'var(--gold)' },
-    { rank: 7, name: 'XLM / Stellar', sym: 'XLM', price: '$0.270', d1: '−0.62%', d7: '−2.8%', mcap: '$8.3B', vol: '$0.5B', signal: 'WATCH', sigColor: 'var(--muted)' },
-    { rank: 8, name: 'IOTA', sym: 'IOTA', price: '$0.210', d1: '+1.14%', d7: '+0.8%', mcap: '$0.58B', vol: '$24M', signal: 'HOLD', sigColor: 'var(--gold)' },
-  ];
+  const { coins, source } = useContext(CmcContext);
+  const topAssets = coins.slice(0, 12);
+
+  /* Simple signal logic based on 7d performance */
+  function getSignal(c: CmcCoin): { label: string; color: string } {
+    const d7 = c.percent_change_7d;
+    if (d7 > 2) return { label: 'ACCUMULATE', color: 'var(--green)' };
+    if (d7 > -3) return { label: 'HOLD', color: 'var(--gold)' };
+    return { label: 'WATCH', color: 'var(--muted)' };
+  }
+
   return (
     <div className="panel">
       <div className="ph">
         <div className="pt">Top Assets by Market Cap</div>
-        <div className="tag tag-live">Live · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a></div>
+        <div className="tag tag-live">
+          <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
+          {sourceLabel(source)} · <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CoinMarketCap</a>
+        </div>
       </div>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
         <thead>
@@ -681,27 +856,33 @@ function MarketTable() {
           </tr>
         </thead>
         <tbody>
-          {assets.map(a => (
-            <tr key={a.sym} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
-                onMouseLeave={e => (e.currentTarget.style.background = '')}>
-              <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 9 }}>{a.rank}</td>
-              <td style={{ padding: '5px 8px' }}>
-                <span style={{ color: 'var(--text)', fontWeight: 500 }}>{a.name}</span>
-                <span style={{ marginLeft: 6, fontSize: 8, color: 'var(--muted)' }}>{a.sym}</span>
-              </td>
-              <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{a.price}</td>
-              <td style={{ textAlign: 'right', padding: '5px 8px', color: a.d1.startsWith('+') ? 'var(--green)' : 'var(--red)' }}>{a.d1}</td>
-              <td style={{ textAlign: 'right', padding: '5px 8px', color: a.d7.startsWith('+') ? 'var(--green)' : 'var(--red)' }}>{a.d7}</td>
-              <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.mcap}</td>
-              <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.vol}</td>
-              <td style={{ textAlign: 'right', padding: '5px 8px' }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: `1px solid ${a.sigColor}`, color: a.sigColor, letterSpacing: '0.06em' }}>
-                  {a.signal}
-                </span>
-              </td>
-            </tr>
-          ))}
+          {topAssets.map(a => {
+            const sig = getSignal(a);
+            const d1 = a.percent_change_24h;
+            const d7 = a.percent_change_7d;
+            return (
+              <tr key={a.symbol} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 9 }}>{a.cmc_rank}</td>
+                <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{a.name}</span>
+                  <span style={{ fontSize: 8, color: 'var(--muted)' }}>{a.symbol}</span>
+                </td>
+                <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{fmtPrice(a.price)}</td>
+                <td style={{ textAlign: 'right', padding: '5px 8px', color: d1 >= 0 ? 'var(--green)' : 'var(--red)' }}>{d1 >= 0 ? '+' : ''}{d1.toFixed(2)}%</td>
+                <td style={{ textAlign: 'right', padding: '5px 8px', color: d7 >= 0 ? 'var(--green)' : 'var(--red)' }}>{d7 >= 0 ? '+' : ''}{d7.toFixed(2)}%</td>
+                <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.market_cap, 1)}</td>
+                <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.volume_24h, 1)}</td>
+                <td style={{ textAlign: 'right', padding: '5px 8px' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>
+                    {sig.label}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>
@@ -748,21 +929,53 @@ function BloombergCallout() {
   );
 }
 
+/* ── Live KPI Row (powered by shared CMC data) ── */
+function LiveKPIs() {
+  const { coins, global, source } = useContext(CmcContext);
+  const btc = coins.find(c => c.symbol === 'BTC');
+
+  const totalMcap = global?.total_market_cap ?? FALLBACK_GLOBAL.total_market_cap;
+  const mcapChg = global?.total_market_cap_yesterday_percentage_change ?? FALLBACK_GLOBAL.total_market_cap_yesterday_percentage_change;
+  const btcDom = global?.btc_dominance ?? FALLBACK_GLOBAL.btc_dominance;
+
+  const srcHtml = `<span style="color:${sourceColor(source)};font-size:7px">●</span> ${sourceLabel(source)} · <a class="src-link" href="https://coinmarketcap.com" target="_blank">CoinMarketCap</a>`;
+
+  return (
+    <div className="g4" style={{ marginTop: 8 }}>
+      <KPI
+        label="Total Market Cap"
+        value={fmtUsd(totalMcap, 2)}
+        change={`${mcapChg >= 0 ? '+' : ''}${mcapChg.toFixed(2)}% today`}
+        changeDir={mcapChg >= 0 ? 'up' : 'dn'}
+        color="var(--gold)"
+        source={srcHtml}
+      />
+      <KPI
+        label="BTC Dominance"
+        value={`${btcDom.toFixed(1)}%`}
+        change={btc ? `BTC ${fmtPrice(btc.price)} · ${btc.percent_change_24h >= 0 ? '+' : ''}${btc.percent_change_24h.toFixed(2)}%` : 'Loading...'}
+        changeDir={btc && btc.percent_change_24h >= 0 ? 'up' : 'dn'}
+        source={srcHtml}
+      />
+      <KPI label="Fear & Greed Index" value="13" change="Extreme Fear (13/100) · Historic low" changeDir="dn" color="var(--red)" source='<a class="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank">Fear &amp; Greed Index</a>' />
+      <KPI label="Total DeFi TVL" value="$85.0B" change="−2.1% in 24h · 6,400+ protocols" changeDir="dn" source='<a class="src-link" href="https://defillama.com" target="_blank">DefiLlama</a>' />
+    </div>
+  );
+}
+
 /* ── MAIN OVERVIEW TAB ── */
 export default function OverviewTab() {
+  const cmcData = useCmcData();
+
   return (
+    <CmcContext.Provider value={cmcData}>
     <div>
       <AiStrip body='Market at <strong>Extreme Fear (13/100)</strong> — historically a contrarian accumulation signal. 4 consecutive ETF inflow days (+$169.6M today) while retail sentiment is maximally negative. <strong>Smart money and retail are diverging.</strong>' />
       <QuickGuide />
       <MorningBrief />
       <AskCI />
 
-      <div className="g4" style={{ marginTop: 8 }}>
-        <KPI label="Total Market Cap" value="$2.65T" change="+$18.4B today · +0.64%" changeDir="up" color="var(--gold)" source='<a class="src-link" href="https://coingecko.com" target="_blank">CoinGecko</a> · <a class="src-link" href="https://coinmarketcap.com" target="_blank">CoinMarketCap</a>' />
-        <KPI label="BTC Dominance" value="63.0%" change="+0.8% vs yesterday — rising" changeDir="up" source='<a class="src-link" href="https://coingecko.com" target="_blank">CoinGecko</a> API' />
-        <KPI label="Fear & Greed Index" value="13" change="Extreme Fear (13/100) · Historic low" changeDir="dn" color="var(--red)" source='<a class="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank">Fear &amp; Greed Index</a>' />
-        <KPI label="Total DeFi TVL" value="$85.0B" change="−2.1% in 24h · 6,400+ protocols" changeDir="dn" source='<a class="src-link" href="https://defillama.com" target="_blank">DefiLlama</a>' />
-      </div>
+      <LiveKPIs />
 
       <SectorHeat />
 
@@ -796,5 +1009,6 @@ export default function OverviewTab() {
 
       <BloombergCallout />
     </div>
+    </CmcContext.Provider>
   );
 }

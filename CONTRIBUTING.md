@@ -22,7 +22,7 @@ Thank you for your interest in contributing to ChainIntel Terminal.
 3. Ensure all JavaScript validates: `node -e "new Function(...)"`
 4. Test all 12 tabs and the tour walkthrough
 5. Open a PR against `develop` with a clear description
-6. Request review from @SMQKEDQG
+6. Request review from a core maintainer
 
 ## Code Standards
 

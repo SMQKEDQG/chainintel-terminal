@@ -82,7 +82,7 @@ Fonts:        JetBrains Mono (monospace data), Inter (UI)
 
 ```bash
 # Clone
-git clone https://github.com/SMQKEDQG/chainintel-terminal.git
+git clone https://github.com/chainintel/chainintel-terminal.git
 cd chainintel-terminal
 
 # Serve locally
@@ -158,10 +158,8 @@ See [changelog.html](https://chainintelterminal.com/changelog.html) for full ver
 
 ## Author
 
-**Allen Williams** ([@SMQKEDQG](https://x.com/SMQKEDQG))
-- 80,600+ X followers
+Built by the ChainIntel team.
 - ChainIntel Inc. — Wyoming LLC
-- Herndon, VA
 
 ---
 

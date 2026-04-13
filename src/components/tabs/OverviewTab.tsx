@@ -492,8 +492,16 @@ function EthChart() {
   );
 }
 
-/* ── AI Context Strip ── */
-function AiStrip({ body }: { body: string }) {
+/* ── AI Context Strip (live data) ── */
+function AiStrip() {
+  const { coins, global } = useContext(CmcContext);
+  const btc = coins.find(c => c.symbol === 'BTC');
+  const btcPrice = btc ? fmtPrice(btc.price) : '$73K';
+  const btcChg = btc ? btc.percent_change_24h : 0;
+  const btcDom = global?.btc_dominance?.toFixed(1) ?? '63.0';
+
+  const body = `BTC <strong>${btcPrice}</strong> (${btcChg >= 0 ? '+' : ''}${btcChg.toFixed(2)}%) — BTC Dominance <strong>${btcDom}%</strong>. ${btcChg < -3 ? 'Significant sell pressure. Watch for support levels.' : btcChg < 0 ? 'Slight pullback — monitor ETF flows for institutional direction.' : 'Price holding steady. Institutional accumulation pattern continues.'}`;
+
   return (
     <div className="ai-context-strip">
       <span className="acs-icon">◈ CI·AI</span>
@@ -533,29 +541,59 @@ function QuickGuide() {
   );
 }
 
-/* ── AI Morning Brief ── */
+/* ── AI Morning Brief (live data) ── */
 function MorningBrief() {
+  const { coins, global, source } = useContext(CmcContext);
+  const btc = coins.find(c => c.symbol === 'BTC');
+  const eth = coins.find(c => c.symbol === 'ETH');
+  const btcPrice = btc ? fmtPrice(btc.price) : '$73K';
+  const btcChg24h = btc?.percent_change_24h ?? 0;
+  const btcChg7d = btc?.percent_change_7d ?? -3.14;
+  const ethChg7d = eth?.percent_change_7d ?? -8.32;
+  const btcDom = global?.btc_dominance?.toFixed(1) ?? '63.0';
+
+  // Dynamic sentiment based on live data
+  const sentiment = btcChg7d > 5 ? 'BULLISH' : btcChg7d > 0 ? 'CAUTIOUSLY BULLISH' : btcChg7d > -5 ? 'NEUTRAL' : 'CAUTIOUSLY BEARISH';
+  const sentimentColor = btcChg7d > 0 ? 'var(--green)' : btcChg7d > -5 ? 'var(--gold)' : 'var(--red)';
+
+  // Count gainers/losers from top 20
+  const top20 = coins.slice(0, 20);
+  const gainers = top20.filter(c => c.percent_change_24h > 0).length;
+  const losers = top20.length - gainers;
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
   return (
     <div style={{ background: 'var(--s1)', border: '1px solid rgba(0,212,170,0.15)', padding: '12px 14px', position: 'relative', marginBottom: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--cyan)', letterSpacing: '0.08em', fontWeight: 600 }}>⬡ CI·AI</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--text2)' }}>MORNING INTELLIGENCE BRIEF</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--text2)' }}>INTELLIGENCE BRIEF</span>
         <div style={{ flex: 1 }} />
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>Apr 10, 2026</span>
-        <div style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 6px var(--green)', animation: 'pulse 2s infinite' }} />
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: '1px solid rgba(240,192,64,0.3)', color: 'var(--gold)', letterSpacing: '0.08em' }}>CAUTIOUSLY BULLISH</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>{dateStr}</span>
+        <div style={{ width: 8, height: 8, borderRadius: '50%', background: sourceColor(source), boxShadow: `0 0 6px ${sourceColor(source)}`, animation: 'pulse 2s infinite' }} />
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: `1px solid ${sentimentColor}40`, color: sentimentColor, letterSpacing: '0.08em' }}>{sentiment}</span>
       </div>
       <div style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700, color: 'var(--cyan)', marginBottom: 8, letterSpacing: '-0.01em' }}>
-        BTC $73K · Extreme Fear 13 · Institutional accumulation confirmed · 4 ETF inflow days
+        BTC {btcPrice} ({btcChg24h >= 0 ? '+' : ''}{btcChg24h.toFixed(2)}%) · BTC Dom {btcDom}% · Market: {gainers} up / {losers} down
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
         <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', padding: '8px 10px' }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--green)', letterSpacing: '0.12em', marginBottom: 4 }}>▲ BULLISH</div>
-          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>BlackRock IBIT +$224M — 4th consecutive inflow day. 7-day net +$1.04B. Institutions buying into Extreme Fear.</div>
+          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>
+            {(() => {
+              const topGainers = top20.filter(c => c.percent_change_24h > 0).sort((a, b) => b.percent_change_24h - a.percent_change_24h).slice(0, 3);
+              if (topGainers.length === 0) return 'No significant gainers in top 20 today.';
+              return `Top movers: ${topGainers.map(c => `${c.symbol} +${c.percent_change_24h.toFixed(1)}%`).join(', ')}. ${gainers} of ${top20.length} assets positive in 24h.`;
+            })()}
+          </div>
         </div>
         <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)', padding: '8px 10px' }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--red)', letterSpacing: '0.12em', marginBottom: 4 }}>▼ WATCH</div>
-          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>ETH down 8.32% over 7 days. DeFi TVL fell 2.1%. No confirmed altcoin recovery yet — BTC dominance rising to 63%.</div>
+          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>
+            {eth ? `ETH ${ethChg7d >= 0 ? '+' : ''}${ethChg7d.toFixed(2)}% over 7 days (${fmtPrice(eth.price)}).` : 'ETH data loading.'}
+            {' '}BTC dominance at {btcDom}% — {parseFloat(btcDom) > 60 ? 'capital rotating to safety, altcoin weakness likely' : 'healthy distribution across assets'}.
+          </div>
         </div>
         <div style={{ background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.12)', padding: '8px 10px' }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 4 }}>◈ KEY CATALYST</div>
@@ -970,7 +1008,7 @@ export default function OverviewTab() {
   return (
     <CmcContext.Provider value={cmcData}>
     <div>
-      <AiStrip body='Market at <strong>Extreme Fear (13/100)</strong> — historically a contrarian accumulation signal. 4 consecutive ETF inflow days (+$169.6M today) while retail sentiment is maximally negative. <strong>Smart money and retail are diverging.</strong>' />
+      <AiStrip />
       <QuickGuide />
       <MorningBrief />
       <AskCI />

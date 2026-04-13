@@ -9,6 +9,23 @@ interface TickerItem {
   chg: number;
 }
 
+/* Map symbol → CMC data from the listings response */
+function cmcToTickerItems(cmcData: any[]): TickerItem[] {
+  const bySymbol = new Map<string, any>();
+  for (const c of cmcData) {
+    bySymbol.set((c.symbol as string).toUpperCase(), c);
+  }
+  return TICKER_ASSETS.map(a => {
+    const c = bySymbol.get(a.sym);
+    if (!c) return { sym: a.sym, price: '—', chg: 0 };
+    const p = c.quote?.USD?.price ?? 0;
+    const price = p >= 1000 ? p.toLocaleString('en-US', { maximumFractionDigits: 0 })
+      : p >= 1 ? p.toFixed(2)
+      : p.toFixed(4);
+    return { sym: a.sym, price: `$${price}`, chg: c.quote?.USD?.percent_change_24h ?? 0 };
+  });
+}
+
 export default function TickerTape() {
   const [items, setItems] = useState<TickerItem[]>(
     TICKER_ASSETS.map(a => ({ sym: a.sym, price: '—', chg: 0 }))
@@ -16,14 +33,31 @@ export default function TickerTape() {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchPrices() {
+      // Try CMC proxy first
+      try {
+        const res = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=50&sort=market_cap&convert=USD');
+        if (res.ok) {
+          const json = await res.json();
+          const data = json.data?.data || [];
+          if (data.length > 0 && !cancelled) {
+            setItems(cmcToTickerItems(data));
+            return;
+          }
+        }
+      } catch { /* fall through to CoinGecko */ }
+
+      // Fallback: CoinGecko
       try {
         const ids = TICKER_ASSETS.map(a => a.id).join(',');
         const res = await fetch(
           `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
         );
-        if (!res.ok) return;
+        if (!res.ok || cancelled) return;
         const data = await res.json();
+        if (cancelled) return;
         setItems(
           TICKER_ASSETS.map(a => {
             const d = data[a.id];
@@ -34,11 +68,12 @@ export default function TickerTape() {
             return { sym: a.sym, price: `$${price}`, chg: d.usd_24h_change || 0 };
           })
         );
-      } catch {}
+      } catch { /* keep initial state */ }
     }
+
     fetchPrices();
     const id = setInterval(fetchPrices, 60000);
-    return () => clearInterval(id);
+    return () => { cancelled = true; clearInterval(id); };
   }, []);
 
   const renderItem = (item: TickerItem, i: number) => (

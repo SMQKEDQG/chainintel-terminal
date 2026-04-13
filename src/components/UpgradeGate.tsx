@@ -91,11 +91,11 @@ export default function UpgradeGate({
 
   return (
     <div style={{ position: 'relative', minHeight: '600px', overflow: 'hidden' }}>
-      {/* Blurred sneak peek of actual tab content */}
+      {/* Blurred sneak peek of actual tab content — visible enough to tease */}
       <div
         style={{
-          filter: 'blur(6px)',
-          opacity: 0.4,
+          filter: 'blur(5px)',
+          opacity: 0.7,
           pointerEvents: 'none',
           userSelect: 'none',
           position: 'absolute',
@@ -107,12 +107,12 @@ export default function UpgradeGate({
         {children}
       </div>
 
-      {/* Gradient overlay */}
+      {/* Light gradient overlay — subtle, keeps blurred content clearly visible */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(180deg, rgba(8,13,22,0.3) 0%, rgba(8,13,22,0.85) 40%, rgba(8,13,22,0.95) 100%)',
+          background: 'linear-gradient(180deg, rgba(8,13,22,0.15) 0%, rgba(8,13,22,0.45) 50%, rgba(8,13,22,0.65) 100%)',
           zIndex: 1,
         }}
       />
@@ -189,9 +189,10 @@ const styles: Record<string, React.CSSProperties> = {
   card: {
     maxWidth: '520px',
     width: '100%',
-    background: 'rgba(13,20,32,0.95)',
-    border: '1px solid var(--b2)',
-    backdropFilter: 'blur(12px)',
+    background: 'rgba(13,20,32,0.88)',
+    border: '1px solid var(--b3)',
+    backdropFilter: 'blur(16px)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
     padding: '0',
   },
   accentLine: {

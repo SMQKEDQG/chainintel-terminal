@@ -4,6 +4,42 @@ import { useEffect, useState, useCallback } from 'react';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
 
+/* ── Macro Correlation types ── */
+interface MacroAsset {
+  name: string;
+  symbol: string;
+  value: number;
+  change7d: number;
+  changeBps?: number;
+  changeDir: 'up' | 'dn' | 'flat';
+  correlation: number;
+  corrLabel: string;
+  corrPct: string;
+  color: string;
+}
+interface MacroData {
+  assets: MacroAsset[];
+  btcPrice: number;
+  btcChange7d: number;
+  live: boolean;
+}
+
+/* ── Stablecoin types ── */
+interface StablecoinInfo {
+  name: string;
+  symbol: string;
+  supply: number;
+  change30d: number;
+  peg: number;
+  chain: string;
+}
+interface StablecoinData {
+  stablecoins: StablecoinInfo[];
+  totalSupply: number;
+  totalChange30d: number;
+  live: boolean;
+}
+
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler);
 
 interface ExchangeData { name: string; fundingRate: number; oi: number; }
@@ -22,19 +58,10 @@ interface DerivData {
   updatedAt: string;
 }
 
-// Static fallback
-const STATIC_DATA: DerivData = {
-  assets: [
-    { asset: 'BTC', avgFundingRate: -0.004, totalOI: 28400000000, totalVolume: 46000000000, exchanges: [{ name: 'Binance', fundingRate: -0.004, oi: 9200000000 }, { name: 'OKX', fundingRate: -0.003, oi: 5800000000 }, { name: 'Bybit', fundingRate: -0.005, oi: 4400000000 }, { name: 'dYdX', fundingRate: -0.002, oi: 1200000000 }], price: 73296, change24h: 2.83 },
-    { asset: 'ETH', avgFundingRate: -0.006, totalOI: 9100000000, totalVolume: 14000000000, exchanges: [{ name: 'Binance', fundingRate: -0.006, oi: 3100000000 }, { name: 'OKX', fundingRate: -0.005, oi: 2200000000 }, { name: 'Bybit', fundingRate: -0.007, oi: 1800000000 }, { name: 'dYdX', fundingRate: -0.004, oi: 600000000 }], price: 2259, change24h: 2.27 },
-    { asset: 'XRP', avgFundingRate: 0.008, totalOI: 2200000000, totalVolume: 3400000000, exchanges: [{ name: 'Binance', fundingRate: 0.008, oi: 800000000 }, { name: 'OKX', fundingRate: 0.006, oi: 600000000 }, { name: 'Bybit', fundingRate: 0.007, oi: 500000000 }], price: 1.35, change24h: 1.03 },
-    { asset: 'SOL', avgFundingRate: -0.002, totalOI: 3800000000, totalVolume: 5200000000, exchanges: [{ name: 'Binance', fundingRate: -0.002, oi: 1400000000 }, { name: 'OKX', fundingRate: -0.001, oi: 1000000000 }, { name: 'Bybit', fundingRate: -0.003, oi: 800000000 }], price: 84.05, change24h: 1.72 },
-    { asset: 'BNB', avgFundingRate: 0.003, totalOI: 1800000000, totalVolume: 2800000000, exchanges: [{ name: 'Binance', fundingRate: 0.003, oi: 900000000 }, { name: 'OKX', fundingRate: 0.002, oi: 400000000 }], price: 608.32, change24h: 2.15 },
-    { asset: 'ADA', avgFundingRate: 0.000, totalOI: 900000000, totalVolume: 1200000000, exchanges: [{ name: 'Binance', fundingRate: 0.000, oi: 400000000 }, { name: 'OKX', fundingRate: -0.001, oi: 200000000 }], price: 0.2399, change24h: 0.25 },
-    { asset: 'AVAX', avgFundingRate: -0.007, totalOI: 800000000, totalVolume: 1100000000, exchanges: [{ name: 'Binance', fundingRate: -0.008, oi: 300000000 }, { name: 'OKX', fundingRate: -0.006, oi: 200000000 }], price: 9.29, change24h: 1.77 },
-    { asset: 'LINK', avgFundingRate: 0.011, totalOI: 700000000, totalVolume: 900000000, exchanges: [{ name: 'Binance', fundingRate: 0.012, oi: 300000000 }, { name: 'OKX', fundingRate: 0.010, oi: 200000000 }], price: 8.98, change24h: 1.89 },
-  ],
-  summary: { totalOI: 47700000000, totalVolume: 74600000000, btcOI: 28400000000, ethOI: 9100000000, btcFunding: -0.004, assetCount: 8, dataPoints: 0 },
+// Empty initial state — shows loading skeleton until live data arrives
+const EMPTY_DATA: DerivData = {
+  assets: [],
+  summary: { totalOI: 0, totalVolume: 0, btcOI: 0, ethOI: 0, btcFunding: 0, assetCount: 0, dataPoints: 0 },
   updatedAt: new Date().toISOString(),
 };
 
@@ -53,7 +80,7 @@ const fmtRate = (r: number): string => {
 const rateClass = (r: number) => (r < 0 ? 'fr-negative' : r > 0 ? 'fr-positive' : '');
 
 export default function DerivativesTab() {
-  const [data, setData] = useState<DerivData>(STATIC_DATA);
+  const [data, setData] = useState<DerivData>(EMPTY_DATA);
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('');
@@ -254,51 +281,128 @@ export default function DerivativesTab() {
         </div>
       </div>
 
-      {/* Macro Correlation + Stablecoin Supply — keep existing */}
+      {/* Macro Correlation + Stablecoin Supply — LIVE DATA */}
       <div className="g2" style={{ marginTop: '1px' }}>
-        <div className="panel">
-          <div className="ph">
-            <div className="pt">Macro Correlation — BTC vs Traditional Markets</div>
-            <div className="tag tag-ai">ChainIntel Research</div>
-          </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '8px', letterSpacing: '0.1em' }}>30-DAY ROLLING CORRELATION WITH BTC PRICE</div>
-          {[
-            { name: 'S&P 500 (SPX)', val: '5,204', chg: '−0.8% 7d', dir: 'dn', corr: '+0.72 Strong ↑', pct: '72%', color: 'var(--green)' },
-            { name: 'NASDAQ (QQQ)', val: '447.2', chg: '−1.1% 7d', dir: 'dn', corr: '+0.68 Moderate ↑', pct: '68%', color: 'var(--green)' },
-            { name: 'DXY (Dollar)', val: '104.8', chg: '+0.4% 7d', dir: 'up', corr: '−0.61 Inverse ↓', pct: '61%', color: 'var(--red)' },
-            { name: 'Gold (XAU)', val: '$3,242', chg: '+2.1% 7d', dir: 'up', corr: '+0.34 Weak ↑', pct: '34%', color: 'var(--gold)' },
-            { name: '10Y Treasury', val: '4.52%', chg: '−8bps 7d', dir: 'dn', corr: '−0.44 Moderate ↓', pct: '44%', color: 'var(--red)' },
-            { name: 'Crude Oil (WTI)', val: '$62.8', chg: '−3.2% 7d', dir: 'dn', corr: '+0.18 Weak', pct: '18%', color: 'var(--text2)' },
-          ].map((m) => (
-            <div className="macro-row" key={m.name}>
-              <div className="macro-asset">{m.name}</div>
-              <div className="macro-val">{m.val}</div>
-              <div className={`macro-chg ${m.dir}`}>{m.chg}</div>
-              <div className="macro-corr">
-                <span style={{ color: m.color }}>{m.corr}</span>
-                <div className="corr-bar" style={{ background: 'var(--b3)' }}><div style={{ width: m.pct, height: '3px', background: m.color, borderRadius: '2px' }}></div></div>
+        <MacroCorrelationPanel />
+        <StablecoinSupplyPanel />
+      </div>
+
+      {/* AI Synthesis — dynamic */}
+      <DerivativesAISynthesis assets={assets} summary={summary} isLive={isLive} negCount={negCount} posCount={posCount} />
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * MacroCorrelationPanel — live data from /api/macro-correlations
+ * ═══════════════════════════════════════════════════════════════════ */
+function MacroCorrelationPanel() {
+  const [macroData, setMacroData] = useState<MacroData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/macro-correlations')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((d: MacroData) => { setMacroData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const fmtVal = (a: MacroAsset) => {
+    if (a.symbol === 'TNX') return `${a.value.toFixed(2)}%`;
+    if (a.symbol === 'XAU' || a.symbol === 'WTI') return `$${a.value.toLocaleString('en-US', { maximumFractionDigits: a.symbol === 'WTI' ? 1 : 0 })}`;
+    return a.value.toLocaleString('en-US', { maximumFractionDigits: a.value > 100 ? 0 : 1 });
+  };
+
+  const fmtChg = (a: MacroAsset) => {
+    if (a.symbol === 'TNX' && a.changeBps !== undefined) {
+      return `${a.changeBps >= 0 ? '+' : ''}${Math.round(a.changeBps)}bps 7d`;
+    }
+    return `${a.change7d >= 0 ? '+' : ''}${a.change7d.toFixed(1)}% 7d`;
+  };
+
+  return (
+    <div className="panel">
+      <div className="ph">
+        <div className="pt">Macro Correlation — BTC vs Traditional Markets</div>
+        <div className={`tag ${macroData?.live ? 'tag-live' : 'tag-ai'}`}>
+          {macroData?.live ? <><span style={{ color: 'var(--green)', marginRight: '4px' }}>●</span>LIVE · Yahoo Finance</> : 'ChainIntel Research'}
+        </div>
+      </div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '8px', letterSpacing: '0.1em' }}>30-DAY ROLLING CORRELATION WITH BTC PRICE</div>
+      {loading ? (
+        <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--muted)' }}>Loading macro correlations...</div>
+      ) : macroData?.assets && macroData.assets.length > 0 ? (
+        macroData.assets.map((m) => (
+          <div className="macro-row" key={m.symbol}>
+            <div className="macro-asset">{m.name}</div>
+            <div className="macro-val">{fmtVal(m)}</div>
+            <div className={`macro-chg ${m.changeDir}`}>{fmtChg(m)}</div>
+            <div className="macro-corr">
+              <span style={{ color: m.color }}>{m.corrLabel}</span>
+              <div className="corr-bar" style={{ background: 'var(--b3)' }}>
+                <div style={{ width: m.corrPct, height: '3px', background: m.color, borderRadius: '2px' }}></div>
               </div>
             </div>
-          ))}
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginTop: '8px' }}>Bloomberg cannot show this cross-asset view natively · ChainIntel exclusive</div>
-        </div>
-
-        <div className="panel">
-          <div className="ph">
-            <div className="pt">Stablecoin Supply — Liquidity Signal</div>
-            <div className="tag tag-live">DefiLlama · CoinGecko</div>
           </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '8px', letterSpacing: '0.1em' }}>STABLECOIN MARKET = SIDELINED CASH WAITING TO ENTER CRYPTO</div>
+        ))
+      ) : (
+        <div style={{ padding: '10px', fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--muted)' }}>Macro data unavailable — retrying on next cycle</div>
+      )}
+      <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginTop: '8px' }}>Bloomberg cannot show this cross-asset view natively · ChainIntel exclusive</div>
+    </div>
+  );
+}
+
+/* ═════════════════════════════════════════════════════════════════
+ * StablecoinSupplyPanel — live data from /api/stablecoin-supply
+ * ═════════════════════════════════════════════════════════════════ */
+function StablecoinSupplyPanel() {
+  const [data, setData] = useState<StablecoinData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/stablecoin-supply')
+      .then(r => r.ok ? r.json() : Promise.reject(r.status))
+      .then((d: StablecoinData) => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const fmtB = (n: number) => n >= 1e12 ? `$${(n / 1e12).toFixed(2)}T` : n >= 1e9 ? `$${(n / 1e9).toFixed(1)}B` : `$${(n / 1e6).toFixed(0)}M`;
+  const fmtChg = (n: number) => {
+    const abs = Math.abs(n);
+    const str = abs >= 1e9 ? `$${(abs / 1e9).toFixed(1)}B` : `$${(abs / 1e6).toFixed(0)}M`;
+    return n >= 0 ? `+${str}` : `−${str}`;
+  };
+
+  const totalSupply = data?.totalSupply ?? 0;
+  const totalChange = data?.totalChange30d ?? 0;
+  const stables = data?.stablecoins ?? [];
+
+  return (
+    <div className="panel">
+      <div className="ph">
+        <div className="pt">Stablecoin Supply — Liquidity Signal</div>
+        <div className={`tag ${data?.live ? 'tag-live' : 'tag-pro'}`}>
+          {data?.live ? <><span style={{ color: 'var(--green)', marginRight: '4px' }}>●</span>LIVE · DefiLlama</> : 'DefiLlama · CoinGecko'}
+        </div>
+      </div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '8px', letterSpacing: '0.1em' }}>STABLECOIN MARKET = SIDELINED CASH WAITING TO ENTER CRYPTO</div>
+      {loading ? (
+        <div style={{ padding: '20px', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--muted)' }}>Loading stablecoin data...</div>
+      ) : (
+        <>
           <div className="g2" style={{ gap: '8px', marginBottom: '10px' }}>
             <div style={{ background: 'var(--s1)', padding: '10px', border: '1px solid var(--b2)' }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '3px' }}>TOTAL STABLECOIN SUPPLY</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '18px', fontWeight: 700, color: 'var(--cyan)' }}>$243.2B</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--green)' }}>+$4.2B this month · BULLISH inflow</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '18px', fontWeight: 700, color: 'var(--cyan)' }}>{fmtB(totalSupply)}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: totalChange >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                {fmtChg(totalChange)} this month · {totalChange >= 0 ? 'BULLISH inflow' : 'BEARISH outflow'}
+              </div>
             </div>
             <div style={{ background: 'var(--s1)', padding: '10px', border: '1px solid var(--b2)' }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '3px' }}>30D SUPPLY CHANGE</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '18px', fontWeight: 700, color: 'var(--green)' }}>+$4.2B</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)' }}>New USD entering crypto ecosystem</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '18px', fontWeight: 700, color: totalChange >= 0 ? 'var(--green)' : 'var(--red)' }}>{fmtChg(totalChange)}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)' }}>{totalChange >= 0 ? 'New USD entering crypto ecosystem' : 'Capital rotating out of stablecoins'}</div>
             </div>
           </div>
           <table className="fr-table dt">
@@ -312,41 +416,76 @@ export default function DerivativesTab() {
               </tr>
             </thead>
             <tbody>
-              <tr><td>USDT</td><td>$144.2B</td><td className="fr-positive">+$2.1B</td><td style={{ color: 'var(--green)' }}>✓ 1.000</td><td style={{ color: 'var(--text2)' }}>Multi</td></tr>
-              <tr><td>USDC</td><td>$60.8B</td><td className="fr-positive">+$1.4B</td><td style={{ color: 'var(--green)' }}>✓ 1.000</td><td style={{ color: 'var(--text2)' }}>Multi</td></tr>
-              <tr><td>USDS</td><td>$14.1B</td><td className="fr-positive">+$0.8B</td><td style={{ color: 'var(--green)' }}>✓ 1.001</td><td style={{ color: 'var(--text2)' }}>ETH</td></tr>
-              <tr><td>DAI</td><td>$5.4B</td><td className="fr-negative">−$0.2B</td><td style={{ color: 'var(--green)' }}>✓ 0.999</td><td style={{ color: 'var(--text2)' }}>ETH</td></tr>
-              <tr><td>FDUSD</td><td>$2.1B</td><td className="fr-negative">−$0.1B</td><td style={{ color: 'var(--green)' }}>✓ 1.000</td><td style={{ color: 'var(--text2)' }}>Multi</td></tr>
-              <tr><td style={{ color: 'var(--cyan)', fontWeight: 600 }}>RLUSD</td><td>$1.4B</td><td className="fr-positive">+$0.3B</td><td style={{ color: 'var(--green)' }}>✓ 1.000</td><td style={{ color: 'var(--text2)' }}>XRP/ETH</td></tr>
+              {stables.slice(0, 6).map((s) => (
+                <tr key={s.symbol}>
+                  <td style={s.symbol === 'RLUSD' ? { color: 'var(--cyan)', fontWeight: 600 } : undefined}>{s.symbol}</td>
+                  <td>{fmtB(s.supply)}</td>
+                  <td className={s.change30d >= 0 ? 'fr-positive' : 'fr-negative'}>{fmtChg(s.change30d)}</td>
+                  <td style={{ color: Math.abs(s.peg - 1) < 0.01 ? 'var(--green)' : 'var(--red)' }}>
+                    {Math.abs(s.peg - 1) < 0.01 ? '✓' : '✗'} {s.peg.toFixed(3)}
+                  </td>
+                  <td style={{ color: 'var(--text2)' }}>{s.chain}</td>
+                </tr>
+              ))}
             </tbody>
           </table>
-        </div>
-      </div>
+        </>
+      )}
+    </div>
+  );
+}
 
-      {/* AI Synthesis — dynamic */}
-      <div className="ai-box">
-        <div className="ai-label">
-          <span className="ai-pulse"></span>
-          Derivatives AI Synthesis · {isLive ? 'Live Data' : 'Coinalyze · Laevitas'} · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-        </div>
-        <div className="ai-text">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              <span style={{ color: negCount > posCount ? 'var(--red)' : 'var(--green)', flexShrink: 0 }}>▸</span>
-              <span><strong>{negCount} of {assets.length} assets have negative funding</strong> — derivatives traders are net short. {negCount > posCount ? 'When shorts dominate and spot shows accumulation, historically precedes short squeezes.' : 'Mixed positioning across assets.'}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              <span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span>
-              <span><strong>Total OI: {fmt$(summary.totalOI)}</strong> — BTC dominates at {((summary.btcOI / summary.totalOI) * 100).toFixed(0)}% of total derivatives open interest. {summary.btcFunding < -0.001 ? 'Reduced leverage = lower crash risk from cascading liquidations.' : 'Monitor for leverage buildup.'}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              <span style={{ color: 'var(--green)', flexShrink: 0 }}>▸</span>
-              <span><strong>Stablecoin supply +$4.2B this month</strong> — fresh USD entering the ecosystem. Historical precedent: stablecoin inflows of this magnitude precede meaningful rallies within 30–90 days.</span>
-            </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              <span style={{ color: 'var(--gold)', flexShrink: 0 }}>▸</span>
-              <span><strong>BTC-SPX correlation +0.72</strong> — macro risk-off environment. Dollar strength (DXY +0.4%) creates headwind. Monitor 10Y yield: if drops further, expect BTC to decouple upward as in 2023 pattern.</span>
-            </div>
+/* ═════════════════════════════════════════════════════════════════
+ * DerivativesAISynthesis — dynamic AI synthesis box
+ * ═════════════════════════════════════════════════════════════════ */
+function DerivativesAISynthesis({ assets, summary, isLive, negCount, posCount }: {
+  assets: AssetData[];
+  summary: DerivData['summary'];
+  isLive: boolean;
+  negCount: number;
+  posCount: number;
+}) {
+  // Fetch live stablecoin + macro for synthesis text
+  const [stableChange, setStableChange] = useState<string>('+$0');
+  const [spxCorr, setSpxCorr] = useState<string>('+0.00');
+  const [dxyChg, setDxyChg] = useState<string>('0.0%');
+
+  useEffect(() => {
+    fetch('/api/stablecoin-supply').then(r => r.json()).then((d: StablecoinData) => {
+      const c = d.totalChange30d;
+      setStableChange(c >= 1e9 ? `+$${(c / 1e9).toFixed(1)}B` : c >= 0 ? `+$${(c / 1e6).toFixed(0)}M` : `-$${(Math.abs(c) / 1e9).toFixed(1)}B`);
+    }).catch(() => {});
+    fetch('/api/macro-correlations').then(r => r.json()).then((d: MacroData) => {
+      const spx = d.assets?.find((a: MacroAsset) => a.symbol === 'SPX');
+      const dxy = d.assets?.find((a: MacroAsset) => a.symbol === 'DXY');
+      if (spx) setSpxCorr(`${spx.correlation >= 0 ? '+' : ''}${spx.correlation.toFixed(2)}`);
+      if (dxy) setDxyChg(`${dxy.change7d >= 0 ? '+' : ''}${dxy.change7d.toFixed(1)}%`);
+    }).catch(() => {});
+  }, []);
+
+  return (
+    <div className="ai-box">
+      <div className="ai-label">
+        <span className="ai-pulse"></span>
+        Derivatives AI Synthesis · {isLive ? 'Live Data' : 'CoinGecko Derivatives'} · {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+      </div>
+      <div className="ai-text">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <span style={{ color: negCount > posCount ? 'var(--red)' : 'var(--green)', flexShrink: 0 }}>▸</span>
+            <span><strong>{negCount} of {assets.length} assets have negative funding</strong> — derivatives traders are net short. {negCount > posCount ? 'When shorts dominate and spot shows accumulation, historically precedes short squeezes.' : 'Mixed positioning across assets.'}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span>
+            <span><strong>Total OI: {fmt$(summary.totalOI)}</strong> — BTC dominates at {summary.totalOI > 0 ? ((summary.btcOI / summary.totalOI) * 100).toFixed(0) : '0'}% of total derivatives open interest. {summary.btcFunding < -0.001 ? 'Reduced leverage = lower crash risk from cascading liquidations.' : 'Monitor for leverage buildup.'}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <span style={{ color: 'var(--green)', flexShrink: 0 }}>▸</span>
+            <span><strong>Stablecoin supply {stableChange} this month</strong> — {stableChange.startsWith('+') ? 'fresh USD entering the ecosystem. Historical precedent: stablecoin inflows of this magnitude precede meaningful rallies within 30–90 days.' : 'capital outflows detected. Monitor for potential selling pressure.'}</span>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+            <span style={{ color: 'var(--gold)', flexShrink: 0 }}>▸</span>
+            <span><strong>BTC-SPX correlation {spxCorr}</strong> — {parseFloat(spxCorr) > 0.5 ? 'macro risk-off environment.' : 'decoupling from equities.'} Dollar {dxyChg.startsWith('+') ? `strength (DXY ${dxyChg}) creates headwind` : `weakness (DXY ${dxyChg}) provides tailwind`}. Monitor 10Y yield: if drops further, expect BTC to decouple upward as in 2023 pattern.</span>
           </div>
         </div>
       </div>

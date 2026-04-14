@@ -15,29 +15,7 @@ interface CoinData {
   market_cap_rank: number;
 }
 
-/* ── Fallback top-20 data ── ensures tab never shows $0 ── */
-const FALLBACK_COINS: CoinData[] = [
-  { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png', current_price: 73000, market_cap: 1440000000000, total_volume: 38400000000, price_change_percentage_24h: 0.82, price_change_percentage_7d_in_currency: -3.14, market_cap_rank: 1 },
-  { id: 'ethereum', symbol: 'eth', name: 'Ethereum', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png', current_price: 2250, market_cap: 270000000000, total_volume: 14800000000, price_change_percentage_24h: -1.24, price_change_percentage_7d_in_currency: -8.32, market_cap_rank: 2 },
-  { id: 'tether', symbol: 'usdt', name: 'Tether', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/825.png', current_price: 1.0, market_cap: 143000000000, total_volume: 62000000000, price_change_percentage_24h: 0.01, price_change_percentage_7d_in_currency: 0.0, market_cap_rank: 3 },
-  { id: 'ripple', symbol: 'xrp', name: 'XRP', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/52.png', current_price: 1.35, market_cap: 121000000000, total_volume: 7800000000, price_change_percentage_24h: 1.87, price_change_percentage_7d_in_currency: -4.20, market_cap_rank: 4 },
-  { id: 'solana', symbol: 'sol', name: 'Solana', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png', current_price: 83.90, market_cap: 67200000000, total_volume: 4200000000, price_change_percentage_24h: -0.41, price_change_percentage_7d_in_currency: -5.80, market_cap_rank: 5 },
-  { id: 'bnb', symbol: 'bnb', name: 'BNB', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png', current_price: 598, market_cap: 86000000000, total_volume: 1800000000, price_change_percentage_24h: 0.34, price_change_percentage_7d_in_currency: -2.10, market_cap_rank: 6 },
-  { id: 'usd-coin', symbol: 'usdc', name: 'USD Coin', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png', current_price: 1.0, market_cap: 51000000000, total_volume: 8100000000, price_change_percentage_24h: 0.0, price_change_percentage_7d_in_currency: 0.0, market_cap_rank: 7 },
-  { id: 'dogecoin', symbol: 'doge', name: 'Dogecoin', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png', current_price: 0.082, market_cap: 12000000000, total_volume: 1200000000, price_change_percentage_24h: -2.10, price_change_percentage_7d_in_currency: -6.30, market_cap_rank: 8 },
-  { id: 'cardano', symbol: 'ada', name: 'Cardano', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png', current_price: 0.2402, market_cap: 8600000000, total_volume: 580000000, price_change_percentage_24h: 0.87, price_change_percentage_7d_in_currency: -3.50, market_cap_rank: 9 },
-  { id: 'tron', symbol: 'trx', name: 'TRON', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1958.png', current_price: 0.126, market_cap: 10800000000, total_volume: 620000000, price_change_percentage_24h: 0.45, price_change_percentage_7d_in_currency: -1.80, market_cap_rank: 10 },
-  { id: 'chainlink', symbol: 'link', name: 'Chainlink', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1975.png', current_price: 8.08, market_cap: 5200000000, total_volume: 380000000, price_change_percentage_24h: 2.58, price_change_percentage_7d_in_currency: -1.20, market_cap_rank: 11 },
-  { id: 'avalanche-2', symbol: 'avax', name: 'Avalanche', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5805.png', current_price: 9.35, market_cap: 3800000000, total_volume: 410000000, price_change_percentage_24h: 2.96, price_change_percentage_7d_in_currency: -3.80, market_cap_rank: 12 },
-  { id: 'stellar', symbol: 'xlm', name: 'Stellar', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/512.png', current_price: 0.152, market_cap: 8300000000, total_volume: 500000000, price_change_percentage_24h: 0.35, price_change_percentage_7d_in_currency: -2.80, market_cap_rank: 13 },
-  { id: 'hedera-hashgraph', symbol: 'hbar', name: 'Hedera', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4642.png', current_price: 0.0855, market_cap: 6700000000, total_volume: 300000000, price_change_percentage_24h: -0.61, price_change_percentage_7d_in_currency: 2.10, market_cap_rank: 14 },
-  { id: 'polkadot', symbol: 'dot', name: 'Polkadot', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/6636.png', current_price: 3.82, market_cap: 5400000000, total_volume: 320000000, price_change_percentage_24h: -1.50, price_change_percentage_7d_in_currency: -5.20, market_cap_rank: 15 },
-  { id: 'litecoin', symbol: 'ltc', name: 'Litecoin', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2.png', current_price: 65.40, market_cap: 4900000000, total_volume: 380000000, price_change_percentage_24h: 1.10, price_change_percentage_7d_in_currency: -2.90, market_cap_rank: 16 },
-  { id: 'quant-network', symbol: 'qnt', name: 'Quant', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3155.png', current_price: 74.87, market_cap: 1100000000, total_volume: 44000000, price_change_percentage_24h: -1.77, price_change_percentage_7d_in_currency: 1.80, market_cap_rank: 17 },
-  { id: 'algorand', symbol: 'algo', name: 'Algorand', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4030.png', current_price: 0.1033, market_cap: 850000000, total_volume: 42000000, price_change_percentage_24h: 0.0, price_change_percentage_7d_in_currency: -2.40, market_cap_rank: 18 },
-  { id: 'iota', symbol: 'iota', name: 'IOTA', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1720.png', current_price: 0.054, market_cap: 580000000, total_volume: 24000000, price_change_percentage_24h: -2.11, price_change_percentage_7d_in_currency: 0.80, market_cap_rank: 19 },
-  { id: 'xdc-network', symbol: 'xdc', name: 'XDC Network', image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2634.png', current_price: 0.028, market_cap: 400000000, total_volume: 18000000, price_change_percentage_24h: 0.0, price_change_percentage_7d_in_currency: -1.10, market_cap_rank: 20 },
-];
+/* ── No fallback data ── we show skeleton loading until live data arrives ── */
 
 /* ── Transform CMC API response to our CoinData format ── */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,7 +56,7 @@ function getSignal(chg24: number): { label: string; color: string } {
 }
 
 export default function MarketsTab() {
-  const [coins, setCoins] = useState<CoinData[]>(FALLBACK_COINS);
+  const [coins, setCoins] = useState<CoinData[]>([]);
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState<'live-cmc' | 'live-cg' | 'cached' | 'fallback'>('fallback');
   const [error, setError] = useState<string | null>(null);
@@ -175,7 +153,7 @@ export default function MarketsTab() {
   const sourceLabel = dataSource === 'live-cmc' ? '● LIVE · COINMARKETCAP' :
     dataSource === 'live-cg' ? '● LIVE · COINGECKO' :
     dataSource === 'cached' ? '● CACHED · COINMARKETCAP' :
-    '● CACHED · STATIC DATA';
+    coins.length > 0 ? '● CACHED' : '○ CONNECTING...';
   const sourceColor = dataSource.startsWith('live') ? 'var(--green)' : 'var(--gold)';
 
   return (
@@ -183,7 +161,9 @@ export default function MarketsTab() {
       <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
         <span className="acs-body">
-          {(() => {
+          {coins.length === 0 ? (
+            <span>Connecting to market data feed...</span>
+          ) : (() => {
             const g = coins.filter(c => c.price_change_percentage_24h > 0).length;
             const l = coins.length - g;
             const topGainer = [...coins].filter(c => !['usdt','usdc','dai','busd','tusd','fdusd'].includes(c.symbol)).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)[0];

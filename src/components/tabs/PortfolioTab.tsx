@@ -31,30 +31,12 @@ const FALLBACK_PRICES: Record<string, number> = {
   ALGO: 0.165,
 };
 
-// ── Symbol → CoinGecko ID mapping (top 20+ coins) ────────────────────────────
-const COINGECKO_IDS: Record<string, string> = {
-  BTC: 'bitcoin',
-  ETH: 'ethereum',
-  SOL: 'solana',
-  XRP: 'ripple',
-  BNB: 'binancecoin',
-  DOGE: 'dogecoin',
-  ADA: 'cardano',
-  TON: 'the-open-network',
-  TRX: 'tron',
-  AVAX: 'avalanche-2',
-  SUI: 'sui',
-  LINK: 'chainlink',
-  DOT: 'polkadot',
-  MATIC: 'matic-network',
-  PEPE: 'pepe',
-  HBAR: 'hedera-hashgraph',
-  QNT: 'quant-network',
-  XLM: 'stellar',
-  IOTA: 'iota',
-  XDC: 'xdce-crowd-sale',
-  ALGO: 'algorand',
-};
+// ── Supported assets for portfolio tracking ──────────────────────────────────
+const SUPPORTED_ASSETS = new Set([
+  'BTC', 'ETH', 'SOL', 'XRP', 'BNB', 'DOGE', 'ADA', 'TON', 'TRX',
+  'AVAX', 'SUI', 'LINK', 'DOT', 'MATIC', 'PEPE', 'HBAR', 'QNT',
+  'XLM', 'IOTA', 'XDC', 'ALGO',
+]);
 
 const ISO_ASSETS = new Set(['XRP', 'XLM', 'HBAR', 'QNT', 'ADA', 'IOTA', 'XDC', 'ALGO']);
 
@@ -141,28 +123,29 @@ export default function PortfolioTab() {
     saveToSession(holdings);
   }, [holdings]);
 
-  // ── Fetch live prices from CoinGecko whenever holdings change ─────────────
+  // ── Fetch live prices via our CMC proxy (avoids CoinGecko rate limits) ────
   useEffect(() => {
-    const assets = holdings.map(h => h.asset).filter(a => COINGECKO_IDS[a]);
+    const assets = holdings.map(h => h.asset).filter(a => SUPPORTED_ASSETS.has(a));
     if (assets.length === 0) return;
 
-    const coinIds = [...new Set(assets.map(a => COINGECKO_IDS[a]))].join(',');
+    const symbols = [...new Set(assets)].join(',');
     setPricesLoading(true);
     setPricesError(false);
 
-    fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${coinIds}&vs_currencies=usd`,
-    )
+    fetch(`/api/cmc?endpoint=/v1/cryptocurrency/quotes/latest&symbol=${symbols}&convert=USD`)
       .then(res => {
-        if (!res.ok) throw new Error('CoinGecko request failed');
+        if (!res.ok) throw new Error('CMC proxy request failed');
         return res.json();
       })
-      .then((data: Record<string, { usd: number }>) => {
+      .then((json) => {
+        // CMC quotes response: data.data.{SYMBOL}.quote.USD.price
+        const quotes = json.data?.data || json.data || {};
         setLivePrices(prev => {
           const next = { ...prev };
-          for (const [symbol, cgId] of Object.entries(COINGECKO_IDS)) {
-            if (data[cgId]?.usd !== undefined) {
-              next[symbol] = data[cgId].usd;
+          for (const [symbol, info] of Object.entries(quotes) as [string, any][]) {
+            const price = info?.quote?.USD?.price;
+            if (price !== undefined && price > 0) {
+              next[symbol] = price;
             }
           }
           return next;
@@ -280,7 +263,7 @@ LARGEST POSITION: ${topAsset.asset} — $${fmt(getValue(topAsset))} (${totalValu
 
 ISO 20022 EXPOSURE: ${isoExposurePct}% of your portfolio is in ISO 20022-compliant assets${isoHoldings.length > 0 ? ` (${isoHoldings.map(h => h.asset).join(', ')})` : ''}. ${parseFloat(isoExposurePct) > 40 ? 'HIGH exposure — well-positioned for SWIFT migration tailwinds.' : parseFloat(isoExposurePct) > 20 ? 'MODERATE exposure — consider increasing ISO 20022 allocation as SWIFT deadline approaches.' : 'LOW exposure — ISO 20022 infrastructure plays (XRP, HBAR, QNT) have structural tailwinds from SWIFT migration.'}
 
-MARKET CONTEXT: BTC funding rates are negative (−0.004%) — derivatives market is net short while on-chain accumulation continues. Stablecoin supply +$4.2B this month signals fresh capital entering. Whale data shows exchange outflows dominating 3.2x — net accumulation phase.
+MARKET CONTEXT: Live prices sourced via CoinMarketCap API. Cross-reference with ChainIntel Sentiment, Derivatives, and Whale tabs for full market context.
 
 Bloomberg cannot generate this brief for your specific holdings. ChainIntel does it instantly.`;
     setBriefText(brief);

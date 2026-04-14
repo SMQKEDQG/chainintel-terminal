@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { TABS, VERSION, type TabId } from '@/lib/constants';
 import { useAuth } from '@/lib/auth-context';
 import TickerTape from './TickerTape';
+import CommandPalette from './CommandPalette';
 import Link from 'next/link';
 
 interface TerminalLayoutProps {
@@ -15,6 +16,7 @@ interface TerminalLayoutProps {
 export default function TerminalLayout({ children, activeTab, onTabChange }: TerminalLayoutProps) {
   const { user, loading, signOut } = useAuth();
   const [clock, setClock] = useState('');
+  const [cmdOpen, setCmdOpen] = useState(false);
 
   useEffect(() => {
     const tick = () => {
@@ -29,7 +31,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
   const handleKeydown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
-      // TODO: command palette
+      setCmdOpen(prev => !prev);
     }
   }, []);
 
@@ -115,6 +117,13 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
               </div>
             )
           )}
+          <button
+            onClick={() => setCmdOpen(true)}
+            className="font-mono text-[7px] tracking-wider px-2 py-1 border transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)] hidden sm:flex items-center gap-1.5"
+            style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
+          >
+            <span>⌘K</span>
+          </button>
           <div className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full bg-[var(--cyan)] animate-pulse" />
             <span className="font-mono text-[8px] tracking-wider" style={{ color: 'var(--cyan)' }}>LIVE</span>
@@ -149,6 +158,9 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
       <main className="flex-1 p-3" style={{ background: 'var(--bg)' }}>
         {children}
       </main>
+
+      {/* Command Palette */}
+      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} onTabChange={onTabChange} />
 
       {/* Footer */}
       <footer

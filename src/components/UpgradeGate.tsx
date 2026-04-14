@@ -153,17 +153,23 @@ export default function UpgradeGate({
           {/* CTA */}
           <div style={styles.ctaRow}>
             <a
-              href="/?tab=pricing"
-              onClick={(e) => {
-                e.preventDefault();
-                const event = new CustomEvent('goPage', { detail: 'pricing' });
-                window.dispatchEvent(event);
-              }}
+              href={requiredTier === 'pro' ? 'https://buy.stripe.com/fZufZi0xL2hg0lUaBsbwk03' : 'https://buy.stripe.com/dRmbJ2bcpg864Ca6lcbwk02'}
               style={{ ...styles.cta, background: meta.color }}
             >
               UPGRADE TO {meta.label} →
             </a>
             <span style={styles.ctaSub}>Cancel anytime · No contracts</span>
+            <a
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                const event = new CustomEvent('goPage', { detail: 'pricing' });
+                window.dispatchEvent(event);
+              }}
+              style={{ display: 'block', fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', marginTop: '8px', letterSpacing: '0.06em', textDecoration: 'underline', cursor: 'pointer' }}
+            >
+              Compare plans →
+            </a>
           </div>
 
           {/* Bottom accent line */}

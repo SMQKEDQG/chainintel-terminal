@@ -61,13 +61,28 @@ export default function PricingTab() {
     setOpenFaqs(prev => ({ ...prev, [i]: !prev[i] }));
   };
 
-  const submitWaitlist = () => {
+  const submitWaitlist = async () => {
     if (!waitlistEmail || !waitlistEmail.includes('@')) return;
+    try {
+      await fetch('/api/waitlist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: waitlistEmail }),
+      });
+    } catch {
+      // Still show success to user even if API fails
+    }
     setWaitlistSubmitted(true);
   };
 
   const scrollToComparison = () => {
     document.getElementById('vsBloombergTable')?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Stripe Payment Links (direct — no server-side secret key needed)
+  const PAYMENT_LINKS: Record<string, string> = {
+    pro: 'https://buy.stripe.com/fZufZi0xL2hg0lUaBsbwk03',
+    ent: 'https://buy.stripe.com/dRmbJ2bcpg864Ca6lcbwk02',
   };
 
   const handleCheckout = async (tier: 'pro' | 'ent') => {
@@ -89,19 +104,13 @@ export default function PricingTab() {
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
-      } else if (data.fallback) {
-        // Stripe not configured — fall back to payment links
-        const fallbackUrl = tier === 'pro'
-          ? 'https://buy.stripe.com/dRm6oI94hf428Sq7pgbwk01'
-          : 'https://buy.stripe.com/eVqfZi2FT1dc8Sq9xobwk00';
-        window.open(fallbackUrl, '_blank');
+      } else {
+        // Stripe session unavailable — redirect to payment link
+        window.location.href = PAYMENT_LINKS[tier];
       }
     } catch {
-      // Fallback to direct payment links on error
-      const fallbackUrl = tier === 'pro'
-        ? 'https://buy.stripe.com/dRm6oI94hf428Sq7pgbwk01'
-        : 'https://buy.stripe.com/eVqfZi2FT1dc8Sq9xobwk00';
-      window.open(fallbackUrl, '_blank');
+      // Fallback to direct payment links on any error
+      window.location.href = PAYMENT_LINKS[tier];
     } finally {
       setCheckoutLoading(null);
     }

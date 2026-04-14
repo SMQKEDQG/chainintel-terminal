@@ -4,8 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { TABS, VERSION, type TabId } from '@/lib/constants';
 import { useAuth } from '@/lib/auth-context';
 import TickerTape from './TickerTape';
-import CommandPalette from './CommandPalette';
+import AlertPanel from './AlertPanel';
+import StatusBar from './StatusBar';
+import GuidedTour from './GuidedTour';
+import { SourceStatusBadge } from './LevelUpModules';
 import Link from 'next/link';
+
+const PRO_TAB_IDS = new Set(['onchain', 'defi', 'derivatives', 'alerts', 'sentiment']);
 
 interface TerminalLayoutProps {
   children: React.ReactNode;
@@ -16,7 +21,8 @@ interface TerminalLayoutProps {
 export default function TerminalLayout({ children, activeTab, onTabChange }: TerminalLayoutProps) {
   const { user, loading, signOut } = useAuth();
   const [clock, setClock] = useState('');
-  const [cmdOpen, setCmdOpen] = useState(false);
+  const [alertPanelOpen, setAlertPanelOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
 
   useEffect(() => {
     const tick = () => {
@@ -31,7 +37,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
   const handleKeydown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
-      setCmdOpen(prev => !prev);
+      // TODO: command palette
     }
   }, []);
 
@@ -43,7 +49,9 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
   return (
     <div className="flex flex-col min-h-screen">
       {/* Ticker Tape */}
-      <TickerTape />
+      <div data-tour="ticker-tape">
+        <TickerTape />
+      </div>
 
       {/* Topbar */}
       <div
@@ -72,12 +80,17 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             <circle cx="5" cy="25.5" r="1.8" fill="var(--cyan)" />
             <circle cx="5" cy="10.5" r="1.8" fill="var(--cyan)" />
           </svg>
-          <div>
+          <div
+            className="tour-title-btn"
+            onClick={() => setTourOpen(true)}
+            title="Click for guided tour"
+          >
             <div className="font-mono text-xs font-semibold tracking-wider" style={{ color: 'var(--cyan)' }}>
               CHAININTEL
             </div>
             <div className="font-mono text-[7px] tracking-widest" style={{ color: 'var(--muted)' }}>
               DIGITAL ASSET INTELLIGENCE · {VERSION}
+              <span style={{ marginLeft: 6, color: 'var(--cyan)', opacity: 0.5, fontSize: 6 }}>▶ TOUR</span>
             </div>
           </div>
         </div>
@@ -118,15 +131,18 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             )
           )}
           <button
-            onClick={() => setCmdOpen(true)}
-            className="font-mono text-[7px] tracking-wider px-2 py-1 border transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)] hidden sm:flex items-center gap-1.5"
-            style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
+            data-tour="alert-btn"
+            onClick={() => setAlertPanelOpen(prev => !prev)}
+            className="flex items-center gap-1.5 px-2 py-1 border transition-colors hover:border-[var(--cyan)]"
+            style={{ borderColor: alertPanelOpen ? 'var(--cyan)' : 'var(--b3)', background: alertPanelOpen ? 'rgba(0,212,170,0.06)' : 'transparent' }}
+            title="Alert Engine"
           >
-            <span>⌘K</span>
+            <span style={{ fontSize: 10 }}>🔔</span>
+            <span className="font-mono text-[7px] tracking-wider" style={{ color: alertPanelOpen ? 'var(--cyan)' : 'var(--muted)' }}>ALERTS</span>
           </button>
-          <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--cyan)] animate-pulse" />
-            <span className="font-mono text-[8px] tracking-wider" style={{ color: 'var(--cyan)' }}>LIVE</span>
+          <div data-tour="live-indicator" className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-[var(--cyan)] heartbeat" />
+            <span className="font-mono text-[8px] tracking-wider live-breathe" style={{ color: 'var(--cyan)' }}>LIVE</span>
           </div>
           <span className="font-mono text-[9px]" style={{ color: 'var(--muted)' }}>{clock}</span>
         </div>
@@ -134,12 +150,14 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
 
       {/* Tab Navigation */}
       <nav
+        data-tour="tab-nav"
         className="flex items-center gap-0 overflow-x-auto border-b"
         style={{ background: 'var(--s1)', borderColor: 'var(--b1)', zIndex: 10000, position: 'sticky', top: 42 }}
       >
         {TABS.map((tab) => (
           <button
             key={tab.id}
+            data-tour={`tab-${tab.id}`}
             onClick={() => onTabChange(tab.id)}
             title={tab.title}
             className="font-mono text-[9px] tracking-wider px-3.5 py-2.5 whitespace-nowrap border-b-2 transition-colors duration-150 hover:bg-[var(--s2)]"
@@ -150,6 +168,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             }}
           >
             {tab.label}
+            {PRO_TAB_IDS.has(tab.id) && <span className="tab-pro-badge">PRO</span>}
           </button>
         ))}
       </nav>
@@ -159,28 +178,38 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
         {children}
       </main>
 
-      {/* Command Palette */}
-      <CommandPalette open={cmdOpen} onClose={() => setCmdOpen(false)} onTabChange={onTabChange} />
-
-      {/* Footer */}
+      {/* Footer links */}
       <footer
-        className="flex items-center justify-between px-4 py-1.5 border-t font-mono text-[8px]"
+        className="flex items-center justify-between px-4 py-1 border-t font-mono text-[7px]"
         style={{ background: 'var(--s1)', borderColor: 'var(--b1)', color: 'var(--muted)', letterSpacing: '0.06em' }}
       >
         <div className="flex items-center gap-4">
           <span>CHAININTEL {VERSION}</span>
-          <span>89 SOURCES</span>
-          <span>12 MODULES</span>
+          <SourceStatusBadge />
         </div>
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
           <a href="/deck" className="hover:text-[var(--cyan)] transition-colors">PITCH DECK</a>
           <a href="/why-chainintel" className="hover:text-[var(--cyan)] transition-colors">WHY CHAININTEL</a>
           <a href="/promo" className="hover:text-[var(--cyan)] transition-colors">PROMO</a>
           <a href="/tos" className="hover:text-[var(--cyan)] transition-colors">TERMS</a>
           <a href="/privacy" className="hover:text-[var(--cyan)] transition-colors">PRIVACY</a>
-          <span className="hidden sm:inline">chainintelterminal.com</span>
         </div>
       </footer>
+
+      {/* Live Status Bar */}
+      <div data-tour="status-bar">
+        <StatusBar />
+      </div>
+
+      {/* Alert Panel Slideout */}
+      <AlertPanel isOpen={alertPanelOpen} onClose={() => setAlertPanelOpen(false)} />
+
+      {/* Guided Tour */}
+      <GuidedTour
+        isOpen={tourOpen}
+        onClose={() => setTourOpen(false)}
+        onSwitchTab={(tabId) => onTabChange(tabId as TabId)}
+      />
     </div>
   );
 }

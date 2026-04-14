@@ -19,10 +19,13 @@ const CACHE_TTL = 60_000; // 60 seconds
 const ALLOWED_PATHS = new Set([
   '/v1/cryptocurrency/listings/latest',
   '/v1/cryptocurrency/quotes/latest',
+  '/v2/cryptocurrency/quotes/latest',
   '/v1/global-metrics/quotes/latest',
   '/v1/cryptocurrency/trending/gainers-losers',
   '/v1/cryptocurrency/trending/latest',
   '/v1/cryptocurrency/trending/most-visited',
+  '/v1/cryptocurrency/categories',
+  '/v1/cryptocurrency/category',
 ]);
 
 export async function GET(req: NextRequest) {

@@ -28,7 +28,7 @@ const faqs: FAQItem[] = [
   },
   {
     q: 'How accurate is the data?',
-    a: 'Price data is sourced from CoinMarketCap (updated every 60 seconds). On-chain metrics pull from Glassnode, Santiment, and public blockchain explorers. Regulatory data is manually curated and updated weekly. ETF flow data sources SEC filings and Bloomberg ETF data.',
+    a: 'Price data is sourced from CoinMarketCap (updated every 60 seconds). On-chain metrics pull from Mempool.space, Blockchain.com, and Etherscan. Regulatory data is aggregated from the Federal Register, SEC EDGAR, and 10+ RSS feeds updated every 2 minutes. ETF flow data is sourced from Farside Investors and SEC filings.',
   },
   {
     q: 'Can I cancel my subscription anytime?',

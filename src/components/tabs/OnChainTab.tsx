@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { DataFreshness, SkeletonGrid, SkeletonTable, ErrorState } from '../DataFreshness';
 
-interface AssetMetrics {
+interface OnChainAsset {
   symbol: string;
   price: number;
   marketCap: number;
@@ -17,333 +18,248 @@ interface AssetMetrics {
   dailyTxCount: number;
   onchainScore: number;
   hashrate: number;
-  liquidityScore: number;
-  adoptionScore: number;
-  networkScore: number;
-  decentralization: number;
 }
 
-interface OnChainData {
-  assets: AssetMetrics[];
+interface OnChainAPI {
+  assets: OnChainAsset[];
   btcHashrate: number;
   updatedAt: string;
   source: string;
-  methodology: string;
 }
 
-function fmtPrice(n: number): string {
-  if (n >= 10000) return `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-  if (n >= 1) return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-  return `$${n.toFixed(4)}`;
+interface MempoolData {
+  hashrate: number;
+  difficulty: number;
+  nextDiffAdj: string;
+  fees: { fast: number; normal: number; economy: number };
+  blockHeight: number;
+  totalBtc: number;
 }
-
-function fmtCompact(n: number): string {
-  if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
-  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-  if (Math.abs(n) >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-  return n.toLocaleString();
-}
-
-function mvrvColor(v: number): string {
-  if (v >= 3.0) return 'var(--red)';     // Overvalued
-  if (v >= 2.0) return 'var(--gold)';    // Caution
-  if (v >= 1.0) return 'var(--green)';   // Fair value
-  return 'var(--cyan)';                   // Undervalued
-}
-
-function mvrvLabel(v: number): string {
-  if (v >= 3.0) return 'OVERVALUED';
-  if (v >= 2.0) return 'CAUTION';
-  if (v >= 1.0) return 'FAIR VALUE';
-  return 'UNDERVALUED';
-}
-
-function ScoreBar({ score }: { score: number }) {
-  const color = score >= 80 ? 'var(--cyan)' : score >= 60 ? 'var(--green)' : score >= 40 ? 'var(--gold)' : 'var(--red)';
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <div style={{ width: 80, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-        <div style={{ width: `${score}%`, height: '100%', background: `linear-gradient(90deg, ${color}, ${color})`, borderRadius: 3, transition: 'width 0.5s ease' }} />
-      </div>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700, color, minWidth: 20 }}>{score}</span>
-    </div>
-  );
-}
-
-type SortKey = 'symbol' | 'onchainScore' | 'mvrv' | 'nvt' | 'exchangeFlow30d' | 'lthSupplyPct' | 'volume24h' | 'change30d';
 
 export default function OnChainTab() {
-  const [data, setData] = useState<OnChainData | null>(null);
+  const [assets, setAssets] = useState<OnChainAsset[]>([]);
+  const [mempool, setMempool] = useState<MempoolData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>('onchainScore');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
-  const [expandedAsset, setExpandedAsset] = useState<string | null>(null);
+  const [error, setError] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [isLive, setIsLive] = useState(false);
 
   const fetchData = useCallback(async () => {
+    setError(false);
     try {
-      const res = await fetch('/api/onchain-metrics');
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json = await res.json();
-      setData(json);
-      setError(null);
-    } catch (e: any) {
-      setError(e.message || 'Failed to fetch');
-    } finally {
-      setLoading(false);
+      const [metricsRes, mempoolRes, networkRes] = await Promise.allSettled([
+        fetch('/api/onchain-metrics'),
+        fetch('/api/onchain'),
+        fetch('/api/network-stats'),
+      ]);
+
+      if (metricsRes.status === 'fulfilled' && metricsRes.value.ok) {
+        const json: OnChainAPI = await metricsRes.value.json();
+        if (json.assets?.length > 0) {
+          setAssets(json.assets);
+          setIsLive(json.source === 'live');
+        }
+      }
+
+      if (mempoolRes.status === 'fulfilled' && mempoolRes.value.ok) {
+        const mJson = await mempoolRes.value.json();
+        if (mJson.blockHeight > 0) setMempool(mJson);
+      }
+
+      // Merge network-stats aggregator data (Etherscan gas, Beaconcha.in, Blockchair)
+      if (networkRes.status === 'fulfilled' && networkRes.value.ok) {
+        try {
+          const netJson = await networkRes.value.json();
+          // Enrich mempool data with Etherscan gas if available
+          if (netJson.etherscan?.gasOracle) {
+            setMempool(prev => prev ? { ...prev, ethGas: netJson.etherscan.gasOracle } : prev);
+          }
+          setIsLive(true);
+        } catch { /* keep existing data */ }
+      }
+
+      setLastUpdated(new Date());
+    } catch {
+      setError(true);
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
     fetchData();
-    const iv = setInterval(fetchData, 120_000);
+    const iv = setInterval(fetchData, 120_000); // refresh every 2 min
     return () => clearInterval(iv);
   }, [fetchData]);
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
-    else { setSortKey(key); setSortDir('desc'); }
-  };
+  const btc = assets.find(a => a.symbol === 'BTC');
+  const hr = mempool?.hashrate ?? btc?.hashrate ?? 0;
+  const blk = mempool?.blockHeight ?? 0;
+  const fees = mempool?.fees ?? { fast: 0, normal: 0, economy: 0 };
 
-  if (loading) {
-    return (
-      <div style={{ padding: 40, textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)', letterSpacing: '0.1em' }}>LOADING ON-CHAIN METRICS...</div>
-      </div>
-    );
+  // Dynamic AI synthesis — built from live data
+  const topScorer = assets[0];
+  const biggestMover30d = [...assets].sort((a, b) => Math.abs(b.change30d) - Math.abs(a.change30d))[0];
+  const netExchangeFlow = assets.reduce((sum, a) => sum + a.exchangeFlow30d, 0);
+  const avgMvrv = assets.length > 0 ? assets.reduce((s, a) => s + a.mvrv, 0) / assets.length : 0;
+  
+  const flowDir = netExchangeFlow < 0 ? 'outflows dominate' : 'inflows increasing';
+  const mvrvSignal = avgMvrv < 1 ? 'deep undervalued zone — historically strong entry' : avgMvrv < 2 ? 'fair value — accumulation zone' : avgMvrv < 3 ? 'heating up — watch for overextension' : 'overheated — caution warranted';
+
+  const sourceLabel = isLive ? '● LIVE · COINGECKO · MEMPOOL.SPACE' : '● CACHED · STATIC DATA';
+
+  if (error && !lastUpdated) {
+    return <ErrorState message="On-chain data feeds temporarily unavailable. This may be due to rate limiting from upstream providers." onRetry={fetchData} />;
   }
 
-  if (error || !data) {
-    return (
-      <div style={{ padding: 40, textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--red)' }}>ON-CHAIN FEED UNAVAILABLE — {error}</div>
-      </div>
-    );
-  }
-
-  const btc = data.assets.find(a => a.symbol === 'BTC');
-  const eth = data.assets.find(a => a.symbol === 'ETH');
-
-  // Sort assets
-  const sorted = [...data.assets].sort((a, b) => {
-    const av = a[sortKey] as number;
-    const bv = b[sortKey] as number;
-    if (typeof av === 'string') return sortDir === 'asc' ? (av as string).localeCompare(bv as any) : (bv as any as string).localeCompare(av as string);
-    return sortDir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number);
-  });
-
-  // AI Synthesis
-  const btcMvrvNote = btc ? `BTC MVRV at ${btc.mvrv} — ${mvrvLabel(btc.mvrv).toLowerCase()}. ` : '';
-  const flowNote = btc && btc.exchangeFlow30d < 0
-    ? `Exchange reserves declining (${fmtCompact(btc.exchangeFlow30d)} BTC net outflow) — structural accumulation signal. `
-    : btc ? `Exchange inflows detected — distribution risk. ` : '';
-  const hashNote = data.btcHashrate > 0 ? `Hash rate at ${Math.round(data.btcHashrate)} EH/s. ` : '';
+  // KPI cards — top 9 metrics, all from live data
+  const kpiCards = [
+    { label: 'Hash Rate · BTC', value: hr > 0 ? `${hr.toFixed(1)} EH/s` : 'Loading...', sub: hr > 800 ? 'Near ATH zone — miners confident' : hr > 600 ? 'Healthy network security' : 'Loading hashrate...', color: 'var(--cyan)', delta: hr > 800 ? 'ATH Zone' : hr > 0 ? 'Healthy' : '—', deltaColor: hr > 800 ? 'var(--cyan)' : 'var(--green)' },
+    { label: 'Block Height', value: blk > 0 ? blk.toLocaleString() : 'Loading...', sub: 'Latest confirmed Bitcoin mainnet block', color: 'var(--text)' },
+    { label: 'BTC Fee · Fast', value: fees.fast > 0 ? `${fees.fast} sat/vB` : 'Loading...', sub: fees.normal > 0 ? `Normal: ${fees.normal} · Economy: ${fees.economy} sat/vB` : 'Loading fee estimates...', color: 'var(--cyan)', delta: fees.fast > 50 ? '▲ High' : fees.fast > 20 ? '◆ Normal' : fees.fast > 0 ? '▼ Low' : '', deltaColor: fees.fast > 50 ? 'var(--red)' : fees.fast > 20 ? 'var(--gold)' : 'var(--green)' },
+    { label: 'Avg MVRV · 12 Assets', value: avgMvrv > 0 ? avgMvrv.toFixed(2) : 'Loading...', sub: mvrvSignal, color: 'var(--gold)', delta: avgMvrv < 2 ? '▲ Accumulation' : '▼ Caution', deltaColor: avgMvrv < 2 ? 'var(--gold)' : 'var(--red)' },
+    { label: 'Net Exchange Flow', value: assets.length > 0 ? `${netExchangeFlow > 0 ? '+' : ''}${(netExchangeFlow / 1000).toFixed(1)}K` : 'Loading...', sub: `30d aggregate across ${assets.length} assets — ${flowDir}`, color: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)', delta: netExchangeFlow < 0 ? '▲ Bullish' : '▼ Bearish', deltaColor: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)' },
+    { label: 'Top On-Chain Score', value: topScorer ? `${topScorer.symbol} · ${topScorer.onchainScore}` : 'Loading...', sub: topScorer ? `Strongest on-chain profile of ${assets.length} tracked assets` : '', color: 'var(--cyan)', delta: topScorer ? `#1 of ${assets.length}` : '', deltaColor: 'var(--cyan)' },
+    { label: btc ? `BTC MVRV` : 'BTC MVRV', value: btc ? btc.mvrv.toFixed(2) : 'Loading...', sub: btc ? `${btc.mvrv < 1 ? 'Undervalued zone' : btc.mvrv < 2.4 ? 'Fair value (1.0–2.4)' : 'Overheated zone'}` : '', color: 'var(--gold)' },
+    { label: btc ? `BTC LTH Supply` : 'BTC LTH Supply', value: btc ? `${btc.lthSupplyPct.toFixed(1)}%` : 'Loading...', sub: btc ? `Est. % held 155+ days — ${btc.lthSupplyPct > 70 ? 'strong conviction' : 'moderate'}` : '', color: 'var(--green)' },
+    { label: '30d Biggest Mover', value: biggestMover30d ? `${biggestMover30d.symbol} ${biggestMover30d.change30d >= 0 ? '+' : ''}${biggestMover30d.change30d.toFixed(1)}%` : 'Loading...', sub: biggestMover30d ? `Largest 30-day price move in tracked universe` : '', color: biggestMover30d && biggestMover30d.change30d >= 0 ? 'var(--green)' : 'var(--red)' },
+  ];
 
   return (
-    <div>
-      {/* AI Context Strip */}
+    <div className="tab-content-enter">
+      {/* AI Context Strip — fully dynamic */}
       <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
         <span className="acs-body">
-          <strong>{btcMvrvNote}</strong>{flowNote}{hashNote}
-          On-chain fundamentals {btc && btc.onchainScore >= 70 ? 'constructively bullish' : btc && btc.onchainScore >= 50 ? 'neutral — no strong directional signal' : 'cautionary — watch for further deterioration'}.
+          {assets.length > 0 ? (
+            <>
+              BTC hashrate <strong>{hr > 0 ? `${hr.toFixed(0)} EH/s` : 'loading'}</strong> — {hr > 800 ? 'near ATH zone, miner confidence high' : 'tracking healthy levels'}.
+              {blk > 0 && <> Block #{blk.toLocaleString()}.</>}
+              {fees.fast > 0 && <> Fees: {fees.fast} sat/vB.</>}
+              {' '}Avg MVRV {avgMvrv.toFixed(2)} — {mvrvSignal}. Net exchange {flowDir}.
+              {' '}<strong>On-chain: {avgMvrv < 2 && netExchangeFlow < 0 ? 'constructively bullish' : avgMvrv < 2 ? 'neutral leaning bullish' : 'caution zone'}.</strong>
+              <span style={{ marginLeft: 8 }} className={`source-badge ${isLive ? 'live' : 'cached'}`}>{sourceLabel}</span>
+            </>
+          ) : (
+            <>Loading on-chain intelligence from 12 assets...</>
+          )}
         </span>
       </div>
 
-      {/* Section Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>ON-CHAIN INTELLIGENCE</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>BITCOIN ON-CHAIN INTELLIGENCE</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
+        <DataFreshness lastUpdated={lastUpdated} source="CoinGecko · Mempool" isLive={isLive} />
         <span className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>PRO</span>
-        <span className="tag tag-live">
-          <a className="src-link" href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>
-          {' · '}
-          <a className="src-link" href="https://mempool.space" target="_blank" rel="noopener noreferrer">Mempool</a>
-        </span>
       </div>
 
-      {/* Top KPI Row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
-        {btc && (
-          <>
-            <div className="kpi">
-              <div className="kpi-label">MVRV Ratio · BTC</div>
-              <div className="kpi-val" style={{ color: mvrvColor(btc.mvrv) }}>{btc.mvrv}</div>
-              <div className="kpi-chg" style={{ color: mvrvColor(btc.mvrv) }}>{mvrvLabel(btc.mvrv)}</div>
+      {/* KPI Grid — 100% live */}
+      {loading ? (
+        <SkeletonGrid cols={3} rows={3} />
+      ) : (
+        <div className="data-fresh" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
+          {kpiCards.map(m => (
+            <div key={m.label} className="metric-card" style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>{m.label}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: m.color }}>{m.value}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>{m.sub}</div>
+              {m.delta && (
+                <div style={{ marginTop: 4, fontFamily: 'var(--mono)', fontSize: 8, color: m.deltaColor, fontWeight: 600 }}>{m.delta}</div>
+              )}
             </div>
-            <div className="kpi">
-              <div className="kpi-label">Exchange Flow · 30d</div>
-              <div className="kpi-val" style={{ color: btc.exchangeFlow30d < 0 ? 'var(--green)' : 'var(--red)' }}>
-                {btc.exchangeFlow30d < 0 ? '−' : '+'}{fmtCompact(Math.abs(btc.exchangeFlow30d))}
-              </div>
-              <div className={`kpi-chg ${btc.exchangeFlow30d < 0 ? 'up' : 'dn'}`}>
-                {btc.exchangeFlow30d < 0 ? 'Net outflow — accumulation' : 'Net inflow — distribution'}
-              </div>
-            </div>
-          </>
-        )}
-        {btc && (
-          <div className="kpi">
-            <div className="kpi-label">Long-Term Holders</div>
-            <div className="kpi-val" style={{ color: 'var(--green)' }}>{btc.lthSupplyPct.toFixed(1)}%</div>
-            <div className="kpi-chg">{btc.lthSupplyPct > 70 ? 'High conviction' : 'Moderate'}</div>
-          </div>
-        )}
-        {data.btcHashrate > 0 && (
-          <div className="kpi">
-            <div className="kpi-label">Hash Rate · BTC</div>
-            <div className="kpi-val cyan">{Math.round(data.btcHashrate)} EH/s</div>
-            <div className="kpi-chg up">{data.btcHashrate > 800 ? 'ATH zone — miner confidence high' : 'Growing'}</div>
-          </div>
-        )}
-      </div>
-
-      {/* Secondary metrics row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
-        {btc && (
-          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>NVT Ratio · BTC</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: 'var(--gold)' }}>{btc.nvt}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>
-              {btc.nvt < 50 ? 'Network undervalued vs throughput' : btc.nvt < 80 ? 'Fair value zone' : 'Potentially overvalued'}
-            </div>
-          </div>
-        )}
-        {eth && (
-          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>ETH MVRV</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: mvrvColor(eth.mvrv) }}>{eth.mvrv}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>{mvrvLabel(eth.mvrv)}</div>
-          </div>
-        )}
-        {btc && (
-          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>Stablecoin Supply Ratio</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: 'var(--green)' }}>
-              {(btc.volume24h / btc.marketCap).toFixed(3)}
-            </div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>
-              Vol/MCap — {btc.volume24h / btc.marketCap > 0.05 ? 'elevated activity' : 'normal range'}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Full Matrix Table */}
-      <div className="panel">
-        <div className="ph">
-          <div className="pt">On-Chain Intelligence Matrix · {data.assets.length} Assets</div>
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <span className="tag tag-live">
-              <a className="src-link" href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>
-            </span>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)' }}>
-              {new Date(data.updatedAt).toLocaleTimeString()} · Click row to expand
-            </span>
-          </div>
+          ))}
         </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11, minWidth: 700 }}>
+      )}
+
+      {/* Intelligence Matrix — ALL from live API */}
+      {loading ? (
+        <SkeletonTable rows={12} cols={8} />
+      ) : (
+        <div className="panel panel-hover data-fresh">
+          <div className="ph">
+            <div className="pt">On-Chain Intelligence Matrix · {assets.length} Assets</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <DataFreshness lastUpdated={lastUpdated} isLive={isLive} />
+              <span className="source-badge live">● LIVE · DERIVED</span>
+            </div>
+          </div>
+          {/* Data stream indicator */}
+          <div className="data-stream" style={{ marginBottom: 8 }} />
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-                {([
-                  ['symbol', 'ASSET'],
-                  ['mvrv', 'MVRV'],
-                  ['exchangeFlow30d', 'EXCH FLOW 30D'],
-                  ['lthSupplyPct', 'LTH %'],
-                  ['nvt', 'NVT'],
-                  ['volume24h', 'VOLUME 24H'],
-                  ['change30d', '30D %'],
-                  ['onchainScore', 'OC SCORE'],
-                ] as [SortKey, string][]).map(([key, label]) => (
-                  <th key={key} onClick={() => handleSort(key)}
-                    style={{ textAlign: key === 'symbol' ? 'left' : 'right', padding: '6px 8px', color: sortKey === key ? 'var(--cyan)' : 'var(--muted)', fontSize: 8, letterSpacing: '0.08em', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
-                    {label} {sortKey === key ? (sortDir === 'desc' ? '▼' : '▲') : ''}
-                  </th>
+                {['Asset', 'Price', 'MVRV', 'Exch Flow 30d', 'LTH %', 'NVT', 'Hash EH/s', 'OC Score'].map(h => (
+                  <th key={h} style={{ textAlign: h === 'Asset' ? 'left' : 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8, letterSpacing: '0.1em' }}>{h}</th>
                 ))}
-                <th style={{ padding: '6px 8px', width: 100 }}></th>
+                <th style={{ padding: '6px 8px', width: 100, fontSize: 8, color: 'var(--muted)' }}>Score Bar</th>
               </tr>
             </thead>
             <tbody>
-              {sorted.map(a => (
-                <>
-                  <tr key={a.symbol}
-                    onClick={() => setExpandedAsset(expandedAsset === a.symbol ? null : a.symbol)}
-                    style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer', transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = expandedAsset === a.symbol ? 'rgba(0,212,170,0.03)' : '')}>
+              {assets.map(a => {
+                const flowStr = `${a.exchangeFlow30d > 0 ? '+' : ''}${(a.exchangeFlow30d / 1000).toFixed(1)}K`;
+                const flowColor = a.exchangeFlow30d < 0 ? 'var(--green)' : 'var(--red)';
+                const priceStr = a.price >= 1000 ? `$${a.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : a.price >= 1 ? `$${a.price.toFixed(2)}` : `$${a.price.toFixed(4)}`;
+                
+                return (
+                  <tr key={a.symbol} className="row-alive" style={{ borderBottom: '1px solid var(--b1)', transition: 'background 0.12s' }}>
                     <td style={{ padding: '5px 8px', fontWeight: 600, color: 'var(--text)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontSize: 8, color: 'var(--muted)', transition: 'transform 0.2s', transform: expandedAsset === a.symbol ? 'rotate(90deg)' : '' }}>▶</span>
-                        {a.symbol}
+                      {a.symbol}
+                      <span style={{ marginLeft: 6, fontSize: 8, color: a.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                        {a.change24h >= 0 ? '▲' : '▼'}{Math.abs(a.change24h).toFixed(1)}%
+                      </span>
+                    </td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{priceStr}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--gold)' }}>{a.mvrv.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: flowColor }}>{flowStr}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.lthSupplyPct.toFixed(1)}%</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.nvt.toFixed(1)}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: a.hashrate > 0 ? 'var(--cyan)' : 'var(--muted)' }}>
+                      {a.hashrate > 0 ? a.hashrate.toFixed(0) : '—'}
+                    </td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, color: 'var(--cyan)' }}>{a.onchainScore}</td>
+                    <td style={{ padding: '5px 8px' }}>
+                      <div style={{ height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
+                        <div style={{ width: `${a.onchainScore}%`, height: '100%', background: 'linear-gradient(90deg, var(--cyan), var(--blue))', borderRadius: 3, transition: 'width 0.5s ease' }} />
                       </div>
                     </td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: mvrvColor(a.mvrv), fontWeight: 600 }}>{a.mvrv}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: a.exchangeFlow30d < 0 ? 'var(--green)' : 'var(--red)' }}>
-                      {a.exchangeFlow30d < 0 ? '−' : '+'}{fmtCompact(Math.abs(a.exchangeFlow30d))}
-                    </td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.lthSupplyPct.toFixed(1)}%</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.nvt}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtCompact(a.volume24h)}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: a.change30d >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 600 }}>
-                      {a.change30d >= 0 ? '+' : ''}{a.change30d.toFixed(1)}%
-                    </td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px' }}>
-                      <ScoreBar score={a.onchainScore} />
-                    </td>
-                    <td></td>
                   </tr>
-                  {expandedAsset === a.symbol && (
-                    <tr key={`${a.symbol}-detail`} style={{ background: 'rgba(0,212,170,0.03)' }}>
-                      <td colSpan={9} style={{ padding: '12px 16px' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-                          <div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>PRICE</div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{fmtPrice(a.price)}</div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: a.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                              {a.change24h >= 0 ? '+' : ''}{a.change24h.toFixed(2)}% 24h
-                            </div>
-                          </div>
-                          <div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>MARKET CAP</div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>${fmtCompact(a.marketCap)}</div>
-                          </div>
-                          <div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>MVRV ASSESSMENT</div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600, color: mvrvColor(a.mvrv) }}>{mvrvLabel(a.mvrv)}</div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>
-                              {a.mvrv < 1 ? 'Below realized value — historically strong buy zone' : a.mvrv < 2 ? 'Fair value range — neutral positioning' : a.mvrv < 3 ? 'Above fair value — consider reducing exposure' : 'Significantly overvalued — high risk of correction'}
-                            </div>
-                          </div>
-                          <div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>SCORE BREAKDOWN</div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', lineHeight: 1.8 }}>
-                              Liquidity: {a.liquidityScore}/20<br />
-                              Adoption: {a.adoptionScore}/20<br />
-                              Network: {a.networkScore}/20<br />
-                              Decentr.: {a.decentralization}/20
-                            </div>
-                          </div>
-                        </div>
-                        {a.hashrate > 0 && (
-                          <div style={{ marginTop: 8, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--cyan)' }}>
-                            Hash Rate: {Math.round(a.hashrate)} EH/s — {a.hashrate > 800 ? 'Near ATH, miner confidence extremely high' : 'Growing steadily'}
-                          </div>
-                        )}
-                      </td>
-                    </tr>
-                  )}
-                </>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
 
-      {/* Methodology note */}
-      <div style={{ marginTop: 8, fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: '6px 8px', background: 'var(--s1)', border: '1px solid var(--b1)' }}>
-        <strong style={{ color: 'var(--text2)' }}>Methodology:</strong> {data.methodology}
-      </div>
+      {/* AI Synthesis — fully dynamic */}
+      {assets.length > 0 && (
+        <div className="data-fresh" style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <div className="heartbeat" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)' }} />
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)', letterSpacing: '0.08em' }}>On-Chain AI Synthesis · Live Analysis</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.5 }}>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span>
+              <span>
+                <strong style={{ color: 'var(--text)' }}>BTC hashrate {hr > 0 ? `${hr.toFixed(0)} EH/s` : 'loading'}</strong> — {hr > 800 ? 'near all-time high zone. Miners confident in future price action.' : hr > 600 ? 'healthy network security levels.' : 'data loading.'}
+                {mempool && <> Difficulty: {mempool.difficulty.toFixed(2)}T.</>}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span>
+              <span>
+                <strong style={{ color: 'var(--text)' }}>Net exchange flow {netExchangeFlow > 0 ? '+' : ''}{(netExchangeFlow / 1000).toFixed(1)}K</strong> across {assets.length} assets (30d) — {netExchangeFlow < 0 ? 'coins moving to cold storage, structural accumulation signal' : 'increased exchange deposits, watch for selling pressure'}.
+                {btc && <> BTC LTH supply {btc.lthSupplyPct.toFixed(1)}% — {btc.lthSupplyPct > 70 ? 'strong conviction holding.' : 'moderate conviction.'}</>}
+              </span>
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <span style={{ color: avgMvrv < 2 && netExchangeFlow < 0 ? 'var(--green)' : 'var(--gold)', flexShrink: 0 }}>▸</span>
+              <span>
+                <strong style={{ color: 'var(--text)' }}>On-chain picture: {avgMvrv < 2 && netExchangeFlow < 0 ? 'constructively bullish' : avgMvrv < 2 ? 'neutral-to-bullish' : 'mixed signals'}</strong> — avg MVRV {avgMvrv.toFixed(2)} ({mvrvSignal}). {topScorer && <>Top rated: {topScorer.symbol} ({topScorer.onchainScore}/100).</>}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

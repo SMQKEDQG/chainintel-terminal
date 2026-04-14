@@ -387,11 +387,12 @@ export default function DefiTab() {
 
   const fetchAll = useCallback(async () => {
     try {
-      const [chainsRes, protocolsRes, stablesRes, tvlHistRes] = await Promise.allSettled([
+      const [chainsRes, protocolsRes, stablesRes, tvlHistRes, defiDeepRes] = await Promise.allSettled([
         fetch('https://api.llama.fi/v2/chains').then((r) => r.json()),
         fetch('https://api.llama.fi/protocols').then((r) => r.json()),
         fetch('https://stablecoins.llama.fi/stablecoins?includePrices=true').then((r) => r.json()),
         fetch('https://api.llama.fi/v2/historicalChainTvl/Ethereum').then((r) => r.json()),
+        fetch('/api/defi-deep').then((r) => r.json()),
       ]);
 
       // ── Chains ──────────────────────────────────────────────────────────────
@@ -473,6 +474,29 @@ export default function DefiTab() {
       if (tvlHistRes.status === 'fulfilled' && Array.isArray(tvlHistRes.value)) {
         const all: TvlPoint[] = tvlHistRes.value;
         tvlHistory = all.slice(-90);
+      }
+
+      // Merge defi-deep aggregator data (DefiLlama yields/bridges/dex + CoinGecko defi)
+      if (defiDeepRes.status === 'fulfilled' && defiDeepRes.value) {
+        const deep = defiDeepRes.value;
+        // Enrich with CoinGecko DeFi market cap if available
+        if (deep.coingecko?.defiMcap) {
+          // Store for display — accessible in render
+          (globalThis as any).__ciDefiMcap = deep.coingecko.defiMcap;
+          (globalThis as any).__ciDefiVolume = deep.coingecko.totalVolume;
+        }
+        // Bridge volume from DefiLlama
+        if (deep.defiLlama?.bridges?.length > 0) {
+          (globalThis as any).__ciBridges = deep.defiLlama.bridges.slice(0, 5);
+        }
+        // Top DEX volumes
+        if (deep.defiLlama?.dexVolumes?.length > 0) {
+          (globalThis as any).__ciDexVolumes = deep.defiLlama.dexVolumes.slice(0, 5);
+        }
+        // Top yields
+        if (deep.defiLlama?.topYields?.length > 0) {
+          (globalThis as any).__ciTopYields = deep.defiLlama.topYields.slice(0, 8);
+        }
       }
 
       setData({ totalTvl, ethTvl, stablecoinSupply, protocols, tvlHistory, stablecoins });

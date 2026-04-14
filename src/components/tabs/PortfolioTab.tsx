@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
+import { PortfolioModels } from '@/components/LevelUpModules';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -299,6 +300,9 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
         </span>
         <span className="acs-ts" id="acs-ts-portfolio"></span>
       </div>
+
+      {/* Level Up 2: Portfolio Allocation Intelligence */}
+      <PortfolioModels />
 
       <div
         style={{

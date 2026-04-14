@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
+import TokenUnlocks from '@/components/TokenUnlocks';
+import { DailyBriefCard, CorrelationEngine, SmartAlerts } from '@/components/LevelUpModules';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -28,11 +30,8 @@ interface CmcCoin {
   price: number;
   market_cap: number;
   volume_24h: number;
-  percent_change_1h: number;
   percent_change_24h: number;
   percent_change_7d: number;
-  circulating_supply: number;
-  max_supply: number | null;
   image: string;
 }
 
@@ -70,11 +69,8 @@ function cmcListingsToCoinData(data: any[]): CmcCoin[] {
     price: c.quote?.USD?.price ?? 0,
     market_cap: c.quote?.USD?.market_cap ?? 0,
     volume_24h: c.quote?.USD?.volume_24h ?? 0,
-    percent_change_1h: c.quote?.USD?.percent_change_1h ?? 0,
     percent_change_24h: c.quote?.USD?.percent_change_24h ?? 0,
     percent_change_7d: c.quote?.USD?.percent_change_7d ?? 0,
-    circulating_supply: c.circulating_supply ?? 0,
-    max_supply: c.max_supply ?? null,
     image: `https://s2.coinmarketcap.com/static/img/coins/64x64/${c.id}.png`,
   }));
 }
@@ -90,32 +86,29 @@ function geckoToCoinData(data: any[]): CmcCoin[] {
     price: c.current_price ?? 0,
     market_cap: c.market_cap ?? 0,
     volume_24h: c.total_volume ?? 0,
-    percent_change_1h: c.price_change_percentage_1h_in_currency ?? 0,
     percent_change_24h: c.price_change_percentage_24h ?? 0,
     percent_change_7d: c.price_change_percentage_7d_in_currency ?? 0,
-    circulating_supply: c.circulating_supply ?? 0,
-    max_supply: c.max_supply ?? null,
     image: c.image ?? '',
   }));
 }
 
 /* Static fallback data */
 const FALLBACK_COINS: CmcCoin[] = [
-  { id: 1, name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', cmc_rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_1h: 0.12, percent_change_24h: 0.82, percent_change_7d: -3.14, circulating_supply: 19.8e6, max_supply: 21e6, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png' },
-  { id: 1027, name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', cmc_rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_1h: -0.31, percent_change_24h: -1.24, percent_change_7d: -8.32, circulating_supply: 120.2e6, max_supply: null, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png' },
-  { id: 52, name: 'XRP', symbol: 'XRP', slug: 'xrp', cmc_rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_1h: 0.08, percent_change_24h: 1.87, percent_change_7d: -4.2, circulating_supply: 57.4e9, max_supply: 100e9, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/52.png' },
-  { id: 5426, name: 'Solana', symbol: 'SOL', slug: 'solana', cmc_rank: 4, price: 81, market_cap: 6.72e10, volume_24h: 4.2e9, percent_change_1h: -0.05, percent_change_24h: -0.41, percent_change_7d: -5.8, circulating_supply: 440e6, max_supply: null, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png' },
-  { id: 1839, name: 'BNB', symbol: 'BNB', slug: 'bnb', cmc_rank: 5, price: 560, market_cap: 8.2e10, volume_24h: 1.8e9, percent_change_1h: 0.02, percent_change_24h: 0.34, percent_change_7d: -1.2, circulating_supply: 145.9e6, max_supply: 200e6, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png' },
-  { id: 74, name: 'Dogecoin', symbol: 'DOGE', slug: 'dogecoin', cmc_rank: 6, price: 0.082, market_cap: 1.2e10, volume_24h: 0.8e9, percent_change_1h: -0.44, percent_change_24h: -0.9, percent_change_7d: -6.1, circulating_supply: 147.7e9, max_supply: null, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png' },
-  { id: 2010, name: 'Cardano', symbol: 'ADA', slug: 'cardano', cmc_rank: 7, price: 0.41, market_cap: 1.5e10, volume_24h: 0.5e9, percent_change_1h: -0.11, percent_change_24h: -2.1, percent_change_7d: -5.4, circulating_supply: 36.8e9, max_supply: 45e9, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png' },
-  { id: 4687, name: 'HBAR', symbol: 'HBAR', slug: 'hedera', cmc_rank: 8, price: 0.17, market_cap: 6.7e9, volume_24h: 0.3e9, percent_change_1h: 0.15, percent_change_24h: 1.44, percent_change_7d: 2.1, circulating_supply: 38.5e9, max_supply: 50e9, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4687.png' },
-  { id: 1975, name: 'Chainlink', symbol: 'LINK', slug: 'chainlink', cmc_rank: 9, price: 12.5, market_cap: 7.8e9, volume_24h: 0.6e9, percent_change_1h: 0.22, percent_change_24h: 0.92, percent_change_7d: -2.1, circulating_supply: 626.8e6, max_supply: 1e9, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1975.png' },
-  { id: 5805, name: 'Avalanche', symbol: 'AVAX', slug: 'avalanche', cmc_rank: 10, price: 22, market_cap: 9e9, volume_24h: 0.4e9, percent_change_1h: -0.18, percent_change_24h: -3.8, percent_change_7d: -7.2, circulating_supply: 405e6, max_supply: 720e6, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5805.png' },
-  { id: 3890, name: 'Polkadot', symbol: 'DOT', slug: 'polkadot', cmc_rank: 11, price: 4.2, market_cap: 5.9e9, volume_24h: 0.3e9, percent_change_1h: -0.09, percent_change_24h: -1.5, percent_change_7d: -4.8, circulating_supply: 1.47e9, max_supply: null, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3890.png' },
-  { id: 3408, name: 'Quant', symbol: 'QNT', slug: 'quant', cmc_rank: 12, price: 88, market_cap: 1.1e9, volume_24h: 44e6, percent_change_1h: 0.05, percent_change_24h: 2.31, percent_change_7d: 1.8, circulating_supply: 12.1e6, max_supply: 14.6e6, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png' },
-  { id: 512, name: 'Stellar', symbol: 'XLM', slug: 'stellar', cmc_rank: 13, price: 0.27, market_cap: 8.3e9, volume_24h: 0.5e9, percent_change_1h: 0.01, percent_change_24h: -0.62, percent_change_7d: -2.8, circulating_supply: 30.5e9, max_supply: 50e9, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/512.png' },
-  { id: 4030, name: 'Algorand', symbol: 'ALGO', slug: 'algorand', cmc_rank: 14, price: 0.18, market_cap: 1.3e9, volume_24h: 60e6, percent_change_1h: -0.03, percent_change_24h: -0.8, percent_change_7d: -3.2, circulating_supply: 8.3e9, max_supply: 10e9, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4030.png' },
-  { id: 1720, name: 'IOTA', symbol: 'IOTA', slug: 'iota', cmc_rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_1h: 0.33, percent_change_24h: 1.14, percent_change_7d: 0.8, circulating_supply: 2.78e9, max_supply: 2.78e9, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1720.png' },
+  { id: 1, name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', cmc_rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_24h: 0.82, percent_change_7d: -3.14, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png' },
+  { id: 1027, name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', cmc_rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_24h: -1.24, percent_change_7d: -8.32, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png' },
+  { id: 52, name: 'XRP', symbol: 'XRP', slug: 'xrp', cmc_rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_24h: 1.87, percent_change_7d: -4.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/52.png' },
+  { id: 5426, name: 'Solana', symbol: 'SOL', slug: 'solana', cmc_rank: 4, price: 81, market_cap: 6.72e10, volume_24h: 4.2e9, percent_change_24h: -0.41, percent_change_7d: -5.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png' },
+  { id: 1839, name: 'BNB', symbol: 'BNB', slug: 'bnb', cmc_rank: 5, price: 560, market_cap: 8.2e10, volume_24h: 1.8e9, percent_change_24h: 0.34, percent_change_7d: -1.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png' },
+  { id: 74, name: 'Dogecoin', symbol: 'DOGE', slug: 'dogecoin', cmc_rank: 6, price: 0.082, market_cap: 1.2e10, volume_24h: 0.8e9, percent_change_24h: -0.9, percent_change_7d: -6.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png' },
+  { id: 2010, name: 'Cardano', symbol: 'ADA', slug: 'cardano', cmc_rank: 7, price: 0.41, market_cap: 1.5e10, volume_24h: 0.5e9, percent_change_24h: -2.1, percent_change_7d: -5.4, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png' },
+  { id: 4687, name: 'HBAR', symbol: 'HBAR', slug: 'hedera', cmc_rank: 8, price: 0.17, market_cap: 6.7e9, volume_24h: 0.3e9, percent_change_24h: 1.44, percent_change_7d: 2.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4687.png' },
+  { id: 1975, name: 'Chainlink', symbol: 'LINK', slug: 'chainlink', cmc_rank: 9, price: 12.5, market_cap: 7.8e9, volume_24h: 0.6e9, percent_change_24h: 0.92, percent_change_7d: -2.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1975.png' },
+  { id: 5805, name: 'Avalanche', symbol: 'AVAX', slug: 'avalanche', cmc_rank: 10, price: 22, market_cap: 9e9, volume_24h: 0.4e9, percent_change_24h: -3.8, percent_change_7d: -7.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5805.png' },
+  { id: 3890, name: 'Polkadot', symbol: 'DOT', slug: 'polkadot', cmc_rank: 11, price: 4.2, market_cap: 5.9e9, volume_24h: 0.3e9, percent_change_24h: -1.5, percent_change_7d: -4.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3890.png' },
+  { id: 3408, name: 'Quant', symbol: 'QNT', slug: 'quant', cmc_rank: 12, price: 88, market_cap: 1.1e9, volume_24h: 44e6, percent_change_24h: 2.31, percent_change_7d: 1.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png' },
+  { id: 512, name: 'Stellar', symbol: 'XLM', slug: 'stellar', cmc_rank: 13, price: 0.27, market_cap: 8.3e9, volume_24h: 0.5e9, percent_change_24h: -0.62, percent_change_7d: -2.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/512.png' },
+  { id: 4030, name: 'Algorand', symbol: 'ALGO', slug: 'algorand', cmc_rank: 14, price: 0.18, market_cap: 1.3e9, volume_24h: 60e6, percent_change_24h: -0.8, percent_change_7d: -3.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4030.png' },
+  { id: 1720, name: 'IOTA', symbol: 'IOTA', slug: 'iota', cmc_rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_24h: 1.14, percent_change_7d: 0.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1720.png' },
 ];
 
 const FALLBACK_GLOBAL: CmcGlobal = {
@@ -213,8 +206,7 @@ function fmtUsd(n: number, decimals = 2): string {
 function fmtPrice(n: number): string {
   if (n >= 1000) return `$${n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   if (n >= 1) return `$${n.toFixed(2)}`;
-  if (n >= 0.01) return `$${n.toFixed(4)}`;
-  return `$${n.toFixed(6)}`;
+  return `$${n.toFixed(4)}`;
 }
 
 function sourceLabel(src: CmcData['source']): string {
@@ -363,6 +355,7 @@ function useLiveCoinChart(coinId: string) {
   const [data, setData] = useState<LiveChartData>(fallback);
   const [loading, setLoading] = useState(false);
   const [isLive, setIsLive] = useState(false);
+  const [updatedAt, setUpdatedAt] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -385,11 +378,11 @@ function useLiveCoinChart(coinId: string) {
           vols: sampledVols.map(v => parseFloat((v[1] / 1e9).toFixed(2))),
         });
         setIsLive(true);
+        setUpdatedAt(Date.now());
         setLoading(false);
       })
       .catch(() => {
         if (!cancelled) {
-          // Keep fallback data — chart still renders
           setIsLive(false);
           setLoading(false);
         }
@@ -397,7 +390,25 @@ function useLiveCoinChart(coinId: string) {
     return () => { cancelled = true; };
   }, [coinId, tf, fallback]);
 
-  return { tf, setTf, data, loading, isLive };
+  return { tf, setTf, data, loading, isLive, updatedAt };
+}
+
+/* ── Time-ago string for chart freshness ── */
+function useTimeAgo(ts: number | null): string {
+  const [str, setStr] = useState('');
+  useEffect(() => {
+    if (!ts) return;
+    const tick = () => {
+      const diff = Math.floor((Date.now() - ts) / 1000);
+      if (diff < 60) setStr(`Updated ${diff}s ago`);
+      else if (diff < 3600) setStr(`Updated ${Math.floor(diff / 60)}m ago`);
+      else setStr(`Updated ${Math.floor(diff / 3600)}h ago`);
+    };
+    tick();
+    const iv = setInterval(tick, 10_000);
+    return () => clearInterval(iv);
+  }, [ts]);
+  return str;
 }
 
 /* ── Shared chart skeleton / error state ── */
@@ -436,12 +447,13 @@ function ChartError() {
 
 /* ── Live BTC Chart ── */
 function BtcChart() {
-  const { tf, setTf, data, loading, isLive } = useLiveCoinChart('bitcoin');
+  const { tf, setTf, data, loading, isLive, updatedAt } = useLiveCoinChart('bitcoin');
+  const timeAgo = useTimeAgo(updatedAt);
   const opts = makeChartOpts('BTC Price');
   const chartData = buildChartData(data.labels, data.prices, data.vols, '#00d4aa', 'rgba(0,212,170,0.08)');
 
   return (
-    <div className="panel">
+    <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">BTC Price &amp; Volume</div>
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -452,7 +464,7 @@ function BtcChart() {
           </div>
           <div className="tag tag-live">
             <span style={{ marginRight: 4, color: isLive ? 'var(--green)' : 'var(--gold)', fontSize: 7 }}>●</span>
-            {isLive ? 'LIVE' : 'CACHED'} · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a>
+            {timeAgo || 'Loading'} · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a>
           </div>
         </div>
       </div>
@@ -470,12 +482,13 @@ function BtcChart() {
 
 /* ── Live ETH Chart ── */
 function EthChart() {
-  const { tf, setTf, data, loading, isLive } = useLiveCoinChart('ethereum');
+  const { tf, setTf, data, loading, isLive, updatedAt } = useLiveCoinChart('ethereum');
+  const timeAgo = useTimeAgo(updatedAt);
   const opts = makeChartOpts('ETH Price');
   const chartData = buildChartData(data.labels, data.prices, data.vols, '#3b82f6', 'rgba(59,130,246,0.08)');
 
   return (
-    <div className="panel">
+    <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">ETH Price &amp; Volume</div>
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
@@ -486,7 +499,7 @@ function EthChart() {
           </div>
           <div className="tag tag-live">
             <span style={{ marginRight: 4, color: isLive ? 'var(--green)' : 'var(--gold)', fontSize: 7 }}>●</span>
-            {isLive ? 'LIVE' : 'CACHED'} · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a>
+            {timeAgo || 'Loading'} · <a className="src-link" href="https://coingecko.com" target="_blank" rel="noreferrer">CoinGecko</a>
           </div>
         </div>
       </div>
@@ -554,6 +567,18 @@ function QuickGuide() {
 /* ── AI Morning Brief (live data) ── */
 function MorningBrief() {
   const { coins, global, source } = useContext(CmcContext);
+  const [fng, setFng] = useState<{ value: number; label: string } | null>(null);
+
+  useEffect(() => {
+    fetch('https://api.alternative.me/fng/?limit=1')
+      .then(r => r.json())
+      .then(d => {
+        const entry = d?.data?.[0];
+        if (entry) setFng({ value: Number(entry.value), label: entry.value_classification });
+      })
+      .catch(() => setFng({ value: 13, label: 'Extreme Fear' }));
+  }, []);
+
   const btc = coins.find(c => c.symbol === 'BTC');
   const eth = coins.find(c => c.symbol === 'ETH');
   const btcPrice = btc ? fmtPrice(btc.price) : '$73K';
@@ -561,6 +586,8 @@ function MorningBrief() {
   const btcChg7d = btc?.percent_change_7d ?? -3.14;
   const ethChg7d = eth?.percent_change_7d ?? -8.32;
   const btcDom = global?.btc_dominance?.toFixed(1) ?? '63.0';
+  const fngVal = fng?.value ?? 13;
+  const fngLabel = fng?.label ?? 'Extreme Fear';
 
   // Dynamic sentiment based on live data
   const sentiment = btcChg7d > 5 ? 'BULLISH' : btcChg7d > 0 ? 'CAUTIOUSLY BULLISH' : btcChg7d > -5 ? 'NEUTRAL' : 'CAUTIOUSLY BEARISH';
@@ -608,13 +635,14 @@ function MorningBrief() {
         <div style={{ background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.12)', padding: '8px 10px' }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 4 }}>◈ KEY CATALYST</div>
           <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>
-            {(() => {
-              const fearGreed = 13; // from API
-              if (fearGreed <= 20) return 'Extreme Fear territory — historically where institutional accumulation begins. 4 of last 5 Extreme Fear periods preceded 20%+ rallies within 90 days.';
-              if (fearGreed <= 40) return 'CLARITY Act advancing — Senate Banking Committee vote scheduled. First SEC/CFTC joint framework for digital assets targeting Q2 2026.';
-              if (fearGreed >= 75) return 'Extreme Greed — distribution risk elevated. Smart money typically reduces exposure at these levels. Monitor for profit-taking signals.';
-              return 'CLARITY Act advancing — Senate Banking Committee vote scheduled. First SEC/CFTC joint framework for digital assets targeting Q2 2026.';
-            })()}
+            {fngVal <= 25 ? (
+              <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — historically, scores below 25 precede 60-day mean reversions of +28%. Institutional accumulation window.{' '}
+              CLARITY Act advancing — first SEC/CFTC joint framework targeting Q2 2026.</>
+            ) : fngVal >= 75 ? (
+              <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — elevated greed. Caution warranted. CLARITY Act still advancing through Senate Banking Committee.</>
+            ) : (
+              <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — neutral zone. CLARITY Act advancing — Senate Banking Committee vote scheduled. First SEC/CFTC joint framework for digital assets targeting Q2 2026.</>
+            )}
           </div>
         </div>
       </div>
@@ -711,7 +739,7 @@ function AskCI() {
 /* ── KPI Card ── */
 function KPI({ label, value, change, changeDir, source, color }: { label: string; value: string; change: string; changeDir: 'up' | 'dn' | 'neutral'; source: string; color?: string }) {
   return (
-    <div className="kpi">
+    <div className="kpi metric-card">
       <div className="kpi-label">{label}</div>
       <div className="kpi-val" style={{ color: color || 'var(--cyan)' }}>{value}</div>
       <div className={`kpi-chg ${changeDir}`}>{change}</div>
@@ -720,14 +748,50 @@ function KPI({ label, value, change, changeDir, source, color }: { label: string
   );
 }
 
-/* ── Sector Heat Row ── */
+/* ── Sector Heat Row (LIVE) ── */
 function SectorHeat() {
+  const { coins, global } = useContext(CmcContext);
+  const [sectors, setSectors] = useState<{ topLabel: string; topChg: number; worstLabel: string; worstChg: number } | null>(null);
+  const [defi, setDefi] = useState<{ stablecoinSupply: number } | null>(null);
+  const [perpFunding, setPerpFunding] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/market-sectors').then(r => r.json()).then(d => {
+      if (d.topSector && d.worstSector) {
+        setSectors({ topLabel: d.topSector.label, topChg: d.topSector.change, worstLabel: d.worstSector.label, worstChg: d.worstSector.change });
+      }
+    }).catch(() => {});
+    fetch('/api/defi-overview').then(r => r.json()).then(d => {
+      if (d.stablecoinSupply) setDefi({ stablecoinSupply: d.stablecoinSupply });
+    }).catch(() => {});
+    // Perp funding from derivatives API
+    fetch('/api/derivatives').then(r => r.json()).then(d => {
+      const btcAsset = d?.assets?.find?.((a: { asset: string }) => a.asset === 'BTC');
+      if (btcAsset?.avgFundingRate !== undefined) setPerpFunding(btcAsset.avgFundingRate);
+    }).catch(() => {});
+  }, []);
+
+  // Altcoin season: % of top 50 alts outperforming BTC over 90d
+  const btc = coins.find(c => c.symbol === 'BTC');
+  const btcChg = btc?.percent_change_7d ?? 0;
+  const alts = coins.filter(c => c.symbol !== 'BTC' && c.symbol !== 'USDT' && c.symbol !== 'USDC').slice(0, 50);
+  const altsBeatingBtc = alts.filter(a => (a.percent_change_7d ?? 0) > btcChg).length;
+  const altcoinIndex = alts.length > 0 ? Math.round((altsBeatingBtc / alts.length) * 100) : 32;
+
+  const stableSupply = defi?.stablecoinSupply ? (defi.stablecoinSupply / 1e9).toFixed(1) : '243.2';
+  const topSectorVal = sectors ? `${sectors.topLabel} ${sectors.topChg >= 0 ? '+' : ''}${sectors.topChg.toFixed(1)}%` : 'RWA +4.2%';
+  const topSectorSub = sectors?.topLabel || 'Real World Assets';
+  const worstSectorVal = sectors ? `${sectors.worstLabel} ${sectors.worstChg >= 0 ? '+' : ''}${sectors.worstChg.toFixed(1)}%` : 'DeFi −3.1%';
+  const worstSectorSub = sectors?.worstLabel || 'Decentralized Finance';
+  const fundingStr = perpFunding !== null ? `${perpFunding >= 0 ? '+' : ''}${perpFunding.toFixed(4)}%` : '−0.004%';
+  const fundingSub = perpFunding !== null ? (perpFunding < 0 ? 'Shorts paying · squeeze risk' : 'Longs paying · healthy') : 'Shorts paying · squeeze risk';
+
   const cells = [
-    { label: 'ALTCOIN SEASON', val: '32', sub: '/100', color: 'var(--gold)', bar: 32 },
-    { label: 'TOP SECTOR · 24H', val: 'RWA +4.2%', sub: 'Real World Assets', color: 'var(--green)' },
-    { label: 'WORST SECTOR · 24H', val: 'DeFi −3.1%', sub: 'Decentralized Finance', color: 'var(--red)' },
-    { label: 'STABLECOIN SUPPLY', val: '$243.2B', sub: '+$4.2B 30d · INFLOW', color: 'var(--cyan)' },
-    { label: 'PERP FUNDING (BTC)', val: '−0.004%', sub: 'Shorts paying · squeeze risk', color: 'var(--gold)' },
+    { label: 'ALTCOIN SEASON', val: String(altcoinIndex), sub: '/100', color: altcoinIndex > 75 ? 'var(--green)' : altcoinIndex > 25 ? 'var(--gold)' : 'var(--red)', bar: altcoinIndex },
+    { label: 'TOP SECTOR · 24H', val: topSectorVal, sub: topSectorSub, color: 'var(--green)' },
+    { label: 'WORST SECTOR · 24H', val: worstSectorVal, sub: worstSectorSub, color: 'var(--red)' },
+    { label: 'STABLECOIN SUPPLY', val: `$${stableSupply}B`, sub: `${defi ? '● LIVE · DefiLlama' : '● CACHED · DefiLlama'}`, color: 'var(--cyan)' },
+    { label: 'PERP FUNDING (BTC)', val: fundingStr, sub: fundingSub, color: 'var(--gold)' },
   ];
   return (
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
@@ -740,7 +804,7 @@ function SectorHeat() {
           {c.bar !== undefined ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
               <div style={{ width: 60, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${c.bar}%`, height: 6, background: c.color, borderRadius: 3 }} />
+                <div style={{ width: `${c.bar}%`, height: 6, background: c.color, borderRadius: 3, transition: 'width 0.6s ease' }} />
               </div>
             </div>
           ) : (
@@ -752,195 +816,10 @@ function SectorHeat() {
   );
 }
 
-/* ── Heatmap helpers ── */
-function fmtCompact(n: number): string {
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `$${(n / 1e3).toFixed(1)}K`;
-  return `$${n.toFixed(2)}`;
-}
-function fmtSupply(n: number): string {
-  if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
-  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
-  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
-  return n.toFixed(0);
-}
-
-function heatmapSignal(c: CmcCoin): { label: string; color: string; detail: string } {
-  const volMcap = c.volume_24h / Math.max(c.market_cap, 1);
-  const momentum1h = c.percent_change_1h;
-  const momentum24h = c.percent_change_24h;
-  const momentum7d = c.percent_change_7d;
-  // Multi-factor signal
-  if (momentum24h > 5 && momentum7d > 5 && volMcap > 0.08)
-    return { label: 'STRONG BUY', color: 'var(--green)', detail: 'Accelerating rally with high volume confirmation. Momentum on all timeframes.' };
-  if (momentum24h > 2 && momentum7d > 0)
-    return { label: 'ACCUMULATE', color: 'var(--green)', detail: 'Positive trend across 24h and 7d. Volume supports the move.' };
-  if (momentum24h > 0 && momentum7d < -5)
-    return { label: 'BOUNCE', color: 'var(--gold)', detail: 'Short-term recovery after weekly decline. Watch for sustained follow-through.' };
-  if (momentum24h < -5 && volMcap > 0.1)
-    return { label: 'CAPITULATION', color: 'var(--red)', detail: 'Heavy selling with elevated volume. Potential flush event — contrarian opportunity or further downside.' };
-  if (momentum24h < -3 && momentum7d < -8)
-    return { label: 'WEAK', color: 'var(--red)', detail: 'Sustained selling pressure. No reversal signal yet on any timeframe.' };
-  if (Math.abs(momentum24h) < 1 && Math.abs(momentum1h) < 0.3)
-    return { label: 'CONSOLIDATING', color: 'var(--muted)', detail: 'Low volatility. Price coiling before a directional move. Watch for volume spike.' };
-  if (momentum24h > 0)
-    return { label: 'HOLD', color: 'var(--cyan)', detail: 'Modestly positive. No strong conviction signal in either direction.' };
-  return { label: 'WATCH', color: 'var(--muted)', detail: 'Slightly negative but within normal range. Wait for clearer momentum signal.' };
-}
-
-/* ── Coin Detail Panel (slide-out on click) ── */
-function CoinDetailPanel({ coin, onClose, allCoins }: { coin: CmcCoin; onClose: () => void; allCoins: CmcCoin[] }) {
-  const chg = coin.percent_change_24h;
-  const signal = heatmapSignal(coin);
-  const volMcap = coin.volume_24h / Math.max(coin.market_cap, 1);
-  const dominance = (coin.market_cap / Math.max(allCoins.reduce((s, c) => s + c.market_cap, 0), 1) * 100);
-  const supplyPct = coin.max_supply ? (coin.circulating_supply / coin.max_supply * 100) : null;
-
-  const chgColor = (v: number) => v >= 0 ? 'var(--green)' : 'var(--red)';
-  const chgFmt = (v: number) => `${v >= 0 ? '+' : ''}${v.toFixed(2)}%`;
-
-  return (
-    <div style={{
-      position: 'absolute', top: 0, right: 0, bottom: 0, width: '340px', maxWidth: '100%',
-      background: 'linear-gradient(180deg, rgba(13,20,32,0.98) 0%, rgba(8,13,22,0.99) 100%)',
-      borderLeft: `1px solid ${chg >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'}`,
-      boxShadow: '-8px 0 32px rgba(0,0,0,0.5)',
-      zIndex: 10, overflowY: 'auto', padding: 0,
-      animation: 'slideInRight 0.2s ease-out',
-    }}>
-      <style>{`@keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }`}</style>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderBottom: '1px solid var(--b2)', background: chg >= 0 ? 'rgba(16,185,129,0.04)' : 'rgba(239,68,68,0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <img src={coin.image} alt={coin.symbol} style={{ width: 24, height: 24, borderRadius: 4 }} onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-          <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 700, color: 'var(--text)' }}>{coin.name}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>{coin.symbol} · Rank #{coin.cmc_rank}</div>
-          </div>
-        </div>
-        <button onClick={onClose} style={{ background: 'none', border: '1px solid var(--b2)', color: 'var(--muted)', fontFamily: 'var(--mono)', fontSize: 9, padding: '3px 8px', cursor: 'pointer', letterSpacing: '0.08em' }}>✕ CLOSE</button>
-      </div>
-
-      {/* Price */}
-      <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--b1)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 24, fontWeight: 700, color: 'var(--text)', lineHeight: 1 }}>{fmtPrice(coin.price)}</div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 6 }}>
-          <div><span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.08em' }}>1H </span><span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: chgColor(coin.percent_change_1h), fontWeight: 600 }}>{chgFmt(coin.percent_change_1h)}</span></div>
-          <div><span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.08em' }}>24H </span><span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: chgColor(coin.percent_change_24h), fontWeight: 600 }}>{chgFmt(coin.percent_change_24h)}</span></div>
-          <div><span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.08em' }}>7D </span><span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: chgColor(coin.percent_change_7d), fontWeight: 600 }}>{chgFmt(coin.percent_change_7d)}</span></div>
-        </div>
-      </div>
-
-      {/* Signal Badge */}
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)', background: 'rgba(0,0,0,0.15)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.14em', marginBottom: 5 }}>◈ CI SIGNAL</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700, color: signal.color, padding: '2px 8px', border: `1px solid ${signal.color}`, letterSpacing: '0.1em' }}>{signal.label}</span>
-        </div>
-        <div style={{ fontFamily: 'var(--sans)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.5, marginTop: 6 }}>{signal.detail}</div>
-      </div>
-
-      {/* Metrics Grid */}
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.14em', marginBottom: 8 }}>KEY METRICS</div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {[
-            { label: 'MARKET CAP', value: fmtCompact(coin.market_cap) },
-            { label: '24H VOLUME', value: fmtCompact(coin.volume_24h) },
-            { label: 'VOL/MCAP', value: `${(volMcap * 100).toFixed(2)}%`, hint: volMcap > 0.1 ? 'High' : volMcap > 0.05 ? 'Normal' : 'Low' },
-            { label: 'DOMINANCE', value: `${dominance.toFixed(2)}%` },
-          ].map(m => (
-            <div key={m.label} style={{ background: 'var(--s1)', padding: '8px 10px', border: '1px solid var(--b1)' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.1em' }}>{m.label}</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 700, color: 'var(--text)', marginTop: 2 }}>{m.value}</div>
-              {m.hint && <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--cyan)', marginTop: 1 }}>{m.hint}</div>}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Supply Section */}
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.14em', marginBottom: 8 }}>SUPPLY</div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>Circulating</span>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', fontWeight: 600 }}>{fmtSupply(coin.circulating_supply)} {coin.symbol}</span>
-        </div>
-        {coin.max_supply && (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>Max Supply</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', fontWeight: 600 }}>{fmtSupply(coin.max_supply)} {coin.symbol}</span>
-            </div>
-            {/* Supply bar */}
-            {supplyPct !== null && (
-              <div style={{ position: 'relative', height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min(supplyPct, 100)}%`, height: '100%', background: 'linear-gradient(90deg, var(--cyan), var(--blue))', borderRadius: 3, transition: 'width 0.5s ease' }} />
-                <span style={{ position: 'absolute', right: 4, top: -1, fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--text)', fontWeight: 600 }}>{supplyPct.toFixed(1)}%</span>
-              </div>
-            )}
-          </>
-        )}
-        {!coin.max_supply && (
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', fontStyle: 'italic' }}>No max supply cap (inflationary)</div>
-        )}
-      </div>
-
-      {/* Volume Activity Bar */}
-      <div style={{ padding: '10px 14px', borderBottom: '1px solid var(--b1)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.14em', marginBottom: 8 }}>VOLUME ACTIVITY</div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-          <div style={{ flex: 1, height: 8, background: 'var(--b3)', borderRadius: 4, overflow: 'hidden', position: 'relative' }}>
-            <div style={{
-              width: `${Math.min(volMcap * 500, 100)}%`,
-              height: '100%',
-              background: volMcap > 0.1 ? 'var(--green)' : volMcap > 0.05 ? 'var(--cyan)' : 'var(--muted)',
-              borderRadius: 4,
-              transition: 'width 0.5s ease',
-            }} />
-          </div>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', fontWeight: 600, minWidth: 36, textAlign: 'right' }}>{fmtCompact(coin.volume_24h)}</span>
-        </div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)' }}>
-          {volMcap > 0.15 ? 'Extremely high volume — potential breakout or panic event' :
-           volMcap > 0.08 ? 'Elevated volume — significant institutional or whale activity' :
-           volMcap > 0.04 ? 'Normal trading activity for this market cap range' :
-           'Low volume — limited conviction, potential low-liquidity risk'}
-        </div>
-      </div>
-
-      {/* Quick Links */}
-      <div style={{ padding: '10px 14px' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.14em', marginBottom: 8 }}>EXPLORE</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {[
-            { label: `CoinMarketCap`, href: `https://coinmarketcap.com/currencies/${coin.slug}/` },
-            { label: `CoinGecko`, href: `https://www.coingecko.com/en/coins/${coin.slug}` },
-            { label: `TradingView`, href: `https://www.tradingview.com/chart/?symbol=${coin.symbol}USD` },
-          ].map(link => (
-            <a key={link.label} href={link.href} target="_blank" rel="noopener noreferrer" style={{
-              fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)', padding: '3px 8px',
-              border: '1px solid var(--b2)', textDecoration: 'none', letterSpacing: '0.06em',
-              transition: 'background 0.15s',
-            }}
-              onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.08)')}
-              onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-            >{link.label} ↗</a>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 /* ── Heatmap (powered by shared CMC data) ── */
 function Heatmap() {
   const { coins, source, loading } = useContext(CmcContext);
   const topCoins = coins.slice(0, 20);
-  const [selectedCoin, setSelectedCoin] = useState<CmcCoin | null>(null);
-  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
 
   function getSpan(idx: number): { row?: string; col?: string } {
     if (idx === 0) return { row: 'span 2', col: 'span 2' };
@@ -949,79 +828,43 @@ function Heatmap() {
   }
 
   return (
-    <div className="panel" style={{ position: 'relative', overflow: 'hidden' }}>
+    <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">Market Heatmap — 24h Performance</div>
         <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>▪ size = market cap · click for detail</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>▪ size = market cap</span>
           <div className="tag tag-live">
             <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
             {sourceLabel(source)} · <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CoinMarketCap</a>
           </div>
         </div>
       </div>
-      {loading ? (
-        <div style={{ padding: '20px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Loading live market data...</div>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2 }}>
-          {topCoins.map((c, i) => {
-            const chg = c.percent_change_24h;
-            const span = getSpan(i);
-            const isSelected = selectedCoin?.symbol === c.symbol;
-            const isHovered = hoveredIdx === i;
-            const baseAlpha = Math.min(0.06 + Math.abs(chg) * 0.04, 0.4);
-            const alpha = isHovered ? Math.min(baseAlpha + 0.15, 0.55) : baseAlpha;
-            return (
-              <div
-                key={c.symbol}
-                onClick={() => setSelectedCoin(isSelected ? null : c)}
-                onMouseEnter={() => setHoveredIdx(i)}
-                onMouseLeave={() => setHoveredIdx(null)}
-                style={{
-                  background: chg >= 0 ? `rgba(16,185,129,${alpha})` : `rgba(239,68,68,${alpha})`,
-                  border: isSelected
-                    ? `2px solid ${chg >= 0 ? 'var(--green)' : 'var(--red)'}` 
-                    : `1px solid ${chg >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-                  padding: isSelected ? '7px 5px' : '8px 6px',
-                  textAlign: 'center',
-                  gridRow: span.row,
-                  gridColumn: span.col,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  transform: isHovered ? 'scale(1.04)' : 'scale(1)',
-                  zIndex: isHovered ? 2 : 1,
-                  position: 'relative',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 1,
-                }}>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: span.col === 'span 2' ? 14 : 10, fontWeight: 600, color: 'var(--text)' }}>{c.symbol}</div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: span.col === 'span 2' ? 11 : 9, color: chg >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 600 }}>
-                  {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
-                </div>
-                {/* Show price on hover/selected or for large cells */}
-                {(isHovered || isSelected || span.col === 'span 2') && (
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: span.col === 'span 2' ? 10 : 8, color: 'var(--text2)', marginTop: 1 }}>
-                    {fmtPrice(c.price)}
-                  </div>
-                )}
-                {/* Show volume indicator for large cells */}
-                {span.col === 'span 2' && (
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginTop: 2 }}>
-                    Vol {fmtCompact(c.volume_24h)}
-                  </div>
-                )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2, position: 'relative' }}>
+        {loading && topCoins.length === 0 && (
+          <div style={{ gridColumn: '1 / -1', padding: '20px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', animation: 'pulse 1.5s ease-in-out infinite' }}>Loading live market data...</div>
+        )}
+        {topCoins.map((c, i) => {
+          const chg = c.percent_change_24h;
+          const span = getSpan(i);
+          return (
+            <div key={c.symbol} style={{
+              background: chg >= 0 ? `rgba(16,185,129,${Math.min(0.06 + Math.abs(chg) * 0.04, 0.4)})` : `rgba(239,68,68,${Math.min(0.06 + Math.abs(chg) * 0.04, 0.4)})`,
+              border: `1px solid ${chg >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
+              padding: '8px 6px',
+              textAlign: 'center',
+              gridRow: span.row,
+              gridColumn: span.col,
+              transition: 'background 0.3s ease',
+            }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600, color: 'var(--text)' }}>{c.symbol}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: chg >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
               </div>
-            );
-          })}
-        </div>
-      )}
-      {/* Detail panel overlay */}
-      {selectedCoin && (
-        <CoinDetailPanel coin={selectedCoin} onClose={() => setSelectedCoin(null)} allCoins={coins} />
-      )}
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginTop: 2 }}>{fmtPrice(c.price)}</div>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -1036,7 +879,7 @@ function ETFFlows() {
     { name: 'Grayscale Bitcoin Trust', issuer: 'GRAYSCALE · GBTC', flow: '−$174.0M', up: false },
   ];
   return (
-    <div className="panel">
+    <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">Bitcoin ETF Daily Flows</div>
         <div className="tag tag-live"><a className="src-link" href="https://farside.co.uk/bitcoin-etf-flow-all-data/" target="_blank" rel="noopener noreferrer">Farside Investors</a></div>
@@ -1076,7 +919,7 @@ function ChainScore() {
     { rank: '07', name: 'XLM / Stellar', sym: 'XLM', score: 64 },
   ];
   return (
-    <div className="panel">
+    <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">ChainScore™ — Top Rated</div>
         <div className="tag" style={{ background: 'rgba(0,212,170,0.08)', color: 'var(--cyan)' }}>Methodology v1.0</div>
@@ -1112,7 +955,7 @@ function MarketTable() {
   }
 
   return (
-    <div className="panel">
+    <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">Top Assets by Market Cap</div>
         <div className="tag tag-live">
@@ -1167,17 +1010,63 @@ function MarketTable() {
   );
 }
 
-/* ── Whale Feed ── */
+/* ── Whale Feed (LIVE from /api/whales) ── */
 function WhaleFeed() {
-  const whales = [
+  const [whales, setWhales] = useState<{ dir: string; amt: string; asset: string; route: string; age: string; color: string }[]>([
     { dir: 'BUY', amt: '$48.2M', asset: '12,456 ETH', route: 'Unknown → Binance', age: '2m ago', color: 'var(--green)' },
     { dir: 'XFER', amt: '$122.4M', asset: '1,400 BTC', route: 'Cold wallet → Cold wallet', age: '7m ago', color: 'var(--blue)' },
     { dir: 'SELL', amt: '$31.8M', asset: '22.4M XRP', route: 'Kraken → Unknown', age: '12m ago', color: 'var(--red)' },
     { dir: 'BUY', amt: '$89.6M', asset: '1,024 BTC', route: 'Unknown → Coinbase Pro', age: '19m ago', color: 'var(--green)' },
-  ];
+  ]);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('/api/whales');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data?.transactions?.length) {
+          const mapped = data.transactions.slice(0, 4).map((tx: any) => {
+            const amt = tx.amount_usd ?? tx.amountUsd ?? 0;
+            const sym = (tx.symbol || tx.asset || 'BTC').toUpperCase();
+            const from = tx.from?.owner || tx.from_label || 'Unknown';
+            const to = tx.to?.owner || tx.to_label || 'Unknown';
+            const dir = to.toLowerCase().includes('exchange') || to.toLowerCase().includes('binance') || to.toLowerCase().includes('coinbase') ? 'SELL'
+              : from.toLowerCase().includes('exchange') || from.toLowerCase().includes('binance') ? 'BUY'
+              : 'XFER';
+            const dirColor = dir === 'BUY' ? 'var(--green)' : dir === 'SELL' ? 'var(--red)' : 'var(--blue)';
+            const ageMs = Date.now() - (tx.timestamp ? tx.timestamp * 1000 : Date.now());
+            const ageMins = Math.max(1, Math.round(ageMs / 60000));
+            const ageStr = ageMins < 60 ? `${ageMins}m ago` : `${Math.round(ageMins / 60)}h ago`;
+            return {
+              dir,
+              amt: `$${(amt / 1e6).toFixed(1)}M`,
+              asset: `${sym}`,
+              route: `${from} → ${to}`,
+              age: ageStr,
+              color: dirColor,
+            };
+          });
+          setWhales(mapped);
+          setIsLive(true);
+        }
+      } catch { /* keep fallback */ }
+    };
+    load();
+    const iv = setInterval(load, 60_000);
+    return () => clearInterval(iv);
+  }, []);
+
   return (
     <>
-      <div className="ph" style={{ marginTop: 8 }}><div className="pt">Live Whale Alerts</div><div className="tag" style={{ background: 'rgba(0,212,170,0.08)', color: 'var(--cyan)' }}>Whale Alert API</div></div>
+      <div className="ph" style={{ marginTop: 8 }}>
+        <div className="pt">Live Whale Alerts</div>
+        <div className="tag" style={{ background: 'rgba(0,212,170,0.08)', color: 'var(--cyan)' }}>
+          {isLive && <span style={{ color: 'var(--green)', fontSize: 7, marginRight: 4 }}>●</span>}
+          <a className="src-link" href="https://whale-alert.io" target="_blank" rel="noopener noreferrer">Whale Alert API</a>
+        </div>
+      </div>
       {whales.map((w, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 12px', borderBottom: '1px solid var(--b1)' }}>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 700, color: w.color, padding: '2px 6px', border: `1px solid ${w.color}`, letterSpacing: '0.06em', width: 36, textAlign: 'center' }}>{w.dir}</span>
@@ -1187,6 +1076,7 @@ function WhaleFeed() {
           </div>
           <div style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>{w.route}</div>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>{w.age}</span>
+          <a href="https://whale-alert.io" target="_blank" rel="noopener noreferrer" className="src-link" style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', opacity: 0.7 }}>TX ↗</a>
         </div>
       ))}
     </>
@@ -1205,6 +1095,35 @@ function BloombergCallout() {
       <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginLeft: 'auto', flexShrink: 0 }}>Bloomberg: $24K–$32K/yr · ChainIntel: from $0</span>
     </div>
   );
+}
+
+/* ── Live Fear & Greed KPI ── */
+function LiveFngKpi() {
+  const [fng, setFng] = useState<{ value: number; label: string } | null>(null);
+  useEffect(() => {
+    const load = () => fetch('/api/sentiment').then(r => r.json()).then(d => {
+      if (d?.fearGreed) setFng({ value: d.fearGreed.value, label: d.fearGreed.label });
+    }).catch(() => {});
+    load();
+    const iv = setInterval(load, 60_000);
+    return () => clearInterval(iv);
+  }, []);
+  const val = fng?.value ?? 13;
+  const label = fng?.label ?? 'Extreme Fear';
+  const color = val <= 25 ? 'var(--red)' : val <= 50 ? 'var(--gold)' : val <= 75 ? 'var(--green)' : 'var(--cyan)';
+  return <KPI label="Fear & Greed Index" value={String(val)} change={`${label} (${val}/100)${val <= 20 ? ' \u00b7 Historic low' : ''}`} changeDir={val > 50 ? 'up' : 'dn'} color={color} source={`<span style="color:${fng ? 'var(--green)' : 'var(--gold)'};font-size:7px">\u25cf</span> ${fng ? 'LIVE' : 'CACHED'} \u00b7 <a class="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank">Fear &amp; Greed Index</a>`} />;
+}
+
+/* ── Live DeFi TVL KPI ── */
+function LiveDefiKpi() {
+  const [tvl, setTvl] = useState<{ totalTvl: number; protocolCount: number } | null>(null);
+  useEffect(() => {
+    fetch('/api/defi-overview').then(r => r.json()).then(d => {
+      if (d?.totalTvl) setTvl({ totalTvl: d.totalTvl, protocolCount: d.protocolCount || 6400 });
+    }).catch(() => {});
+  }, []);
+  const val = tvl ? fmtUsd(tvl.totalTvl, 1) : '$85.0B';
+  return <KPI label="Total DeFi TVL" value={val} change={tvl ? `${tvl.protocolCount.toLocaleString()}+ protocols` : '6,400+ protocols'} changeDir="dn" source={`<span style="color:${tvl ? 'var(--green)' : 'var(--gold)'};font-size:7px">\u25cf</span> ${tvl ? 'LIVE' : 'CACHED'} \u00b7 <a class="src-link" href="https://defillama.com" target="_blank">DefiLlama</a>`} />;
 }
 
 /* ── Live KPI Row (powered by shared CMC data) ── */
@@ -1235,8 +1154,8 @@ function LiveKPIs() {
         changeDir={btc && btc.percent_change_24h >= 0 ? 'up' : 'dn'}
         source={srcHtml}
       />
-      <KPI label="Fear & Greed Index" value="13" change="Extreme Fear (13/100) · Historic low" changeDir="dn" color="var(--red)" source='<a class="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank">Fear &amp; Greed Index</a>' />
-      <KPI label="Total DeFi TVL" value="$85.0B" change="−2.1% in 24h · 6,400+ protocols" changeDir="dn" source='<a class="src-link" href="https://defillama.com" target="_blank">DefiLlama</a>' />
+      <LiveFngKpi />
+      <LiveDefiKpi />
     </div>
   );
 }
@@ -1250,6 +1169,7 @@ export default function OverviewTab() {
     <div>
       <AiStrip />
       <QuickGuide />
+      <DailyBriefCard />
       <MorningBrief />
       <AskCI />
 
@@ -1270,11 +1190,17 @@ export default function OverviewTab() {
         <ETFFlows />
       </div>
 
+      {/* CI Signal — Cross-Source Correlation Engine */}
+      <CorrelationEngine />
+
+      {/* Smart Alerts (compact) */}
+      <SmartAlerts compact />
+
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <ChainScore />
         </div>
-        <div className="panel">
+        <div className="panel panel-hover">
           <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(0,212,170,0.08)', color: 'var(--cyan)' }}>ChainIntel AI</div></div>
           <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
             <strong style={{ color: 'var(--text)' }}>Bitcoin holding $73K at Extreme Fear (13/100).</strong> Price stability against capitulation-level sentiment historically precedes 8–15% bounces. ETF flows constructive: IBIT +$224M, net +$169.6M, 4th consecutive inflow day. Exchange reserves −42,800 BTC in 30 days. LTH supply at 74.8%. <strong style={{ color: 'var(--text)' }}>Setup cautiously bullish for 90+ day horizon.</strong>
@@ -1285,6 +1211,7 @@ export default function OverviewTab() {
 
 
 
+      <TokenUnlocks />
       <BloombergCallout />
     </div>
     </CmcContext.Provider>

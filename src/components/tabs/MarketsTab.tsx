@@ -109,6 +109,18 @@ export default function MarketsTab() {
     setLoading(false);
   }, []);
 
+  // Also fetch binance-data aggregator for exchange-level depth
+  useEffect(() => {
+    fetch('/api/binance-data').then(r => r.json()).then(d => {
+      if (d?.binance?.tickers) {
+        (globalThis as any).__ciBinanceTickers = d.binance.tickers;
+      }
+      if (d?.binance?.futuresOI) {
+        (globalThis as any).__ciFuturesOI = d.binance.futuresOI;
+      }
+    }).catch(() => {});
+  }, []);
+
   useEffect(() => {
     fetchCoins();
     const id = setInterval(fetchCoins, 60000);

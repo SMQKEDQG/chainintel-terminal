@@ -90,7 +90,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             <div className="text-sm font-bold tracking-[0.16em]" style={{ color: 'var(--accent)', fontFamily: 'var(--sans)' }}>
               CHAININTEL
             </div>
-            <div className="font-mono text-[7px] tracking-widest" style={{ color: 'var(--muted)' }}>
+            <div className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--muted)' }}>
               DIGITAL ASSET INTELLIGENCE · {VERSION}
               <span style={{ marginLeft: 6, color: 'var(--accent)', opacity: 0.4, fontSize: 6 }}>▶ TOUR</span>
             </div>

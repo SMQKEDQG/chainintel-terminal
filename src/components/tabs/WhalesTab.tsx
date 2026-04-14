@@ -1,329 +1,360 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
-const chainScoreData: Record<string, {
+interface WhaleAlert {
+  type: 'buy' | 'sell' | 'transfer';
+  dir: string;
+  amt: string;
+  btcAmount: number;
+  txid: string;
+  route: string;
+  minsAgo: number;
+  blockHeight: number;
+  confirmed: boolean;
+}
+
+interface WhaleSummary {
+  totalVolume: number;
+  count: number;
+  buyCount: number;
+  sellCount: number;
+  xferCount: number;
+  netDirection: string;
+}
+
+interface WhaleData {
+  alerts: WhaleAlert[];
+  summary: WhaleSummary;
+  source: string;
+  timestamp: number;
+}
+
+interface ChainScoreRating {
+  asset: string;
+  name: string;
   score: number;
-  onChain: number;
-  protocol: number;
-  regulatory: number;
-  smartMoney: number;
-  technomics: number;
-}> = {
-  BTC: { score: 88, onChain: 92, protocol: 88, regulatory: 84, smartMoney: 90, technomics: 86 },
-  ETH: { score: 82, onChain: 86, protocol: 90, regulatory: 72, smartMoney: 84, technomics: 78 },
-  XRP: { score: 91, onChain: 88, protocol: 92, regulatory: 94, smartMoney: 88, technomics: 90 },
-  HBAR: { score: 85, onChain: 82, protocol: 86, regulatory: 88, smartMoney: 84, technomics: 84 },
-  QNT: { score: 87, onChain: 80, protocol: 88, regulatory: 90, smartMoney: 86, technomics: 88 },
-  XLM: { score: 76, onChain: 74, protocol: 80, regulatory: 82, smartMoney: 72, technomics: 74 },
-  ADA: { score: 72, onChain: 76, protocol: 82, regulatory: 74, smartMoney: 68, technomics: 70 },
-  IOTA: { score: 70, onChain: 68, protocol: 74, regulatory: 72, smartMoney: 66, technomics: 68 },
-};
+  grade: string;
+  signal: string;
+  factors: {
+    regulatory_clarity: number;
+    adoption_velocity: number;
+    decentralization: number;
+    liquidity_depth: number;
+    network_fundamentals: number;
+  };
+  updated: string;
+}
 
-const chainScoreLiveRows = [
-  { sym: 'BTC', name: 'Bitcoin', score: 88, rating: 'STRONG BUY', reg: 'COMMODITY', adoption: 'INSTITUTIONAL', liquidity: 'ULTRA HIGH', notes: 'SEC/CFTC commodity classification confirmed' },
-  { sym: 'ETH', name: 'Ethereum', score: 82, rating: 'BUY', reg: 'COMMODITY', adoption: 'INSTITUTIONAL', liquidity: 'ULTRA HIGH', notes: 'Commodity ruling pending; ETF approved' },
-  { sym: 'XRP', name: 'XRP Ledger', score: 91, rating: 'STRONG BUY', reg: 'COMMODITY', adoption: 'INSTITUTIONAL', liquidity: 'HIGH', notes: 'SEC case settled; commodity classification' },
-  { sym: 'SOL', name: 'Solana', score: 74, rating: 'BUY', reg: 'UNRESOLVED', adoption: 'HIGH', liquidity: 'HIGH', notes: 'ETF filed; regulatory status pending' },
-  { sym: 'BNB', name: 'BNB Chain', score: 62, rating: 'NEUTRAL', reg: 'SCRUTINY', adoption: 'MEDIUM', liquidity: 'HIGH', notes: 'DOJ settlement; ongoing regulatory scrutiny' },
-  { sym: 'HBAR', name: 'Hedera', score: 85, rating: 'STRONG BUY', reg: 'COMMODITY', adoption: 'INSTITUTIONAL', liquidity: 'MEDIUM', notes: 'CFTC commodity; 39-member governing council' },
-  { sym: 'QNT', name: 'Quant Network', score: 87, rating: 'STRONG BUY', reg: 'COMMODITY', adoption: 'INSTITUTIONAL', liquidity: 'MEDIUM', notes: 'ECB pioneer; MX.3 integration' },
-  { sym: 'XLM', name: 'Stellar', score: 76, rating: 'BUY', reg: 'MiCA', adoption: 'MEDIUM', liquidity: 'MEDIUM', notes: 'MiCA aligned; EU CBDC rails' },
-  { sym: 'ADA', name: 'Cardano', score: 72, rating: 'BUY', reg: 'MiCA', adoption: 'MEDIUM', liquidity: 'MEDIUM', notes: 'MiCA compliant; UNHCR partnership' },
-  { sym: 'IOTA', name: 'IOTA', score: 70, rating: 'BUY', reg: 'FAVORABLE', adoption: 'GOV PILOT', liquidity: 'LOW', notes: 'UK govt TWIN trial; FCA engagement' },
-  { sym: 'XDC', name: 'XDC Network', score: 74, rating: 'BUY', reg: 'FAVORABLE', adoption: 'TRADE FIN', liquidity: 'LOW', notes: 'BitGo custody; $50B+ trade finance pipeline' },
-  { sym: 'ALGO', name: 'Algorand', score: 66, rating: 'NEUTRAL', reg: 'MiCA', adoption: 'CBDC PILOT', liquidity: 'LOW', notes: 'Marshall Islands SOV; CBDC pilots' },
-  { sym: 'DOT', name: 'Polkadot', score: 64, rating: 'NEUTRAL', reg: 'UNRESOLVED', adoption: 'DEVELOPER', liquidity: 'MEDIUM', notes: 'Parachain ecosystem; regulatory pending' },
-  { sym: 'LINK', name: 'Chainlink', score: 78, rating: 'BUY', reg: 'FAVORABLE', adoption: 'INSTITUTIONAL', liquidity: 'MEDIUM', notes: 'SWIFT CCIP integration; DeFi oracle standard' },
-];
+interface ChainScoreData {
+  count: number;
+  ratings: ChainScoreRating[];
+}
 
-const getRatingColor = (rating: string) => {
-  if (rating === 'STRONG BUY') return 'var(--cyan)';
-  if (rating === 'BUY') return 'var(--green)';
-  if (rating === 'NEUTRAL') return 'var(--gold)';
+function ScoreBar({ score, max = 20 }: { score: number; max?: number }) {
+  const pct = (score / max) * 100;
+  const color = pct >= 80 ? 'var(--cyan)' : pct >= 60 ? 'var(--green)' : pct >= 40 ? 'var(--gold)' : 'var(--red)';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+      <div style={{ width: 50, height: 5, background: 'var(--b3)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.5s ease' }} />
+      </div>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color, minWidth: 14, textAlign: 'right' }}>{score}</span>
+    </div>
+  );
+}
+
+function gradeColor(grade: string): string {
+  if (grade.startsWith('A') || grade === 'Institutional Grade' || grade === 'Investment Grade') return 'var(--cyan)';
+  if (grade.startsWith('B') || grade === 'Speculative Grade') return 'var(--green)';
+  if (grade.startsWith('C') || grade === 'High Risk') return 'var(--gold)';
   return 'var(--red)';
-};
+}
 
-const getScoreColor = (score: number) => {
-  if (score >= 85) return 'var(--cyan)';
-  if (score >= 75) return 'var(--green)';
-  if (score >= 65) return 'var(--gold)';
+function signalColor(signal: string): string {
+  if (signal === 'BUY') return 'var(--green)';
+  if (signal === 'HOLD') return 'var(--gold)';
   return 'var(--red)';
-};
+}
 
-const whaleAlerts = [
-  { type: 'buy', dir: 'BUY', amt: '$224.8M', asset: '2,709 BTC', from: 'Unknown → Coinbase Custody', minsAgo: 3 },
-  { type: 'transfer', dir: 'XFER', amt: '$312M', asset: '3,759 BTC', from: 'Cold wallet → OTC desk', minsAgo: 8 },
-  { type: 'buy', dir: 'BUY', amt: '$48.2M', asset: '30,506 ETH', from: 'Unknown → Binance', minsAgo: 14 },
-  { type: 'sell', dir: 'SELL', amt: '$31.8M', asset: '15.1M XRP', from: 'Kraken → Unknown', minsAgo: 18 },
-  { type: 'transfer', dir: 'XFER', amt: '$88.4M', asset: '130M ADA', from: 'Binance → Cold storage', minsAgo: 26 },
-  { type: 'buy', dir: 'BUY', amt: '$89.6M', asset: '1,080 BTC', from: 'Unknown → Coinbase Pro', minsAgo: 31 },
-  { type: 'sell', dir: 'SELL', amt: '$14.2M', asset: '8,987 ETH', from: 'Unknown → DEX', minsAgo: 44 },
-  { type: 'transfer', dir: 'XFER', amt: '$210M', asset: '2,530 BTC', from: 'Binance → Cold storage', minsAgo: 52 },
-];
+function alertTypeColor(type: string): string {
+  if (type === 'buy') return 'var(--green)';
+  if (type === 'sell') return 'var(--red)';
+  return 'var(--cyan)';
+}
 
 export default function WhalesTab() {
-  const [selectedAsset, setSelectedAsset] = useState('BTC');
-  const [alertAsset, setAlertAsset] = useState('BTC');
-  const [alertCondition, setAlertCondition] = useState('above');
-  const [alertTarget, setAlertTarget] = useState('');
-  const [alertFreq, setAlertFreq] = useState('once');
-  const [alerts, setAlerts] = useState<Array<{ asset: string; condition: string; target: string; freq: string }>>([]);
+  const [whaleData, setWhaleData] = useState<WhaleData | null>(null);
+  const [chainScores, setChainScores] = useState<ChainScoreRating[]>([]);
+  const [whaleLoading, setWhaleLoading] = useState(true);
+  const [csLoading, setCsLoading] = useState(true);
+  const [expandedAsset, setExpandedAsset] = useState<string | null>(null);
 
-  const cs = chainScoreData[selectedAsset];
+  const fetchWhales = useCallback(async () => {
+    try {
+      const res = await fetch('/api/whales');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setWhaleData(json);
+    } catch { /* fail silently */ }
+    setWhaleLoading(false);
+  }, []);
 
-  const addPriceAlert = () => {
-    if (!alertTarget) return;
-    setAlerts(prev => [...prev, { asset: alertAsset, condition: alertCondition, target: alertTarget, freq: alertFreq }]);
-    setAlertTarget('');
-  };
+  const fetchChainScores = useCallback(async () => {
+    try {
+      const res = await fetch('/api/chainscore?all=true');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const ratings = json.ratings || (json.count ? json.ratings : [json]);
+      if (Array.isArray(ratings)) {
+        ratings.sort((a: ChainScoreRating, b: ChainScoreRating) => b.score - a.score);
+        setChainScores(ratings);
+      }
+    } catch { /* fail silently */ }
+    setCsLoading(false);
+  }, []);
 
-  const removeAlert = (idx: number) => {
-    setAlerts(prev => prev.filter((_, i) => i !== idx));
-  };
+  useEffect(() => {
+    fetchWhales();
+    fetchChainScores();
+    const whaleIv = setInterval(fetchWhales, 120_000);
+    const csIv = setInterval(fetchChainScores, 300_000);
+    return () => { clearInterval(whaleIv); clearInterval(csIv); };
+  }, [fetchWhales, fetchChainScores]);
 
-  const conditionLabel = (c: string) => {
-    if (c === 'above') return 'above';
-    if (c === 'below') return 'below';
-    if (c === 'change_up') return '% up';
-    return '% down';
-  };
+  const summary = whaleData?.summary;
+  const alerts = whaleData?.alerts || [];
+
+  // AI synthesis
+  const whaleAi = summary
+    ? `${summary.count} whale transactions detected (last ~1hr). Net direction: ${summary.netDirection}. ${summary.totalVolume.toFixed(0)} BTC moved — ${summary.buyCount} accumulation, ${summary.sellCount} distribution, ${summary.xferCount} transfers.`
+    : 'Loading whale intelligence...';
+
+  const topScore = chainScores[0];
+  const csAi = topScore
+    ? `ChainScore leader: ${topScore.asset} at ${topScore.score}/100 (${topScore.grade}). ${chainScores.filter(r => r.signal === 'BUY').length} assets rated BUY, ${chainScores.filter(r => r.signal === 'HOLD').length} HOLD, ${chainScores.filter(r => r.signal === 'WATCH').length} WATCH.`
+    : '';
 
   return (
-    <div className="page" id="page-alerts">
-      <div className="ai-context-strip" id="acs-alerts">
+    <div>
+      {/* AI Context */}
+      <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
-        <span className="acs-body" id="acs-body-alerts">
-          Net whale direction: accumulative — exchange outflows dominate inflows 3.2x. The $312M cold-wallet OTC desk transfer signals institutional block purchasing.{' '}
-          <strong>Pattern matches pre-rally accumulation phases from Q4 2020 and Q4 2023.</strong>
+        <span className="acs-body">
+          <strong>{whaleAi}</strong>{csAi ? ` ${csAi}` : ''}
         </span>
-        <span className="acs-ts" id="acs-ts-alerts"></span>
-      </div>
-      <div className="section-h">
-        <div className="section-h-label">Whale Transaction Tracker</div>
-        <div className="section-h-line"></div>
-        <div className="tag tag-live">Whale Alert · Nansen</div>
       </div>
 
+      {/* Section Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>WHALE ACTIVITY & CHAINSCORE RATINGS</span>
+        <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
+        <span className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>PRO</span>
+        <span className="tag tag-live">
+          <a className="src-link" href="https://mempool.space" target="_blank" rel="noopener noreferrer">Mempool</a>
+          {' · '}
+          <span>Supabase</span>
+        </span>
+      </div>
+
+      {/* KPI Row */}
       <div className="g4">
-        <div className="kpi"><div className="kpi-label">Alerts Today</div><div className="kpi-val" style={{ color: 'var(--text)' }}>284</div><div className="kpi-chg">$50M+ threshold</div></div>
-        <div className="kpi"><div className="kpi-label">Largest Alert · 24h</div><div className="kpi-val gold">$312M</div><div className="kpi-chg">3,568 BTC · Cold → OTC desk</div></div>
-        <div className="kpi"><div className="kpi-label">Net Whale Direction</div><div className="kpi-val cyan">ACCUM</div><div className="kpi-chg up">Exchange outflows dominate</div></div>
-        <div className="kpi"><div className="kpi-label">Smart Money Signal</div><div className="kpi-val up">BULLISH</div><div className="kpi-chg up">Nansen-labeled wallets accumulating</div></div>
+        <div className="kpi">
+          <div className="kpi-label">Whale Transactions</div>
+          <div className="kpi-val cyan">{summary?.count ?? '—'}</div>
+          <div className="kpi-chg">{whaleLoading ? 'Loading...' : 'Last ~1 hour'}</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Total Volume</div>
+          <div className="kpi-val" style={{ color: 'var(--gold)' }}>{summary ? `${summary.totalVolume.toFixed(0)} BTC` : '—'}</div>
+          <div className="kpi-chg">{summary ? `$${((summary.totalVolume * 74000) / 1e6).toFixed(0)}M est.` : ''}</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Net Direction</div>
+          <div className="kpi-val" style={{ color: summary?.netDirection === 'accumulation' ? 'var(--green)' : summary?.netDirection === 'distribution' ? 'var(--red)' : 'var(--gold)' }}>
+            {summary?.netDirection?.toUpperCase() || '—'}
+          </div>
+          <div className="kpi-chg">{summary ? `${summary.buyCount} buy · ${summary.sellCount} sell · ${summary.xferCount} xfer` : ''}</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">ChainScore Assets</div>
+          <div className="kpi-val cyan">{chainScores.length || '—'}</div>
+          <div className="kpi-chg">{csLoading ? 'Loading...' : `${chainScores.filter(r => r.signal === 'BUY').length} rated BUY`}</div>
+        </div>
       </div>
 
-      <div className="g2">
+      {/* Two columns: Whale Alerts + ChainScore */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
+        {/* Whale Alerts */}
         <div className="panel">
           <div className="ph">
-            <div className="pt">Whale Transaction Tracker · $10M+ Transactions</div>
-            <div className="tag tag-live">Whale Alert API</div>
+            <div className="pt">Live Whale Alerts — BTC</div>
+            <div className="tag tag-live">
+              <a className="src-link" href="https://mempool.space" target="_blank" rel="noopener noreferrer">Mempool.space</a>
+            </div>
           </div>
-          <div id="whaleAlertFeed">
-            {whaleAlerts.map((w, i) => (
-              <div key={i} className={`whale-item ${w.type}`}>
-                <div className={`wdir ${w.type}`}>{w.dir}</div>
-                <div>
-                  <div className="wamt">{w.amt}</div>
-                  <div className="wasset">{w.asset}</div>
-                </div>
-                <div className="wfrom">{w.from}</div>
-                <div className="wage" data-minsago={w.minsAgo}>{w.minsAgo}m ago</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="panel">
-          <div className="ph">
-            <div className="pt"><span data-glossary="ChainScore™">ChainScore™</span> — Full Ratings</div>
-            <div className="tag tag-ai">5-Dimension Methodology</div>
-          </div>
-          <div id="chainScoreSelector" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px', maxWidth: '100%' }}>
-            {Object.keys(chainScoreData).map(asset => (
-              <button
-                key={asset}
-                className={`cs-asset-btn${selectedAsset === asset ? ' active' : ''}`}
-                data-asset={asset}
-                onClick={() => setSelectedAsset(asset)}
-                style={{
-                  fontFamily: 'var(--mono)',
-                  fontSize: '8px',
-                  padding: '3px 7px',
-                  background: 'var(--s3)',
-                  border: `1px solid ${selectedAsset === asset ? 'var(--cyan)' : 'var(--b2)'}`,
-                  color: selectedAsset === asset ? 'var(--cyan)' : 'var(--text2)',
-                  borderRadius: '3px',
-                  cursor: 'pointer',
-                  flexShrink: 0,
+          {whaleLoading ? (
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)' }}>SCANNING BLOCKCHAIN...</div>
+          ) : alerts.length === 0 ? (
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)' }}>No large transactions in recent blocks</div>
+          ) : (
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              {alerts.map((a, i) => (
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px',
+                  borderBottom: '1px solid var(--b1)',
+                  background: a.btcAmount >= 100 ? 'rgba(240,192,64,0.04)' : 'transparent',
                 }}
-              >
-                {asset}
-              </button>
-            ))}
-          </div>
-          <div className="gauge-wrap">
-            <svg width="160" height="90" viewBox="0 0 160 90">
-              <path d="M 10 80 A 70 70 0 0 1 150 80" fill="none" stroke="var(--b3)" strokeWidth="12" strokeLinecap="round"/>
-              <path
-                d="M 10 80 A 70 70 0 0 1 150 80"
-                fill="none"
-                stroke="var(--cyan)"
-                strokeWidth="12"
-                strokeLinecap="round"
-                strokeDasharray={`${(cs.score / 100) * 220} 220`}
-              />
-              <text x="80" y="70" textAnchor="middle" fill="var(--cyan)" fontFamily="var(--mono)" fontSize="22" fontWeight="700">{cs.score}</text>
-              <text x="80" y="86" textAnchor="middle" fill="var(--text2)" fontFamily="var(--mono)" fontSize="8">{selectedAsset} ChainScore™</text>
-            </svg>
-          </div>
-          <div className="sub-scores">
-            <div className="ss-row"><div className="ss-label">On-Chain Health</div><div className="ss-bar"><div className="ss-fill" id="ss1" style={{ width: `${cs.onChain}%` }}></div></div><div className="ss-val">{cs.onChain}</div></div>
-            <div className="ss-row"><div className="ss-label">Protocol Fundamentals</div><div className="ss-bar"><div className="ss-fill" id="ss2" style={{ width: `${cs.protocol}%` }}></div></div><div className="ss-val">{cs.protocol}</div></div>
-            <div className="ss-row"><div className="ss-label">Regulatory Exposure</div><div className="ss-bar"><div className="ss-fill" id="ss3" style={{ width: `${cs.regulatory}%` }}></div></div><div className="ss-val">{cs.regulatory}</div></div>
-            <div className="ss-row"><div className="ss-label">Smart Money Position</div><div className="ss-bar"><div className="ss-fill" id="ss4" style={{ width: `${cs.smartMoney}%` }}></div></div><div className="ss-val">{cs.smartMoney}</div></div>
-            <div className="ss-row"><div className="ss-label">Technomics Risk</div><div className="ss-bar"><div className="ss-fill" id="ss5" style={{ width: `${cs.technomics}%` }}></div></div><div className="ss-val">{cs.technomics}</div></div>
-          </div>
-        </div>
-      </div>
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = a.btcAmount >= 100 ? 'rgba(240,192,64,0.04)' : '')}>
+                  {/* Direction icon */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: a.type === 'buy' ? 'rgba(16,185,129,0.15)' : a.type === 'sell' ? 'rgba(239,68,68,0.15)' : 'rgba(0,212,170,0.1)',
+                    fontSize: 12,
+                  }}>
+                    {a.type === 'buy' ? '↓' : a.type === 'sell' ? '↑' : '↔'}
+                  </div>
 
-      <div className="ai-box">
-        <div className="ai-label">
-          <span className="ai-pulse"></span>Whale AI Intelligence · Nansen · Whale Alert · <span id="whaleAiDate"></span>
-        </div>
-        <div className="ai-text">
-          <strong>Net whale direction is structurally accumulative — <span data-glossary="Exchange Outflows">exchange outflows</span> dominate inflows by 3.2x.</strong> The $312M cold-wallet to OTC desk transfer signals institutional accumulation, not distribution — OTC desks facilitate large block purchases without impacting spot price. Nansen-labeled smart money wallets are net buyers at current levels. BTC <span data-glossary="ChainScore™">ChainScore™</span> of 88 is in the top 5% of historical readings. <strong>Pattern matches historical pre-rally accumulation phases seen in Q4 2020 and Q4 2023. This is not distribution behavior.</strong>
-        </div>
-      </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: alertTypeColor(a.type) }}>{a.amt}</span>
+                      <span style={{
+                        fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', fontWeight: 600,
+                        background: a.type === 'buy' ? 'rgba(16,185,129,0.15)' : a.type === 'sell' ? 'rgba(239,68,68,0.15)' : 'rgba(0,212,170,0.1)',
+                        color: alertTypeColor(a.type),
+                      }}>{a.dir}</span>
+                      {a.btcAmount >= 100 && <span style={{ fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', background: 'rgba(240,192,64,0.2)', color: 'var(--gold)', fontWeight: 700 }}>🐋 MEGA</span>}
+                    </div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginTop: 1 }}>{a.route}</div>
+                  </div>
 
-      {/* ChainScore Live Table */}
-      <div style={{ background: 'var(--s1)', border: '1px solid var(--b2)', margin: '1px 0' }}>
-        <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--cyan)' }}>◈ CHAINSCORE™ RATINGS — LIVE FROM DATABASE</span>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>Click any row for full asset detail · 14 assets rated</span>
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead>
-              <tr style={{ background: 'var(--s2)' }}>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>SYMBOL</th>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>ASSET</th>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>SCORE /100</th>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>RATING</th>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>REG</th>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>ADOPTION</th>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>LIQUIDITY</th>
-                <th style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em', textAlign: 'left' }}>REGULATORY NOTES</th>
-              </tr>
-            </thead>
-            <tbody id="chainScoreLiveTable">
-              {chainScoreLiveRows.map((row, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--cyan)', fontWeight: 600 }}>{row.sym}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)' }}>{row.name}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '9px', color: getScoreColor(row.score), fontWeight: 700 }}>{row.score}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '8px', color: getRatingColor(row.rating) }}>{row.rating}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)' }}>{row.reg}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)' }}>{row.adoption}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)' }}>{row.liquidity}</td>
-                  <td style={{ padding: '5px 8px', fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)' }}>{row.notes}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Price Alert Builder */}
-      <div className="panel" style={{ marginTop: '1px' }}>
-        <div className="ph">
-          <div className="pt">⚡ Price Alert Builder</div>
-          <div className="tag tag-live">Supabase · Real-time</div>
-        </div>
-        <div style={{ padding: '12px 14px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr auto', gap: '8px', alignItems: 'end', marginBottom: '10px' }}>
-            <div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '4px', letterSpacing: '0.1em' }}>ASSET</div>
-              <select
-                id="alertAsset"
-                value={alertAsset}
-                onChange={e => setAlertAsset(e.target.value)}
-                style={{ width: '100%', background: 'var(--s3)', border: '1px solid var(--b3)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '9px', padding: '6px 8px' }}
-              >
-                <option>BTC</option><option>ETH</option><option>XRP</option><option>SOL</option>
-                <option>XLM</option><option>HBAR</option><option>ADA</option><option>XDC</option>
-                <option>IOTA</option><option>ALGO</option><option>QNT</option><option>BNB</option>
-              </select>
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '4px', letterSpacing: '0.1em' }}>CONDITION</div>
-              <select
-                id="alertCondition"
-                value={alertCondition}
-                onChange={e => setAlertCondition(e.target.value)}
-                style={{ width: '100%', background: 'var(--s3)', border: '1px solid var(--b3)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '9px', padding: '6px 8px' }}
-              >
-                <option value="above">Price above</option>
-                <option value="below">Price below</option>
-                <option value="change_up">% change up</option>
-                <option value="change_down">% change down</option>
-              </select>
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '4px', letterSpacing: '0.1em' }}>TARGET VALUE</div>
-              <input
-                id="alertTarget"
-                type="number"
-                placeholder="e.g. 80000"
-                value={alertTarget}
-                onChange={e => setAlertTarget(e.target.value)}
-                style={{ width: '100%', background: 'var(--s3)', border: '1px solid var(--b3)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '9px', padding: '6px 8px', boxSizing: 'border-box' }}
-              />
-            </div>
-            <div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '4px', letterSpacing: '0.1em' }}>FREQUENCY</div>
-              <select
-                id="alertFreq"
-                value={alertFreq}
-                onChange={e => setAlertFreq(e.target.value)}
-                style={{ width: '100%', background: 'var(--s3)', border: '1px solid var(--b3)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '9px', padding: '6px 8px' }}
-              >
-                <option value="once">Once</option>
-                <option value="always">Every trigger</option>
-              </select>
-            </div>
-            <div>
-              <button
-                onClick={addPriceAlert}
-                style={{ background: 'var(--cyan)', color: '#000', border: 'none', fontFamily: 'var(--mono)', fontSize: '9px', fontWeight: 700, padding: '7px 16px', cursor: 'pointer', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}
-              >
-                + SET ALERT
-              </button>
-            </div>
-          </div>
-          <div id="alertsList" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            {alerts.length === 0 ? (
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', padding: '8px 0', textAlign: 'center' }}>
-                No active alerts. Set one above — it will fire as a toast notification when triggered.
-              </div>
-            ) : (
-              alerts.map((a, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 10px' }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)' }}>
-                    <span style={{ color: 'var(--cyan)' }}>{a.asset}</span> · {conditionLabel(a.condition)} <span style={{ color: 'var(--gold)' }}>${a.target}</span> · {a.freq === 'once' ? 'Once' : 'Every trigger'}
-                  </span>
-                  <button
-                    onClick={() => removeAlert(i)}
-                    style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: '10px' }}
-                  >
-                    ×
-                  </button>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)' }}>
+                      <a href={`https://mempool.space/tx/${a.txid.replace('...', '')}`} target="_blank" rel="noopener noreferrer" className="src-link">{a.txid}</a>
+                    </div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginTop: 1 }}>
+                      {a.minsAgo}m ago · #{a.blockHeight}
+                    </div>
+                  </div>
                 </div>
-              ))
-            )}
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ChainScore Ratings */}
+        <div className="panel">
+          <div className="ph">
+            <div className="pt">ChainScore™ Ratings — {chainScores.length} Assets</div>
+            <div className="tag tag-live">Supabase</div>
           </div>
-          <div style={{ marginTop: '8px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>
-            Alerts are session-based. Pro tier unlocks persistent cloud alerts via email + push notification.
-          </div>
+          {csLoading ? (
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)' }}>LOADING RATINGS...</div>
+          ) : (
+            <div style={{ maxHeight: 400, overflowY: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--b2)', position: 'sticky', top: 0, background: 'var(--s1)' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>ASSET</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>SCORE</th>
+                    <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>GRADE</th>
+                    <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>SIGNAL</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {chainScores.map(r => (
+                    <>
+                      <tr key={r.asset}
+                        onClick={() => setExpandedAsset(expandedAsset === r.asset ? null : r.asset)}
+                        style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                        <td style={{ padding: '5px 8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <span style={{ fontSize: 8, color: 'var(--muted)', transition: 'transform 0.2s', transform: expandedAsset === r.asset ? 'rotate(90deg)' : '' }}>▶</span>
+                            <span style={{ fontWeight: 600, color: 'var(--text)' }}>{r.asset}</span>
+                            <span style={{ fontSize: 8, color: 'var(--muted)' }}>{r.name}</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '5px 8px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
+                            <div style={{ width: 40, height: 5, background: 'var(--b3)', borderRadius: 2, overflow: 'hidden' }}>
+                              <div style={{ width: `${r.score}%`, height: '100%', background: r.score >= 75 ? 'var(--cyan)' : r.score >= 60 ? 'var(--green)' : 'var(--gold)', borderRadius: 2 }} />
+                            </div>
+                            <span style={{ fontWeight: 700, color: 'var(--cyan)', minWidth: 20 }}>{r.score}</span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '5px 8px' }}>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, padding: '2px 6px', fontWeight: 600, color: gradeColor(r.grade), background: `${gradeColor(r.grade)}15` }}>
+                            {r.grade}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '5px 8px' }}>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, padding: '2px 6px', fontWeight: 700, color: signalColor(r.signal) }}>
+                            {r.signal}
+                          </span>
+                        </td>
+                      </tr>
+                      {expandedAsset === r.asset && (
+                        <tr key={`${r.asset}-detail`} style={{ background: 'rgba(0,212,170,0.03)' }}>
+                          <td colSpan={4} style={{ padding: '10px 16px' }}>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.1em' }}>FACTOR BREAKDOWN (0-20 each)</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+                              <div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>REGULATORY</div>
+                                <ScoreBar score={r.factors.regulatory_clarity} />
+                              </div>
+                              <div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>ADOPTION</div>
+                                <ScoreBar score={r.factors.adoption_velocity} />
+                              </div>
+                              <div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>DECENTRAL.</div>
+                                <ScoreBar score={r.factors.decentralization} />
+                              </div>
+                              <div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>LIQUIDITY</div>
+                                <ScoreBar score={r.factors.liquidity_depth} />
+                              </div>
+                              <div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>NETWORK</div>
+                                <ScoreBar score={r.factors.network_fundamentals} />
+                              </div>
+                            </div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginTop: 6 }}>
+                              Last scored: {new Date(r.updated).toLocaleDateString()}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Synthesis */}
+      <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)' }}>CI · Whale & ChainScore Synthesis</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginLeft: 'auto' }}>
+            {whaleData?.source === 'live' ? 'LIVE' : 'CACHED'} · {whaleData ? new Date(whaleData.timestamp).toLocaleTimeString() : ''}
+          </span>
+        </div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
+          <strong style={{ color: 'var(--text)' }}>
+            {summary?.netDirection === 'accumulation'
+              ? 'Whale activity skews accumulation — large holders are buying, not selling. This aligns with Fear & Greed at extreme lows.'
+              : summary?.netDirection === 'distribution'
+                ? 'Distribution pattern detected — large holders reducing exposure. Monitor for continued selling pressure.'
+                : 'Whale flows neutral — no strong directional signal from large transactions.'}
+          </strong>
+          {topScore && ` ChainScore ratings show ${topScore.asset} leading at ${topScore.score}/100. ${chainScores.filter(r => r.signal === 'BUY').length} of ${chainScores.length} assets carry a BUY signal.`}
         </div>
       </div>
     </div>

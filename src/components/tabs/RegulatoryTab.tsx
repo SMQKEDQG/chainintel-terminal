@@ -1,167 +1,242 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
 type Sentiment = 'all' | 'bullish' | 'bearish' | 'neutral';
 
 interface RegItem {
-  hl: string;
-  badges: Array<{ label: string; cls: string }>;
-  tier1?: boolean;
-  sentiment: 'bullish' | 'bearish' | 'neutral';
+  headline: string;
+  summary: string;
+  source: string;
+  regulatory_body: string;
   date: string;
+  date_raw: string;
+  sentiment: string;
+  tier1: boolean;
+  badges: { label: string; cls: string }[];
+  asset_tags: string[];
+  url: string;
 }
 
-const REG_ITEMS: RegItem[] = [
-  { hl: 'SEC classifies 16 digital assets as commodities under joint CFTC digital asset guidance framework — directly affects trading, custody, and reporting obligations for institutional holders', badges: [{ label: 'SEC', cls: 'rb-sec' }], tier1: true, sentiment: 'bullish', date: 'Mar 28, 2026' },
-  { hl: 'EU MiCA Phase 2 compliance deadline confirmed as January 1, 2027 — all Crypto-Asset Service Providers must be authorized or cease EU operations', badges: [{ label: 'ESMA · EU', cls: 'rb-eu' }], sentiment: 'neutral', date: 'Apr 2, 2026' },
-  { hl: 'FCA publishes CP25/40 — UK crypto trading platform authorization and prudential requirements — 2027 implementation timeline confirmed', badges: [{ label: 'FCA · UK', cls: 'rb-sec' }], sentiment: 'neutral', date: 'Apr 2, 2026' },
-  { hl: 'IMF April 2026 Financial Stability Report warns tokenized finance creates systemic risk if unregulated — recommends macro-prudential buffers for institutions', badges: [{ label: 'IMF', cls: 'rb-imf' }], tier1: true, sentiment: 'bearish', date: 'Apr 5, 2026' },
-  { hl: 'CLARITY Act advances through Senate Ag & Banking Committees — digital asset market structure bill targeting Q2 2026 Senate floor vote — CFTC to have exclusive jurisdiction over digital commodity spot markets', badges: [{ label: 'US SENATE', cls: 'rb-sec' }], tier1: true, sentiment: 'bullish', date: 'Apr 7, 2026' },
-  { hl: 'BIS publishes updated crypto capital standards for global banks — 2% cap on unbacked crypto asset exposure — effective Jan 2026', badges: [{ label: 'BIS · BASEL', cls: 'rb-imf' }], sentiment: 'bearish', date: 'Mar 10, 2026' },
-  { hl: 'OCC clarifies national banks may provide crypto custody services without prior approval — removes key barrier for bank-native digital asset products', badges: [{ label: 'OCC', cls: 'rb-cftc' }], sentiment: 'bullish', date: 'Mar 10, 2026' },
-];
+interface RegData {
+  items: RegItem[];
+  stats: { total: number; bullish: number; bearish: number; net: string };
+  aiContext: string;
+  source: string;
+  timestamp: number;
+}
 
-const SENTIMENT_DISPLAY = {
+const SENTIMENT_DISPLAY: Record<string, { arrow: string; color: string }> = {
   bullish: { arrow: '▲ BULLISH', color: 'var(--green)' },
   bearish: { arrow: '▼ BEARISH', color: 'var(--red)' },
   neutral: { arrow: '◆ NEUTRAL', color: 'var(--gold)' },
 };
 
+const BADGE_COLORS: Record<string, string> = {
+  SEC: 'rgba(239,68,68,0.15)',
+  CFTC: 'rgba(59,130,246,0.15)',
+  'EU': 'rgba(0,212,170,0.1)',
+  'ESMA': 'rgba(0,212,170,0.1)',
+  'FCA': 'rgba(240,192,64,0.12)',
+  'IMF': 'rgba(147,51,234,0.12)',
+  'BIS': 'rgba(147,51,234,0.12)',
+  'OCC': 'rgba(59,130,246,0.15)',
+  'FinCEN': 'rgba(239,68,68,0.15)',
+};
+
 export default function RegulatoryTab() {
-  const [activeFilter, setActiveFilter] = useState<Sentiment>('all');
+  const [data, setData] = useState<RegData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<Sentiment>('all');
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
 
-  const visible = REG_ITEMS.filter((r) => activeFilter === 'all' || r.sentiment === activeFilter);
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/regulatory');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setData(json);
+    } catch { /* fail silently */ }
+    setLoading(false);
+  }, []);
 
-  const btnStyle = (s: Sentiment): React.CSSProperties => {
-    const base: React.CSSProperties = { fontFamily: 'var(--mono)', fontSize: '7px', padding: '2px 10px', cursor: 'pointer', letterSpacing: '0.08em' };
-    if (s === 'all') return { ...base, background: activeFilter === 'all' ? 'var(--cyan)' : 'var(--s3)', color: activeFilter === 'all' ? '#000' : 'var(--text2)', border: activeFilter === 'all' ? 'none' : '1px solid var(--b2)', fontWeight: activeFilter === 'all' ? 700 : 400 };
-    const colorMap: Record<string, string> = { bullish: 'var(--green)', bearish: 'var(--red)', neutral: 'var(--gold)' };
-    const borderMap: Record<string, string> = { bullish: 'rgba(16,185,129,0.3)', bearish: 'rgba(239,68,68,0.3)', neutral: 'rgba(240,192,64,0.3)' };
-    return { ...base, background: activeFilter === s ? borderMap[s] : 'var(--s3)', color: colorMap[s], border: `1px solid ${borderMap[s]}` };
-  };
+  useEffect(() => {
+    fetchData();
+    const iv = setInterval(fetchData, 300_000); // 5 min
+    return () => clearInterval(iv);
+  }, [fetchData]);
+
+  const items = data?.items || [];
+  const filtered = filter === 'all' ? items : items.filter(i => i.sentiment === filter);
+  const stats = data?.stats;
 
   return (
-    <div className="page" id="page-reg">
-      <div className="ai-context-strip" id="acs-reg">
+    <div>
+      {/* AI Context */}
+      <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
-        <span className="acs-body" id="acs-body-reg">
-          Regulatory environment is the most constructive since 2020. SEC/CFTC joint commodity classification (16 assets), OCC bank custody clarification, CLARITY Act advancing.{' '}
-          <strong>2026 is the year the legal framework locks in.</strong>
+        <span className="acs-body">
+          {data?.aiContext || 'Loading regulatory intelligence...'}
         </span>
-        <span className="acs-ts" id="acs-ts-reg"></span>
       </div>
 
-      <div style={{ background: 'var(--s1)', border: '1px solid var(--b2)', margin: '1px 0' }}>
-        <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--cyan)' }}>◈ REGULATORY INTELLIGENCE — LIVE DATABASE FEED</span>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>7 entries · Tier 1 Institutional sources only</span>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>REGULATORY INTELLIGENCE FEED</span>
+        <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
+        <span className="tag tag-live">
+          <span>Supabase</span>
+          {' · '}
+          <span>Auto-refreshed</span>
+        </span>
+      </div>
+
+      {/* KPIs */}
+      <div className="g4">
+        <div className="kpi">
+          <div className="kpi-label">Total Updates</div>
+          <div className="kpi-val cyan">{stats?.total ?? '—'}</div>
+          <div className="kpi-chg">{loading ? 'Loading...' : 'Monitored items'}</div>
         </div>
-        <div id="regCacheFeed" style={{ padding: '8px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '6px' }}>
-            {REG_ITEMS.slice(0, 4).map((item) => {
-              const s = SENTIMENT_DISPLAY[item.sentiment];
+        <div className="kpi">
+          <div className="kpi-label">Bullish Developments</div>
+          <div className="kpi-val" style={{ color: 'var(--green)' }}>{stats?.bullish ?? '—'}</div>
+          <div className="kpi-chg up">Pro-crypto regulatory moves</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Bearish Developments</div>
+          <div className="kpi-val" style={{ color: 'var(--red)' }}>{stats?.bearish ?? '—'}</div>
+          <div className="kpi-chg dn">Restrictive / enforcement</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Net Environment</div>
+          <div className="kpi-val" style={{ color: stats?.net === 'constructive' ? 'var(--green)' : stats?.net === 'cautious' ? 'var(--red)' : 'var(--gold)' }}>
+            {stats?.net?.toUpperCase() || '—'}
+          </div>
+          <div className="kpi-chg">Regulatory climate</div>
+        </div>
+      </div>
+
+      {/* Filter Tabs */}
+      <div style={{ display: 'flex', gap: 6, marginTop: 12, marginBottom: 8 }}>
+        {(['all', 'bullish', 'bearish', 'neutral'] as Sentiment[]).map(s => (
+          <button key={s} onClick={() => setFilter(s)} style={{
+            fontFamily: 'var(--mono)', fontSize: 9, padding: '4px 10px', cursor: 'pointer', border: '1px solid',
+            borderColor: filter === s ? 'var(--cyan)' : 'var(--b2)',
+            background: filter === s ? 'rgba(0,212,170,0.1)' : 'var(--s1)',
+            color: filter === s ? 'var(--cyan)' : 'var(--text2)',
+            textTransform: 'uppercase', letterSpacing: '0.05em',
+          }}>
+            {s === 'all' ? `ALL (${items.length})` : `${s.toUpperCase()} (${items.filter(i => i.sentiment === s).length})`}
+          </button>
+        ))}
+      </div>
+
+      {/* Feed */}
+      <div className="panel">
+        <div className="ph">
+          <div className="pt">Regulatory Feed — {filtered.length} Items</div>
+        </div>
+        {loading ? (
+          <div style={{ padding: 30, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)' }}>SCANNING REGULATORY SOURCES...</div>
+        ) : filtered.length === 0 ? (
+          <div style={{ padding: 30, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)' }}>No regulatory items match this filter</div>
+        ) : (
+          <div style={{ maxHeight: 500, overflowY: 'auto' }}>
+            {filtered.map((item, i) => {
+              const sd = SENTIMENT_DISPLAY[item.sentiment] || SENTIMENT_DISPLAY.neutral;
+              const isExpanded = expandedIdx === i;
               return (
-                <div key={item.date + item.sentiment} style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '8px 10px' }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: s.color, letterSpacing: '0.08em', marginBottom: '4px' }}>{s.arrow}</div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text)', lineHeight: 1.4, marginBottom: '4px' }}>{item.hl.slice(0, 80)}…</div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>
-                    {item.badges.map((b) => <span key={b.label} className={`reg-badge ${b.cls}`} style={{ marginRight: '4px' }}>{b.label}</span>)}
-                    {item.date}
+                <div key={i}
+                  onClick={() => setExpandedIdx(isExpanded ? null : i)}
+                  style={{
+                    padding: '10px 14px', borderBottom: '1px solid var(--b1)', cursor: 'pointer',
+                    borderLeft: item.tier1 ? `3px solid ${sd.color}` : '3px solid transparent',
+                    background: isExpanded ? 'rgba(0,212,170,0.03)' : 'transparent',
+                    transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => { if (!isExpanded) e.currentTarget.style.background = 'rgba(0,212,170,0.02)'; }}
+                  onMouseLeave={e => { if (!isExpanded) e.currentTarget.style.background = ''; }}>
+
+                  {/* Top row: badges + date + sentiment */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    {item.badges.map((b, bi) => (
+                      <span key={bi} style={{
+                        fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 6px', fontWeight: 600, letterSpacing: '0.05em',
+                        background: BADGE_COLORS[b.label] || 'rgba(74,106,140,0.15)',
+                        color: 'var(--text2)',
+                      }}>
+                        {b.label}
+                      </span>
+                    ))}
+                    {item.tier1 && (
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', background: 'rgba(239,68,68,0.12)', color: 'var(--red)', fontWeight: 700 }}>TIER 1</span>
+                    )}
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginLeft: 'auto' }}>{item.date}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 600, color: sd.color }}>{sd.arrow}</span>
                   </div>
+
+                  {/* Headline */}
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', lineHeight: 1.5, fontWeight: item.tier1 ? 600 : 400 }}>
+                    {item.headline}
+                  </div>
+
+                  {/* Expanded: summary + source link */}
+                  {isExpanded && (
+                    <div style={{ marginTop: 8 }}>
+                      {item.summary && (
+                        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.5, marginBottom: 6, paddingLeft: 8, borderLeft: '2px solid var(--b2)' }}>
+                          {item.summary}
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {item.url && (
+                          <a href={item.url} target="_blank" rel="noopener noreferrer" className="src-link" style={{ fontFamily: 'var(--mono)', fontSize: 9 }}>
+                            View Source →
+                          </a>
+                        )}
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>Source: {item.source || item.regulatory_body}</span>
+                        {item.asset_tags && item.asset_tags.length > 0 && (
+                          <div style={{ display: 'flex', gap: 3, marginLeft: 'auto' }}>
+                            {item.asset_tags.map((tag: string, ti: number) => (
+                              <span key={ti} style={{ fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', background: 'rgba(0,212,170,0.1)', color: 'var(--cyan)' }}>{tag}</span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
           </div>
+        )}
+      </div>
+
+      {/* Synthesis */}
+      <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)' }}>CI · Regulatory Synthesis</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginLeft: 'auto' }}>
+            {data?.source === 'live' ? 'LIVE' : 'CACHED'} · {data ? new Date(data.timestamp).toLocaleTimeString() : ''}
+          </span>
         </div>
-      </div>
-
-      <div className="section-h">
-        <div className="section-h-label">Regulatory Intelligence Feed · 12 Agencies · Structured Data Not Journalism</div>
-        <div className="section-h-line"></div>
-        <div className="tag tag-pro">PRO</div>
-      </div>
-
-      <div className="g4">
-        <div className="kpi"><div className="kpi-label">Active Agencies Monitored</div><div className="kpi-val cyan">12</div><div className="kpi-chg" style={{ color: 'var(--text2)' }}>SEC · CFTC · BIS · IMF · FCA · MAS · ESMA · FSB · FATF · OCC · FDIC · Fed</div></div>
-        <div className="kpi"><div className="kpi-label">Actions This Month</div><div className="kpi-val" style={{ color: 'var(--text)' }}>14</div><div className="kpi-chg">Enforcement, guidance, proposals</div></div>
-        <div className="kpi"><div className="kpi-label">Regulatory Clarity Score</div><div className="kpi-val up">72</div><div className="kpi-chg up">+8 vs Q1 2026 · Best since 2021</div></div>
-        <div className="kpi"><div className="kpi-label">Pending Decisions</div><div className="kpi-val gold">6</div><div className="kpi-chg">Stablecoin, ETF, Classification</div></div>
-      </div>
-
-      <div className="g2">
-        <div className="panel">
-          <div className="ph"><div className="pt">Recent Regulatory Actions</div><div className="tag tag-live">Auto-Aggregated · 12 Sources</div></div>
-          <div style={{ display: 'flex', gap: '6px', padding: '6px 0 8px' }}>
-            <button onClick={() => setActiveFilter('all')} style={btnStyle('all')}>ALL</button>
-            <button onClick={() => setActiveFilter('bullish')} style={btnStyle('bullish')}>▲ BULLISH</button>
-            <button onClick={() => setActiveFilter('bearish')} style={btnStyle('bearish')}>▼ BEARISH</button>
-            <button onClick={() => setActiveFilter('neutral')} style={btnStyle('neutral')}>◆ NEUTRAL</button>
-          </div>
-          {visible.map((item) => {
-            const s = SENTIMENT_DISPLAY[item.sentiment];
-            return (
-              <div key={item.date + item.hl.slice(0, 20)} className="reg-item" data-sentiment={item.sentiment}>
-                <div className="reg-hl">{item.hl}</div>
-                <div className="reg-meta">
-                  {item.badges.map((b) => <span key={b.label} className={`reg-badge ${b.cls}`}>{b.label}</span>)}
-                  {item.tier1 && <span className="reg-badge rb-t1">TIER 1</span>}
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: s.color, marginLeft: '4px' }}>{s.arrow}</span>
-                  <span className="reg-date">{item.date}</span>
-                </div>
-              </div>
-            );
-          })}
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
+          {stats ? (
+            <>
+              <strong style={{ color: 'var(--text)' }}>
+                {stats.net === 'constructive'
+                  ? `Regulatory environment is constructive (${stats.bullish} bullish vs ${stats.bearish} bearish developments). The trend toward commodity classification for digital assets and custody permissions for banks creates a structural foundation for institutional adoption.`
+                  : stats.net === 'cautious'
+                    ? `Regulatory environment is cautious (${stats.bearish} bearish vs ${stats.bullish} bullish developments). Enforcement actions and risk warnings dominate. Position conservatively until clarity improves.`
+                    : `Regulatory environment is balanced (${stats.bullish} bullish, ${stats.bearish} bearish developments). Mixed signals — both progressive frameworks and restrictive measures in play. No clear directional bias.`}
+              </strong>
+            </>
+          ) : (
+            'Loading regulatory analysis...'
+          )}
         </div>
-
-        <div className="panel">
-          <div className="ph"><div className="pt">Regulatory Tracker</div></div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: '6px' }}>Stablecoin Legislation</div>
-          {[
-            { label: 'CLARITY Act (US Senate)', status: 'ADVANCING', cls: 'rt-advancing' },
-            { label: 'GENIUS Act (Stablecoin) — House', status: 'RECONCILING', cls: 'rt-active' },
-            { label: 'EU MiCA E-Money Tokens', status: 'ACTIVE', cls: 'rt-active' },
-            { label: 'UK Stablecoin Regime', status: 'DRAFT', cls: 'rt-draft' },
-            { label: 'MAS (Singapore) Payment Services Act', status: 'FINAL', cls: 'rt-final' },
-          ].map((item) => (
-            <div key={item.label} className="rt-item"><div className="rt-label">{item.label}</div><div className={`rt-status ${item.cls}`}>{item.status}</div></div>
-          ))}
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted)', margin: '10px 0 6px' }}>Asset Classification</div>
-          {[
-            { label: 'SEC/CFTC Joint Crypto Guidance', status: 'ACTIVE', cls: 'rt-active' },
-            { label: 'EU MiCA Asset Classification', status: 'FINAL', cls: 'rt-final' },
-            { label: 'BTC — US Commodity Status', status: 'APPROVED', cls: 'rt-approved' },
-            { label: 'ETH — US Commodity Status', status: 'APPROVED', cls: 'rt-approved' },
-          ].map((item) => (
-            <div key={item.label} className="rt-item"><div className="rt-label">{item.label}</div><div className={`rt-status ${item.cls}`}>{item.status}</div></div>
-          ))}
-        </div>
-      </div>
-
-      <div className="panel">
-        <div className="ph"><div className="pt">Asset-Level Regulatory Status Matrix</div><div className="tag tag-pro">ChainIntel Research</div></div>
-        <table className="dt">
-          <thead><tr><th style={{ textAlign: 'left' }}>Asset</th><th>US Classification</th><th>EU MiCA Status</th><th>ETF Status</th><th>SEC Filing</th><th>Reg Risk Score</th></tr></thead>
-          <tbody>
-            {[
-              { name: 'Bitcoin', sym: 'BTC', usC: 'COMMODITY', mica: 'EXEMPT', etf: 'APPROVED', sec: 'NOT FILED', risk: 'LOW 12', gc: 'var(--green)', mc: 'var(--green)', ec: 'var(--green)', sc: 'var(--text2)', rc: 'var(--green)' },
-              { name: 'Ethereum', sym: 'ETH', usC: 'COMMODITY', mica: 'EXEMPT', etf: 'APPROVED', sec: 'NOT FILED', risk: 'LOW 14', gc: 'var(--green)', mc: 'var(--green)', ec: 'var(--green)', sc: 'var(--text2)', rc: 'var(--green)' },
-              { name: 'XRP', sym: 'XRP', usC: 'COMMODITY', mica: 'MiCA ALIGN', etf: 'PENDING', sec: 'SETTLED', risk: 'MED 22', gc: 'var(--green)', mc: 'var(--green)', ec: 'var(--gold)', sc: 'var(--gold)', rc: 'var(--gold)' },
-              { name: 'Solana', sym: 'SOL', usC: 'DISPUTED', mica: 'MiCA ALIGN', etf: 'PENDING', sec: 'NAMED', risk: 'MED 31', gc: 'var(--gold)', mc: 'var(--green)', ec: 'var(--gold)', sc: 'var(--red)', rc: 'var(--gold)' },
-              { name: 'HBAR', sym: 'HBAR', usC: 'COMMODITY', mica: 'MiCA ALIGN', etf: 'APPROVED', sec: 'NOT FILED', risk: 'LOW 18', gc: 'var(--green)', mc: 'var(--green)', ec: 'var(--green)', sc: 'var(--text2)', rc: 'var(--green)' },
-              { name: 'QNT', sym: 'QNT', usC: 'COMMODITY', mica: 'COMPLIANT', etf: 'APPROVED', sec: 'NOT FILED', risk: 'LOW 16', gc: 'var(--green)', mc: 'var(--green)', ec: 'var(--green)', sc: 'var(--text2)', rc: 'var(--green)' },
-            ].map((a) => (
-              <tr key={a.sym}>
-                <td><span className="aname">{a.name}</span><span className="asym">{a.sym}</span></td>
-                <td style={{ color: a.gc }}>{a.usC}</td>
-                <td style={{ color: a.mc }}>{a.mica}</td>
-                <td style={{ color: a.ec }}>{a.etf}</td>
-                <td style={{ color: a.sc }}>{a.sec}</td>
-                <td style={{ color: a.rc, fontFamily: 'var(--mono)' }}>{a.risk}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
       </div>
     </div>
   );

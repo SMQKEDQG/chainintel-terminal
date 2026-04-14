@@ -38,7 +38,7 @@ export function CorrelationEngine() {
   return (
     <div className="panel panel-hover" style={{ border: `1px solid ${signalColor}40` }}>
       <div className="ph">
-        <div className="pt" style={{ color: 'var(--cyan)' }}>◈ CI Signal — Cross-Source Correlation Engine</div>
+        <div className="pt" style={{ color: 'var(--accent)' }}>◈ CI Signal — Cross-Source Correlation Engine</div>
         <div className="tag" style={{ background: `${signalColor}15`, color: signalColor, border: `1px solid ${signalColor}40` }}>{data.global.label}</div>
       </div>
 
@@ -119,12 +119,12 @@ export function PortfolioModels() {
   if (!data?.models) return null;
 
   const model = data.models[selectedModel];
-  const regimeColor = data.regime.fng <= 25 ? 'var(--red)' : data.regime.fng <= 40 ? 'var(--gold)' : data.regime.fng <= 60 ? 'var(--text2)' : data.regime.fng <= 75 ? 'var(--green)' : 'var(--cyan)';
+  const regimeColor = data.regime.fng <= 25 ? 'var(--red)' : data.regime.fng <= 40 ? 'var(--gold)' : data.regime.fng <= 60 ? 'var(--text2)' : data.regime.fng <= 75 ? 'var(--green)' : 'var(--accent)';
 
   const modelBtn = (key: string, label: string) => ({
     fontFamily: 'var(--mono)', fontSize: 7, padding: '3px 10px', cursor: 'pointer', letterSpacing: '0.08em',
-    background: selectedModel === key ? 'var(--cyan)' : 'transparent', color: selectedModel === key ? '#000' : 'var(--text2)',
-    border: selectedModel === key ? '1px solid var(--cyan)' : '1px solid var(--b2)', fontWeight: selectedModel === key ? 700 : 400,
+    background: selectedModel === key ? 'var(--accent)' : 'transparent', color: selectedModel === key ? '#000' : 'var(--text2)',
+    border: selectedModel === key ? '1px solid var(--accent)' : '1px solid var(--b2)', fontWeight: selectedModel === key ? 700 : 400,
   });
 
   return (
@@ -174,10 +174,10 @@ export function PortfolioModels() {
           {model.positions?.map((pos: any) => (
             <div key={pos.symbol} style={{ display: 'grid', gridTemplateColumns: '70px 50px 60px 1fr 50px', gap: 8, padding: '5px 8px', background: 'var(--s2)', alignItems: 'center' }}>
               <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', fontWeight: 600 }}>{pos.symbol}</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)' }}>{pos.targetPct}%</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)' }}>{pos.targetPct}%</span>
               <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: pos.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>{pos.change24h >= 0 ? '+' : ''}{pos.change24h}%</span>
               <div style={{ height: 4, background: 'var(--s3)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ width: `${pos.targetPct}%`, height: '100%', background: 'var(--cyan)', borderRadius: 2, opacity: 0.7 }} />
+                <div style={{ width: `${pos.targetPct}%`, height: '100%', background: 'var(--accent)', borderRadius: 2, opacity: 0.7 }} />
               </div>
               <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: pos.needsRebalance ? 'var(--red)' : 'var(--muted)', textAlign: 'right' }}>
                 {pos.needsRebalance ? `↻ ${pos.drift > 0 ? '+' : ''}${pos.drift}%` : '✓'}
@@ -217,7 +217,7 @@ export function SmartAlerts({ compact = false }: { compact?: boolean }) {
 
   if (loading) return null;
 
-  const sevColor: Record<string, string> = { critical: 'var(--red)', warning: 'var(--gold)', info: 'var(--cyan)' };
+  const sevColor: Record<string, string> = { critical: 'var(--red)', warning: 'var(--gold)', info: 'var(--accent)' };
   const sevIcon: Record<string, string> = { critical: '◈', warning: '◇', info: '○' };
   const displayed = compact ? alerts.slice(0, 3) : alerts;
 
@@ -225,7 +225,7 @@ export function SmartAlerts({ compact = false }: { compact?: boolean }) {
 
   return (
     <div className={compact ? '' : 'panel panel-hover'} style={compact ? {} : {}}>
-      {!compact && <div className="ph"><div className="pt">◈ Smart Alert Center</div><div className="tag" style={{ background: alerts.some(a => a.severity === 'critical') ? 'rgba(239,68,68,0.15)' : 'rgba(0,212,170,0.08)', color: alerts.some(a => a.severity === 'critical') ? 'var(--red)' : 'var(--cyan)' }}>{alerts.length} Active</div></div>}
+      {!compact && <div className="ph"><div className="pt">◈ Smart Alert Center</div><div className="tag" style={{ background: alerts.some(a => a.severity === 'critical') ? 'rgba(239,68,68,0.15)' : 'rgba(232,165,52,0.08)', color: alerts.some(a => a.severity === 'critical') ? 'var(--red)' : 'var(--accent)' }}>{alerts.length} Active</div></div>}
       {displayed.length === 0 ? (
         <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: compact ? '4px 0' : '12px 0' }}>No active alerts — all systems nominal.</div>
       ) : (
@@ -274,7 +274,7 @@ export function MicrostructurePanel() {
     <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">◈ Market Microstructure — BTC/USDT</div>
-        <div className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>15s refresh</div>
+        <div className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>15s refresh</div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -378,9 +378,9 @@ export function DailyBriefCard() {
   const signal = brief.signal || sections['CI SIGNAL'] || '';
 
   return (
-    <div style={{ background: 'var(--s1)', border: '1px solid rgba(0,212,170,0.2)', marginBottom: 8, overflow: 'hidden' }}>
+    <div style={{ background: 'var(--s1)', border: '1px solid rgba(232,165,52,0.2)', marginBottom: 8, overflow: 'hidden' }}>
       <div onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', userSelect: 'none' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--cyan)', fontWeight: 600 }}>⬡ DAILY INTELLIGENCE BRIEF</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--accent)', fontWeight: 600 }}>⬡ DAILY INTELLIGENCE BRIEF</span>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>{brief.date}</span>
         <div style={{ flex: 1 }} />
         <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--text2)', letterSpacing: '0.06em' }}>{expanded ? '▲ COLLAPSE' : '▼ EXPAND'}</span>
@@ -396,7 +396,7 @@ export function DailyBriefCard() {
         <div style={{ padding: '0 12px 12px' }}>
           {sections['MARKET SNAPSHOT'] && (
             <div style={{ marginBottom: 8 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--cyan)', letterSpacing: '0.12em', marginBottom: 4 }}>MARKET SNAPSHOT</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--accent)', letterSpacing: '0.12em', marginBottom: 4 }}>MARKET SNAPSHOT</div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{sections['MARKET SNAPSHOT']}</div>
             </div>
           )}
@@ -413,8 +413,8 @@ export function DailyBriefCard() {
             </div>
           )}
           {signal && (
-            <div style={{ background: 'rgba(0,212,170,0.05)', border: '1px solid rgba(0,212,170,0.15)', padding: '8px 10px', marginTop: 8 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--cyan)', letterSpacing: '0.12em', marginBottom: 4 }}>CI SIGNAL</div>
+            <div style={{ background: 'rgba(232,165,52,0.05)', border: '1px solid rgba(232,165,52,0.15)', padding: '8px 10px', marginTop: 8 }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--accent)', letterSpacing: '0.12em', marginBottom: 4 }}>CI SIGNAL</div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text)', lineHeight: 1.6, fontWeight: 500 }}>{typeof signal === 'string' ? signal : ''}</div>
             </div>
           )}

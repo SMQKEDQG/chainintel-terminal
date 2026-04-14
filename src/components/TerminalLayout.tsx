@@ -63,36 +63,36 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
         {/* Logo */}
         <div className="flex items-center gap-3">
           <svg width="30" height="30" viewBox="0 0 36 36" fill="none" aria-label="ChainIntel Logo">
-            {/* Hexagonal node network — data intelligence mark */}
-            {/* Outer hexagon */}
-            <path d="M18 3 L31 10.5 L31 25.5 L18 33 L5 25.5 L5 10.5 Z" 
-              stroke="var(--cyan)" strokeWidth="1.5" fill="none" />
-            {/* Inner data paths — three connecting lines through center */}
-            <line x1="18" y1="3" x2="18" y2="33" stroke="var(--cyan)" strokeWidth="1" opacity="0.3" />
-            <line x1="5" y1="10.5" x2="31" y2="25.5" stroke="var(--cyan)" strokeWidth="1" opacity="0.3" />
-            <line x1="31" y1="10.5" x2="5" y2="25.5" stroke="var(--cyan)" strokeWidth="1" opacity="0.3" />
-            {/* Center filled hexagon */}
-            <path d="M18 13 L23 16 L23 22 L18 25 L13 22 L13 16 Z" 
-              fill="var(--cyan)" opacity="0.9" />
-            {/* Node dots at vertices */}
-            <circle cx="18" cy="3" r="1.8" fill="var(--cyan)" />
-            <circle cx="31" cy="10.5" r="1.8" fill="var(--cyan)" />
-            <circle cx="31" cy="25.5" r="1.8" fill="var(--cyan)" />
-            <circle cx="18" cy="33" r="1.8" fill="var(--cyan)" />
-            <circle cx="5" cy="25.5" r="1.8" fill="var(--cyan)" />
-            <circle cx="5" cy="10.5" r="1.8" fill="var(--cyan)" />
+            {/* Diamond lattice — precision intelligence mark */}
+            {/* Outer diamond */}
+            <path d="M18 2 L34 18 L18 34 L2 18 Z" 
+              stroke="var(--accent)" strokeWidth="1.2" fill="none" />
+            {/* Inner diamond */}
+            <path d="M18 9 L27 18 L18 27 L9 18 Z" 
+              stroke="var(--accent)" strokeWidth="1" fill="none" opacity="0.5" />
+            {/* Center filled diamond */}
+            <path d="M18 14 L22 18 L18 22 L14 18 Z" 
+              fill="var(--accent)" opacity="0.9" />
+            {/* Cross hair lines */}
+            <line x1="18" y1="2" x2="18" y2="34" stroke="var(--accent)" strokeWidth="0.5" opacity="0.2" />
+            <line x1="2" y1="18" x2="34" y2="18" stroke="var(--accent)" strokeWidth="0.5" opacity="0.2" />
+            {/* Corner accent dots */}
+            <circle cx="18" cy="2" r="1.5" fill="var(--accent)" />
+            <circle cx="34" cy="18" r="1.5" fill="var(--accent)" />
+            <circle cx="18" cy="34" r="1.5" fill="var(--accent)" />
+            <circle cx="2" cy="18" r="1.5" fill="var(--accent)" />
           </svg>
           <div
             className="tour-title-btn"
             onClick={() => setTourOpen(true)}
             title="Click for guided tour"
           >
-            <div className="font-mono text-xs font-semibold tracking-wider" style={{ color: 'var(--cyan)' }}>
+            <div className="text-sm font-bold tracking-[0.16em]" style={{ color: 'var(--accent)', fontFamily: 'var(--sans)' }}>
               CHAININTEL
             </div>
             <div className="font-mono text-[7px] tracking-widest" style={{ color: 'var(--muted)' }}>
               DIGITAL ASSET INTELLIGENCE · {VERSION}
-              <span style={{ marginLeft: 6, color: 'var(--cyan)', opacity: 0.5, fontSize: 6 }}>▶ TOUR</span>
+              <span style={{ marginLeft: 6, color: 'var(--accent)', opacity: 0.4, fontSize: 6 }}>▶ TOUR</span>
             </div>
           </div>
         </div>
@@ -107,7 +107,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
                 </span>
                 <button
                   onClick={() => signOut()}
-                  className="font-mono text-[7px] tracking-wider px-2 py-1 border transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)]"
+                  className="font-mono text-[7px] tracking-wider px-2 py-1 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
                 >
                   SIGN OUT
@@ -117,7 +117,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
               <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="font-mono text-[8px] tracking-wider px-2.5 py-1 border transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)]"
+                  className="font-mono text-[8px] tracking-wider px-2.5 py-1 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   style={{ color: 'var(--muted)', borderColor: 'var(--b3)', textDecoration: 'none' }}
                 >
                   SIGN IN
@@ -125,7 +125,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
                 <Link
                   href="/signup"
                   className="font-mono text-[8px] tracking-wider px-2.5 py-1 transition-opacity hover:opacity-80"
-                  style={{ background: 'var(--cyan)', color: '#000', fontWeight: 700, textDecoration: 'none' }}
+                  style={{ background: 'var(--accent)', color: '#000', fontWeight: 700, textDecoration: 'none' }}
                 >
                   SIGN UP
                 </Link>
@@ -135,16 +135,16 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
           <button
             data-tour="alert-btn"
             onClick={() => setAlertPanelOpen(prev => !prev)}
-            className="flex items-center gap-1.5 px-2 py-1 border transition-colors hover:border-[var(--cyan)]"
-            style={{ borderColor: alertPanelOpen ? 'var(--cyan)' : 'var(--b3)', background: alertPanelOpen ? 'rgba(0,212,170,0.06)' : 'transparent' }}
+            className="flex items-center gap-1.5 px-2 py-1 border transition-colors hover:border-[var(--accent)]"
+            style={{ borderColor: alertPanelOpen ? 'var(--accent)' : 'var(--b3)', background: alertPanelOpen ? 'rgba(232,165,52,0.06)' : 'transparent' }}
             title="Alert Engine"
           >
             <span style={{ fontSize: 10 }}>🔔</span>
-            <span className="font-mono text-[7px] tracking-wider" style={{ color: alertPanelOpen ? 'var(--cyan)' : 'var(--muted)' }}>ALERTS</span>
+            <span className="font-mono text-[7px] tracking-wider" style={{ color: alertPanelOpen ? 'var(--accent)' : 'var(--muted)' }}>ALERTS</span>
           </button>
           <div data-tour="live-indicator" className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-[var(--cyan)] heartbeat" />
-            <span className="font-mono text-[8px] tracking-wider live-breathe" style={{ color: 'var(--cyan)' }}>LIVE</span>
+            <div className="w-1.5 h-1.5 rounded-full heartbeat" style={{ background: 'var(--green)' }} />
+            <span className="font-mono text-[8px] tracking-wider live-breathe" style={{ color: 'var(--green)' }}>LIVE</span>
           </div>
           <span className="font-mono text-[9px]" style={{ color: 'var(--muted)' }}>{clock}</span>
         </div>
@@ -162,11 +162,11 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             data-tour={`tab-${tab.id}`}
             onClick={() => onTabChange(tab.id)}
             title={tab.title}
-            className="font-mono text-[9px] tracking-wider px-3.5 py-2.5 whitespace-nowrap border-b-2 transition-colors duration-150 hover:bg-[var(--s2)]"
+            className="font-mono text-[9.5px] tracking-wider px-3.5 py-2.5 whitespace-nowrap border-b-2 transition-colors duration-150 hover:bg-[var(--s2)]"
             style={{
-              color: activeTab === tab.id ? 'var(--cyan)' : 'var(--muted)',
-              borderBottomColor: activeTab === tab.id ? 'var(--cyan)' : 'transparent',
-              background: activeTab === tab.id ? 'rgba(0,212,170,0.04)' : undefined,
+              color: activeTab === tab.id ? 'var(--accent)' : 'var(--muted)',
+              borderBottomColor: activeTab === tab.id ? 'var(--accent)' : 'transparent',
+              background: activeTab === tab.id ? 'rgba(232,165,52,0.04)' : undefined,
             }}
           >
             {tab.label}
@@ -190,11 +190,11 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
           <SourceStatusBadge />
         </div>
         <div className="flex items-center gap-3 flex-wrap">
-          <a href="/deck" className="hover:text-[var(--cyan)] transition-colors">PITCH DECK</a>
-          <a href="/why-chainintel" className="hover:text-[var(--cyan)] transition-colors">WHY CHAININTEL</a>
-          <a href="/promo" className="hover:text-[var(--cyan)] transition-colors">PROMO</a>
-          <a href="/tos" className="hover:text-[var(--cyan)] transition-colors">TERMS</a>
-          <a href="/privacy" className="hover:text-[var(--cyan)] transition-colors">PRIVACY</a>
+          <a href="/deck" className="hover:text-[var(--accent)] transition-colors">PITCH DECK</a>
+          <a href="/why-chainintel" className="hover:text-[var(--accent)] transition-colors">WHY CHAININTEL</a>
+          <a href="/promo" className="hover:text-[var(--accent)] transition-colors">PROMO</a>
+          <a href="/tos" className="hover:text-[var(--accent)] transition-colors">TERMS</a>
+          <a href="/privacy" className="hover:text-[var(--accent)] transition-colors">PRIVACY</a>
         </div>
       </footer>
 

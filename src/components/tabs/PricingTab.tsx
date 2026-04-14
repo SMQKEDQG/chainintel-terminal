@@ -134,7 +134,7 @@ export default function PricingTab() {
       {/* Competition countdown */}
       <div
         id="competitionBanner"
-        style={{ background: 'linear-gradient(135deg,rgba(59,130,246,0.08),rgba(0,212,170,0.06))', border: '1px solid rgba(59,130,246,0.25)', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}
+        style={{ background: 'linear-gradient(135deg,rgba(107,138,255,0.08),rgba(232,165,52,0.06))', border: '1px solid rgba(107,138,255,0.25)', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <span style={{ fontSize: '16px' }}>🏆</span>
@@ -144,17 +144,17 @@ export default function PricingTab() {
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--cyan)', fontWeight: 700 }}>{countdown}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', fontWeight: 700 }}>{countdown}</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>Competition Deadline</div>
         </div>
       </div>
 
       <div
-        style={{ background: 'rgba(0,212,170,0.06)', border: '1px solid rgba(0,212,170,0.2)', borderRadius: '3px', padding: '6px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', cursor: 'pointer' }}
+        style={{ background: 'rgba(232,165,52,0.06)', border: '1px solid rgba(232,165,52,0.2)', borderRadius: '3px', padding: '6px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', cursor: 'pointer' }}
         onClick={scrollToComparison}
       >
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--cyan)', letterSpacing: '0.1em' }}>WHY CHAININTEL BEATS BLOOMBERG AT 1/40TH THE PRICE</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--cyan)' }}>↓ See comparison</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--accent)', letterSpacing: '0.1em' }}>WHY CHAININTEL BEATS BLOOMBERG AT 1/40TH THE PRICE</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--accent)' }}>↓ See comparison</span>
       </div>
 
       <div className="pricing-grid">
@@ -185,12 +185,12 @@ export default function PricingTab() {
                   value={waitlistEmail}
                   onChange={e => setWaitlistEmail(e.target.value)}
                   style={{ width: '100%', background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '9px', padding: '6px 8px', outline: 'none', boxSizing: 'border-box', marginBottom: '4px' }}
-                  onFocus={e => (e.target.style.borderColor = 'var(--cyan)')}
+                  onFocus={e => (e.target.style.borderColor = 'var(--accent)')}
                   onBlur={e => (e.target.style.borderColor = 'var(--b2)')}
                 />
                 <button
                   onClick={submitWaitlist}
-                  style={{ width: '100%', background: 'var(--s3)', border: '1px solid var(--b3)', color: 'var(--cyan)', fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.12em', padding: '6px', cursor: 'pointer' }}
+                  style={{ width: '100%', background: 'var(--s3)', border: '1px solid var(--b3)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.12em', padding: '6px', cursor: 'pointer' }}
                 >
                   JOIN WAITLIST — FREE ACCESS
                 </button>
@@ -278,7 +278,7 @@ export default function PricingTab() {
             <tr>
               <th className="vs-dim">Capability</th>
               <th style={{ color: 'var(--red)' }}>Bloomberg Terminal</th>
-              <th style={{ color: 'var(--cyan)' }}>ChainIntel</th>
+              <th style={{ color: 'var(--accent)' }}>ChainIntel</th>
             </tr>
           </thead>
           <tbody>
@@ -313,7 +313,7 @@ export default function PricingTab() {
               style={{ width: '100%', background: 'var(--s2)', border: 'none', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '9px', padding: '8px 12px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', textAlign: 'left' }}
             >
               <span>{faq.q}</span>
-              <span style={{ color: 'var(--cyan)' }}>{openFaqs[i] ? '−' : '+'}</span>
+              <span style={{ color: 'var(--accent)' }}>{openFaqs[i] ? '−' : '+'}</span>
             </button>
             {openFaqs[i] && (
               <div style={{ background: 'var(--s1)', padding: '10px 12px', fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', lineHeight: 1.6 }}>
@@ -326,7 +326,7 @@ export default function PricingTab() {
 
       {/* Waitlist at bottom */}
       <div style={{ marginTop: '24px', background: 'var(--s1)', border: '1px solid var(--b2)', padding: '20px', textAlign: 'center' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--cyan)', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '6px' }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '6px' }}>
           JOIN THE WAITLIST
         </div>
         <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', marginBottom: '12px' }}>
@@ -340,12 +340,12 @@ export default function PricingTab() {
               value={waitlistEmail}
               onChange={e => setWaitlistEmail(e.target.value)}
               style={{ flex: 1, background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: '9px', padding: '8px 10px', outline: 'none' }}
-              onFocus={e => (e.target.style.borderColor = 'var(--cyan)')}
+              onFocus={e => (e.target.style.borderColor = 'var(--accent)')}
               onBlur={e => (e.target.style.borderColor = 'var(--b2)')}
             />
             <button
               onClick={submitWaitlist}
-              style={{ background: 'var(--cyan)', color: '#000', border: 'none', fontFamily: 'var(--mono)', fontSize: '8px', fontWeight: 700, padding: '8px 14px', cursor: 'pointer', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}
+              style={{ background: 'var(--accent)', color: '#000', border: 'none', fontFamily: 'var(--mono)', fontSize: '8px', fontWeight: 700, padding: '8px 14px', cursor: 'pointer', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}
             >
               JOIN →
             </button>

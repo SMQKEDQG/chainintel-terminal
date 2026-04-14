@@ -65,17 +65,17 @@ export default function SignUpPage() {
             letterSpacing: '0.06em',
             marginBottom: '24px',
           }}>
-            CHAIN<span style={{ color: 'var(--cyan)' }}>INTEL</span>
+            CHAIN<span style={{ color: 'var(--accent)' }}>INTEL</span>
           </div>
           <div style={{
             background: 'var(--s1)',
-            border: '1px solid rgba(0,212,170,0.2)',
+            border: '1px solid rgba(232,165,52,0.2)',
             padding: '28px 24px',
           }}>
             <div style={{
               fontFamily: 'var(--mono)',
               fontSize: '11px',
-              color: 'var(--cyan)',
+              color: 'var(--accent)',
               fontWeight: 600,
               marginBottom: '12px',
             }}>
@@ -94,7 +94,7 @@ export default function SignUpPage() {
               href="/login"
               style={{
                 display: 'block',
-                background: 'var(--cyan)',
+                background: 'var(--accent)',
                 color: '#000',
                 fontFamily: 'var(--mono)',
                 fontSize: '10px',
@@ -137,7 +137,7 @@ export default function SignUpPage() {
               color: '#fff',
               letterSpacing: '0.06em',
             }}>
-              CHAIN<span style={{ color: 'var(--cyan)' }}>INTEL</span>
+              CHAIN<span style={{ color: 'var(--accent)' }}>INTEL</span>
             </div>
           </Link>
           <div style={{
@@ -195,7 +195,7 @@ export default function SignUpPage() {
                   outline: 'none',
                   boxSizing: 'border-box',
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--cyan)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--b2)'}
                 placeholder="you@example.com"
               />
@@ -227,7 +227,7 @@ export default function SignUpPage() {
                   outline: 'none',
                   boxSizing: 'border-box',
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--cyan)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--b2)'}
                 placeholder="Min 6 characters"
               />
@@ -259,7 +259,7 @@ export default function SignUpPage() {
                   outline: 'none',
                   boxSizing: 'border-box',
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--cyan)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--b2)'}
                 placeholder="••••••••"
               />
@@ -284,7 +284,7 @@ export default function SignUpPage() {
               disabled={loading}
               style={{
                 width: '100%',
-                background: 'var(--cyan)',
+                background: 'var(--accent)',
                 color: '#000',
                 border: 'none',
                 fontFamily: 'var(--mono)',
@@ -320,7 +320,7 @@ export default function SignUpPage() {
           color: 'var(--muted)',
         }}>
           Already have an account?{' '}
-          <Link href="/login" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>
+          <Link href="/login" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
             Sign in →
           </Link>
         </div>

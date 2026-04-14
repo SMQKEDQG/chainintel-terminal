@@ -155,8 +155,8 @@ export default function DerivativesTab() {
     datasets: [{
       label: 'Open Interest',
       data: assets.slice(0, 8).map(a => a.totalOI / 1e9),
-      backgroundColor: assets.slice(0, 8).map(a => a.avgFundingRate < 0 ? 'rgba(239,68,68,0.5)' : 'rgba(0,212,170,0.5)'),
-      borderColor: assets.slice(0, 8).map(a => a.avgFundingRate < 0 ? '#ef4444' : '#00d4aa'),
+      backgroundColor: assets.slice(0, 8).map(a => a.avgFundingRate < 0 ? 'rgba(239,68,68,0.5)' : 'rgba(232,165,52,0.5)'),
+      borderColor: assets.slice(0, 8).map(a => a.avgFundingRate < 0 ? '#ef4444' : '#E8A534'),
       borderWidth: 1,
     }],
   };
@@ -178,8 +178,8 @@ export default function DerivativesTab() {
     datasets: [{
       label: '24h Volume',
       data: assets.slice(0, 8).map(a => a.totalVolume / 1e9),
-      backgroundColor: 'rgba(59,130,246,0.5)',
-      borderColor: '#3b82f6',
+      backgroundColor: 'rgba(107,138,255,0.5)',
+      borderColor: '#6B8AFF',
       borderWidth: 1,
     }],
   };
@@ -222,7 +222,7 @@ export default function DerivativesTab() {
       <div className="g4">
         <div className="deriv-card">
           <div className="deriv-label">BTC Open Interest</div>
-          <div className="deriv-metric" style={{ color: 'var(--cyan)' }}>{fmt$(summary.btcOI)}</div>
+          <div className="deriv-metric" style={{ color: 'var(--accent)' }}>{fmt$(summary.btcOI)}</div>
           <div className="deriv-sub">{isLive ? `${summary.dataPoints} contracts tracked` : 'CoinGecko Derivatives'}</div>
         </div>
         <div className="deriv-card">
@@ -320,7 +320,7 @@ export default function DerivativesTab() {
             <div className="pt">Macro Correlation — BTC vs Traditional Markets</div>
             <div className={`tag ${macroLive ? 'tag-live' : 'tag-ai'}`}>{macroLive ? <><span style={{ color: 'var(--green)', marginRight: '4px' }}>●</span> LIVE · Yahoo Finance</> : 'ChainIntel Research'}</div>
           </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '8px', letterSpacing: '0.1em' }}>30-DAY ROLLING PEARSON CORRELATION WITH BTC PRICE{macroBtcPrice > 0 && <span style={{ color: 'var(--cyan)', marginLeft: '8px' }}>BTC ${macroBtcPrice.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({macroBtcChg >= 0 ? '+' : ''}{macroBtcChg.toFixed(1)}% 7d)</span>}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '8px', letterSpacing: '0.1em' }}>30-DAY ROLLING PEARSON CORRELATION WITH BTC PRICE{macroBtcPrice > 0 && <span style={{ color: 'var(--accent)', marginLeft: '8px' }}>BTC ${macroBtcPrice.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({macroBtcChg >= 0 ? '+' : ''}{macroBtcChg.toFixed(1)}% 7d)</span>}</div>
           {macroData.map((m) => {
             const fmtVal = m.symbol === 'TNX' ? `${m.value.toFixed(2)}%`
               : m.unit === '$' ? `$${m.value.toLocaleString('en-US', { maximumFractionDigits: m.value < 100 ? 1 : 0 })}`
@@ -352,7 +352,7 @@ export default function DerivativesTab() {
           <div className="g2" style={{ gap: '8px', marginBottom: '10px' }}>
             <div style={{ background: 'var(--s1)', padding: '10px', border: '1px solid var(--b2)' }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '3px' }}>TOTAL STABLECOIN SUPPLY</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '18px', fontWeight: 700, color: 'var(--cyan)' }}>$243.2B</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '18px', fontWeight: 700, color: 'var(--accent)' }}>$243.2B</div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--green)' }}>+$4.2B this month · BULLISH inflow</div>
             </div>
             <div style={{ background: 'var(--s1)', padding: '10px', border: '1px solid var(--b2)' }}>
@@ -377,7 +377,7 @@ export default function DerivativesTab() {
               <tr className="row-alive"><td>USDS</td><td>$14.1B</td><td className="fr-positive">+$0.8B</td><td style={{ color: 'var(--green)' }}>✓ 1.001</td><td style={{ color: 'var(--text2)' }}>ETH</td></tr>
               <tr className="row-alive"><td>DAI</td><td>$5.4B</td><td className="fr-negative">−$0.2B</td><td style={{ color: 'var(--green)' }}>✓ 0.999</td><td style={{ color: 'var(--text2)' }}>ETH</td></tr>
               <tr className="row-alive"><td>FDUSD</td><td>$2.1B</td><td className="fr-negative">−$0.1B</td><td style={{ color: 'var(--green)' }}>✓ 1.000</td><td style={{ color: 'var(--text2)' }}>Multi</td></tr>
-              <tr className="row-alive"><td style={{ color: 'var(--cyan)', fontWeight: 600 }}>RLUSD</td><td>$1.4B</td><td className="fr-positive">+$0.3B</td><td style={{ color: 'var(--green)' }}>✓ 1.000</td><td style={{ color: 'var(--text2)' }}>XRP/ETH</td></tr>
+              <tr className="row-alive"><td style={{ color: 'var(--accent)', fontWeight: 600 }}>RLUSD</td><td>$1.4B</td><td className="fr-positive">+$0.3B</td><td style={{ color: 'var(--green)' }}>✓ 1.000</td><td style={{ color: 'var(--text2)' }}>XRP/ETH</td></tr>
             </tbody>
           </table>
         </div>
@@ -399,7 +399,7 @@ export default function DerivativesTab() {
               <span><strong>{negCount} of {assets.length} assets have negative funding</strong> — derivatives traders are net short. {negCount > posCount ? 'When shorts dominate and spot shows accumulation, historically precedes short squeezes.' : 'Mixed positioning across assets.'}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
-              <span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span>
+              <span style={{ color: 'var(--accent)', flexShrink: 0 }}>▸</span>
               <span><strong>Total OI: {fmt$(summary.totalOI)}</strong> — BTC dominates at {((summary.btcOI / summary.totalOI) * 100).toFixed(0)}% of total derivatives open interest. {summary.btcFunding < -0.001 ? 'Reduced leverage = lower crash risk from cascading liquidations.' : 'Monitor for leverage buildup.'}</span>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>

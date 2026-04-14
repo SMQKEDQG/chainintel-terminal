@@ -59,7 +59,7 @@ const TIER_META: Record<'pro' | 'enterprise', { label: string; price: string; co
   pro: {
     label: 'PRO',
     price: '$49/mo',
-    color: 'var(--cyan)',
+    color: 'var(--accent)',
   },
   enterprise: {
     label: 'ENTERPRISE',
@@ -91,11 +91,11 @@ export default function UpgradeGate({
 
   return (
     <div style={{ position: 'relative', minHeight: '600px', overflow: 'hidden' }}>
-      {/* Blurred sneak peek of actual tab content — visible enough to tease */}
+      {/* Blurred sneak peek of actual tab content — clearly visible to tease */}
       <div
         style={{
-          filter: 'blur(5px)',
-          opacity: 0.7,
+          filter: 'blur(3px)',
+          opacity: 0.85,
           pointerEvents: 'none',
           userSelect: 'none',
           position: 'absolute',
@@ -107,12 +107,12 @@ export default function UpgradeGate({
         {children}
       </div>
 
-      {/* Light gradient overlay — subtle, keeps blurred content clearly visible */}
+      {/* Very subtle gradient — keeps data highly visible behind the gate */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(180deg, rgba(8,13,22,0.15) 0%, rgba(8,13,22,0.45) 50%, rgba(8,13,22,0.65) 100%)',
+          background: 'linear-gradient(180deg, rgba(8,13,22,0.05) 0%, rgba(8,13,22,0.25) 40%, rgba(8,13,22,0.55) 100%)',
           zIndex: 1,
         }}
       />
@@ -193,13 +193,14 @@ const styles: Record<string, React.CSSProperties> = {
     minHeight: '500px',
   },
   card: {
-    maxWidth: '520px',
+    maxWidth: '440px',
     width: '100%',
-    background: 'rgba(13,20,32,0.88)',
+    background: 'rgba(13,20,32,0.92)',
     border: '1px solid var(--b3)',
-    backdropFilter: 'blur(16px)',
-    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+    backdropFilter: 'blur(20px)',
+    boxShadow: '0 12px 48px rgba(0,0,0,0.6)',
     padding: '0',
+    borderRadius: '2px',
   },
   accentLine: {
     height: '2px',

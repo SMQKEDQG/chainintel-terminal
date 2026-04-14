@@ -69,7 +69,7 @@ export default function DeckPage() {
         zIndex: 100,
         background: 'rgba(8,13,22,0.95)',
         backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(0,212,170,0.12)',
+        borderBottom: '1px solid rgba(232,165,52,0.12)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 32px',
@@ -98,13 +98,13 @@ export default function DeckPage() {
         {/* Logo */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto', marginRight: 'auto' }}>
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-label="ChainIntel logo">
-            <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" stroke="var(--cyan)" strokeWidth="1.5" fill="rgba(0,212,170,0.06)"/>
-            <circle cx="11" cy="11" r="3" fill="var(--cyan)" opacity="0.9"/>
-            <line x1="11" y1="5" x2="11" y2="8" stroke="var(--cyan)" strokeWidth="1" opacity="0.5"/>
-            <line x1="11" y1="14" x2="11" y2="17" stroke="var(--cyan)" strokeWidth="1" opacity="0.5"/>
+            <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" stroke="var(--accent)" strokeWidth="1.5" fill="rgba(232,165,52,0.06)"/>
+            <circle cx="11" cy="11" r="3" fill="var(--accent)" opacity="0.9"/>
+            <line x1="11" y1="5" x2="11" y2="8" stroke="var(--accent)" strokeWidth="1" opacity="0.5"/>
+            <line x1="11" y1="14" x2="11" y2="17" stroke="var(--accent)" strokeWidth="1" opacity="0.5"/>
           </svg>
           <span style={{ fontFamily: 'var(--mono)', fontSize: '13px', fontWeight: 600, letterSpacing: '0.08em', color: '#fff' }}>
-            CHAIN<span style={{ color: 'var(--cyan)' }}>INTEL</span>
+            CHAIN<span style={{ color: 'var(--accent)' }}>INTEL</span>
           </span>
           <span style={{
             fontFamily: 'var(--mono)',
@@ -120,7 +120,7 @@ export default function DeckPage() {
           fontFamily: 'var(--mono)',
           fontSize: '10px',
           letterSpacing: '0.08em',
-          color: 'var(--cyan)',
+          color: 'var(--accent)',
           textDecoration: 'none',
           border: '1px solid var(--cyan-border)',
           padding: '6px 14px',
@@ -145,7 +145,7 @@ export default function DeckPage() {
         <div style={{
           height: '100%',
           width: `${scrollProgress}%`,
-          background: 'linear-gradient(90deg, var(--cyan), var(--blue))',
+          background: 'linear-gradient(90deg, var(--accent), var(--blue))',
           transition: 'width 0.1s',
         }} />
       </div>
@@ -170,7 +170,7 @@ export default function DeckPage() {
               width: i === activeSlide ? '28px' : '6px',
               height: '6px',
               borderRadius: '3px',
-              background: i === activeSlide ? 'var(--cyan)' : 'var(--b3)',
+              background: i === activeSlide ? 'var(--accent)' : 'var(--b3)',
               border: 'none',
               cursor: 'pointer',
               transition: 'all 0.25s',
@@ -207,8 +207,8 @@ export default function DeckPage() {
             position: 'absolute',
             inset: 0,
             backgroundImage: `
-              linear-gradient(rgba(0,212,170,0.04) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0,212,170,0.04) 1px, transparent 1px)
+              linear-gradient(rgba(232,165,52,0.04) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(232,165,52,0.04) 1px, transparent 1px)
             `,
             backgroundSize: '60px 60px',
             pointerEvents: 'none',
@@ -217,7 +217,7 @@ export default function DeckPage() {
           <div style={{
             position: 'absolute',
             inset: 0,
-            background: 'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(0,212,170,0.08) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse 70% 60% at 50% 40%, rgba(232,165,52,0.08) 0%, transparent 70%)',
             pointerEvents: 'none',
           }} />
 
@@ -229,7 +229,7 @@ export default function DeckPage() {
               fontFamily: 'var(--mono)',
               fontSize: '10px',
               letterSpacing: '0.18em',
-              color: 'var(--cyan)',
+              color: 'var(--accent)',
               textTransform: 'uppercase',
               marginBottom: '32px',
               padding: '6px 16px',
@@ -237,7 +237,7 @@ export default function DeckPage() {
               borderRadius: '2px',
               background: 'var(--cyan-dim)',
             }}>
-              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--cyan)', display: 'inline-block' }} />
+              <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
               Perplexity Billion Dollar Build 2026
             </div>
 
@@ -251,7 +251,7 @@ export default function DeckPage() {
               marginBottom: '24px',
             }}>
               ChainIntel —<br />
-              <span style={{ color: 'var(--cyan)' }}>The AI-Native Bloomberg Terminal</span><br />
+              <span style={{ color: 'var(--accent)' }}>The AI-Native Bloomberg Terminal</span><br />
               for Digital Assets
             </h1>
 
@@ -285,7 +285,7 @@ export default function DeckPage() {
                     fontFamily: 'var(--mono)',
                     fontSize: '28px',
                     fontWeight: 600,
-                    color: stat.label === 'ChainIntel Cost' ? 'var(--cyan)' : '#fff',
+                    color: stat.label === 'ChainIntel Cost' ? 'var(--accent)' : '#fff',
                     letterSpacing: '-0.02em',
                     lineHeight: 1,
                   }}>{stat.value}</div>
@@ -380,14 +380,14 @@ export default function DeckPage() {
           padding: '80px clamp(24px, 8vw, 120px)',
           position: 'relative',
           borderTop: '1px solid var(--b2)',
-          background: 'radial-gradient(ellipse 80% 50% at 50% 50%, rgba(0,212,170,0.04) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 80% 50% at 50% 50%, rgba(232,165,52,0.04) 0%, transparent 70%)',
         }}>
           <div style={{ position: 'absolute', top: '40px', left: '40px', fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.1em' }}>03 / {slides.length}</div>
           <div style={{ maxWidth: '1000px', width: '100%' }}>
             <SlideLabel>Our Solution</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '16px', lineHeight: 1.15 }}>
               All-in-one crypto intelligence.<br />
-              At <span style={{ color: 'var(--cyan)' }}>1/40th the price</span> of Bloomberg.
+              At <span style={{ color: 'var(--accent)' }}>1/40th the price</span> of Bloomberg.
             </h2>
             <p style={{ fontSize: '18px', color: 'var(--text2)', marginBottom: '48px', lineHeight: 1.6, maxWidth: '660px' }}>
               ChainIntel is the first terminal purpose-built for digital assets — combining on-chain analytics, DeFi metrics, ETF flows, regulatory intelligence, ISO 20022 tracking, and AI synthesis in one professional interface.
@@ -418,10 +418,10 @@ export default function DeckPage() {
                   left: '24px',
                   right: '24px',
                   height: '2px',
-                  background: 'linear-gradient(90deg, var(--cyan), var(--blue))',
+                  background: 'linear-gradient(90deg, var(--accent), var(--blue))',
                   borderRadius: '0 0 2px 2px',
                 }} />
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--cyan)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '20px' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '20px' }}>
                   CHAININTEL ADVANTAGE
                 </div>
                 {[
@@ -436,8 +436,8 @@ export default function DeckPage() {
                 ].map((item, i) => (
                   <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', padding: '8px 0', borderBottom: i < 7 ? '1px solid var(--b2)' : 'none' }}>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, marginTop: '1px' }}>
-                      <circle cx="7" cy="7" r="6" stroke="var(--cyan)" strokeWidth="1" fill="rgba(0,212,170,0.08)"/>
-                      <path d="M4 7L6.5 9.5L10 5" stroke="var(--cyan)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <circle cx="7" cy="7" r="6" stroke="var(--accent)" strokeWidth="1" fill="rgba(232,165,52,0.08)"/>
+                      <path d="M4 7L6.5 9.5L10 5" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                     <span style={{ fontSize: '13px', color: 'var(--text)', lineHeight: 1.4 }}>{item}</span>
                   </div>
@@ -462,7 +462,7 @@ export default function DeckPage() {
             <SlideLabel>Product</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '16px', lineHeight: 1.15 }}>
               12 Intelligence Modules.<br />
-              One <span style={{ color: 'var(--cyan)' }}>Unified Terminal</span>.
+              One <span style={{ color: 'var(--accent)' }}>Unified Terminal</span>.
             </h2>
             <p style={{ fontSize: '18px', color: 'var(--text2)', marginBottom: '40px', lineHeight: 1.6, maxWidth: '660px' }}>
               Every module is purpose-built for the data type it serves — not bolted onto a legacy platform.
@@ -470,13 +470,13 @@ export default function DeckPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
               {[
-                { id: 'OVERVIEW', desc: 'AI market synthesis, Fear & Greed, top movers', color: 'var(--cyan)' },
+                { id: 'OVERVIEW', desc: 'AI market synthesis, Fear & Greed, top movers', color: 'var(--accent)' },
                 { id: 'MARKETS', desc: 'Top 500 assets, sortable by cap, volume, change', color: 'var(--blue)' },
                 { id: 'ON-CHAIN', desc: 'MVRV, NVT ratio, exchange flows, hash rate', color: 'var(--green)' },
                 { id: 'DeFi', desc: 'TVL rankings, protocol yields, stablecoin monitor', color: 'var(--purple)' },
                 { id: 'ETF & INST', desc: 'Spot ETF flows, institutional holdings, fund data', color: 'var(--gold)' },
                 { id: 'REGULATORY', desc: 'SEC, CFTC, EU MiCA, GENIUS Act tracker', color: 'var(--orange)' },
-                { id: 'ISO 20022', desc: 'SWIFT migration tracker: XRP, XLM, HBAR, QNT, ADA', color: 'var(--cyan)' },
+                { id: 'ISO 20022', desc: 'SWIFT migration tracker: XRP, XLM, HBAR, QNT, ADA', color: 'var(--accent)' },
                 { id: 'SENTIMENT', desc: 'Social signals, Twitter trends, dev activity', color: 'var(--blue)' },
                 { id: 'DERIVATIVES', desc: 'Funding rates, open interest, liquidations', color: 'var(--green)' },
                 { id: 'WHALES', desc: '$10M+ on-chain transactions with ChainScore', color: 'var(--red)' },
@@ -519,7 +519,7 @@ export default function DeckPage() {
           padding: '80px clamp(24px, 8vw, 120px)',
           position: 'relative',
           borderTop: '1px solid var(--b2)',
-          background: 'radial-gradient(ellipse 60% 40% at 80% 60%, rgba(59,130,246,0.06) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 60% 40% at 80% 60%, rgba(107,138,255,0.06) 0%, transparent 70%)',
         }}>
           <div style={{ position: 'absolute', top: '40px', left: '40px', fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.1em' }}>05 / {slides.length}</div>
           <div style={{ maxWidth: '1000px', width: '100%' }}>
@@ -543,7 +543,7 @@ export default function DeckPage() {
                   value: '$3.8T',
                   subvalue: 'All-time high. Institutional adoption accelerating.',
                   note: 'Source: CoinGecko 2025',
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                 },
                 {
                   label: 'Crypto Data & Analytics TAM',
@@ -608,7 +608,7 @@ export default function DeckPage() {
           <div style={{ maxWidth: '1000px', width: '100%' }}>
             <SlideLabel>Traction</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '48px', lineHeight: 1.15 }}>
-              Built. Deployed. <span style={{ color: 'var(--cyan)' }}>Live.</span>
+              Built. Deployed. <span style={{ color: 'var(--accent)' }}>Live.</span>
             </h2>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '48px' }}>
@@ -624,7 +624,7 @@ export default function DeckPage() {
                   borderRadius: '4px',
                   background: 'var(--s1)',
                 }}>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '42px', fontWeight: 700, color: 'var(--cyan)', lineHeight: 1, marginBottom: '8px', letterSpacing: '-0.02em' }}>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '42px', fontWeight: 700, color: 'var(--accent)', lineHeight: 1, marginBottom: '8px', letterSpacing: '-0.02em' }}>
                     {t.metric}
                   </div>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: '#fff', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', marginBottom: '8px' }}>
@@ -637,12 +637,12 @@ export default function DeckPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
               <div style={{ padding: '24px', border: '1px solid var(--b3)', borderRadius: '4px', background: 'var(--s1)' }}>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--cyan)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>
                   DATA INFRASTRUCTURE
                 </div>
                 {['CoinGecko Pro API (real-time prices)', 'Glassnode (on-chain metrics)', 'DefiLlama (DeFi TVL)', 'CoinMarketCap (market data)', 'Santiment (sentiment & social)', 'FRED Economic Data', 'SEC EDGAR (regulatory filings)', 'Alternative.me (Fear & Greed)'].map(s => (
                   <div key={s} style={{ fontSize: '13px', color: 'var(--text2)', padding: '5px 0', borderBottom: '1px solid var(--b1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ color: 'var(--cyan)', fontSize: '10px' }}>▶</span> {s}
+                    <span style={{ color: 'var(--accent)', fontSize: '10px' }}>▶</span> {s}
                   </div>
                 ))}
               </div>
@@ -652,9 +652,9 @@ export default function DeckPage() {
                 </div>
                 <div style={{
                   padding: '16px',
-                  border: '1px solid rgba(59,130,246,0.3)',
+                  border: '1px solid rgba(107,138,255,0.3)',
                   borderRadius: '4px',
-                  background: 'rgba(59,130,246,0.06)',
+                  background: 'rgba(107,138,255,0.06)',
                   marginBottom: '16px',
                 }}>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '6px' }}>
@@ -681,13 +681,13 @@ export default function DeckPage() {
           padding: '80px clamp(24px, 8vw, 120px)',
           position: 'relative',
           borderTop: '1px solid var(--b2)',
-          background: 'radial-gradient(ellipse 60% 40% at 20% 50%, rgba(0,212,170,0.05) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 60% 40% at 20% 50%, rgba(232,165,52,0.05) 0%, transparent 70%)',
         }}>
           <div style={{ position: 'absolute', top: '40px', left: '40px', fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.1em' }}>07 / {slides.length}</div>
           <div style={{ maxWidth: '1000px', width: '100%' }}>
             <SlideLabel>Business Model</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '16px', lineHeight: 1.15 }}>
-              Three tiers. <span style={{ color: 'var(--cyan)' }}>Zero friction</span> to adoption.
+              Three tiers. <span style={{ color: 'var(--accent)' }}>Zero friction</span> to adoption.
             </h2>
             <p style={{ fontSize: '18px', color: 'var(--text2)', marginBottom: '48px', lineHeight: 1.6, maxWidth: '600px' }}>
               Free tier drives top-of-funnel. Pro converts power users. Enterprise serves institutions.
@@ -714,7 +714,7 @@ export default function DeckPage() {
                   features: ['All Free features', 'Full on-chain suite', 'Whale tracking & alerts', 'ISO 20022 monitor', 'AI morning briefs', 'Full derivatives data', 'Priority support'],
                   cta: 'Start Pro',
                   href: STRIPE_PRO,
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                   highlight: true,
                 },
                 {
@@ -733,7 +733,7 @@ export default function DeckPage() {
                   padding: '32px 28px',
                   border: `1px solid ${plan.highlight ? 'var(--cyan-border)' : 'var(--b3)'}`,
                   borderRadius: '6px',
-                  background: plan.highlight ? 'rgba(0,212,170,0.04)' : 'var(--s1)',
+                  background: plan.highlight ? 'rgba(232,165,52,0.04)' : 'var(--s1)',
                   position: 'relative',
                   display: 'flex',
                   flexDirection: 'column',
@@ -745,7 +745,7 @@ export default function DeckPage() {
                       left: 0,
                       right: 0,
                       height: '2px',
-                      background: 'linear-gradient(90deg, var(--cyan), var(--blue))',
+                      background: 'linear-gradient(90deg, var(--accent), var(--blue))',
                       borderRadius: '6px 6px 0 0',
                     }} />
                   )}
@@ -758,7 +758,7 @@ export default function DeckPage() {
                       fontSize: '9px',
                       letterSpacing: '0.12em',
                       color: 'var(--bg)',
-                      background: 'var(--cyan)',
+                      background: 'var(--accent)',
                       padding: '3px 10px',
                       borderRadius: '2px',
                       textTransform: 'uppercase',
@@ -784,7 +784,7 @@ export default function DeckPage() {
                     textAlign: 'center',
                     border: `1px solid ${plan.color}50`,
                     borderRadius: '3px',
-                    background: plan.highlight ? 'var(--cyan)' : 'transparent',
+                    background: plan.highlight ? 'var(--accent)' : 'transparent',
                     color: plan.highlight ? 'var(--bg)' : plan.color,
                     fontFamily: 'var(--mono)',
                     fontSize: '11px',
@@ -808,7 +808,7 @@ export default function DeckPage() {
               ].map(item => (
                 <div key={item.label} style={{ padding: '16px', border: '1px solid var(--b2)', borderRadius: '4px', background: 'var(--s1)' }}>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.06em', marginBottom: '8px', textTransform: 'uppercase' }}>{item.label}</div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '22px', fontWeight: 700, color: 'var(--cyan)', marginBottom: '6px', letterSpacing: '-0.02em' }}>{item.value}</div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '22px', fontWeight: 700, color: 'var(--accent)', marginBottom: '6px', letterSpacing: '-0.02em' }}>{item.value}</div>
                   <div style={{ fontSize: '12px', color: 'var(--text2)' }}>{item.note}</div>
                 </div>
               ))}
@@ -830,7 +830,7 @@ export default function DeckPage() {
           <div style={{ maxWidth: '1000px', width: '100%' }}>
             <SlideLabel>Competitive Landscape</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '16px', lineHeight: 1.15 }}>
-              No one else has built <span style={{ color: 'var(--cyan)' }}>this full stack.</span>
+              No one else has built <span style={{ color: 'var(--accent)' }}>this full stack.</span>
             </h2>
             <p style={{ fontSize: '18px', color: 'var(--text2)', marginBottom: '40px', lineHeight: 1.6, maxWidth: '660px' }}>
               Competitors either cost too much, cover too little, or lack the AI synthesis layer.
@@ -844,12 +844,12 @@ export default function DeckPage() {
                       <th key={h} style={{
                         padding: '12px 16px',
                         textAlign: i === 0 ? 'left' : 'center',
-                        color: i === 5 ? 'var(--cyan)' : 'var(--muted)',
+                        color: i === 5 ? 'var(--accent)' : 'var(--muted)',
                         fontWeight: i === 5 ? 700 : 400,
                         letterSpacing: '0.08em',
                         textTransform: 'uppercase',
                         fontSize: '10px',
-                        background: i === 5 ? 'rgba(0,212,170,0.06)' : 'transparent',
+                        background: i === 5 ? 'rgba(232,165,52,0.06)' : 'transparent',
                       }}>{h}</th>
                     ))}
                   </tr>
@@ -873,9 +873,9 @@ export default function DeckPage() {
                         <td key={ci} style={{
                           padding: '11px 16px',
                           textAlign: ci === 0 ? 'left' : 'center',
-                          color: cell === '✗' ? 'var(--red)' : cell === '✓' ? 'var(--green)' : ci === 5 ? 'var(--cyan)' : 'var(--text2)',
+                          color: cell === '✗' ? 'var(--red)' : cell === '✓' ? 'var(--green)' : ci === 5 ? 'var(--accent)' : 'var(--text2)',
                           fontWeight: ci === 5 ? 600 : 400,
-                          background: ci === 5 ? 'rgba(0,212,170,0.03)' : 'transparent',
+                          background: ci === 5 ? 'rgba(232,165,52,0.03)' : 'transparent',
                           fontSize: ci === 0 ? '12px' : '13px',
                         }}>
                           {cell}
@@ -915,7 +915,7 @@ export default function DeckPage() {
                 {
                   title: 'SWIFT ISO 20022 Migration Complete',
                   desc: 'The global banking messaging standard has migrated. XRP, XLM, HBAR, QNT, and ADA are officially compliant. Trillions in cross-border payments now speak the same language as crypto.',
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                 },
                 {
                   title: 'Spot Bitcoin & Ethereum ETFs Approved',
@@ -974,7 +974,7 @@ export default function DeckPage() {
           <div style={{ maxWidth: '1000px', width: '100%' }}>
             <SlideLabel>Team</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '16px', lineHeight: 1.15 }}>
-              Lean. AI-first. <span style={{ color: 'var(--cyan)' }}>Execution-obsessed.</span>
+              Lean. AI-first. <span style={{ color: 'var(--accent)' }}>Execution-obsessed.</span>
             </h2>
             <p style={{ fontSize: '18px', color: 'var(--text2)', marginBottom: '48px', lineHeight: 1.6, maxWidth: '640px' }}>
               ChainIntel was built by a team that believes the best product wins — not the best pitch. We ship daily.
@@ -1008,7 +1008,7 @@ export default function DeckPage() {
                     width: '48px',
                     height: '48px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, var(--cyan), var(--blue))',
+                    background: 'linear-gradient(135deg, var(--accent), var(--blue))',
                     marginBottom: '16px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1020,7 +1020,7 @@ export default function DeckPage() {
                   }}>
                     {member.role[0]}
                   </div>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '10px' }}>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '10px' }}>
                     {member.role}
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.6, marginBottom: '16px' }}>{member.background}</div>
@@ -1053,11 +1053,11 @@ export default function DeckPage() {
               <div>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '6px' }}>Philosophy</div>
                 <div style={{ fontSize: '15px', color: 'var(--text)', lineHeight: 1.6, maxWidth: '500px' }}>
-                  We believe the future of financial data is <strong style={{ color: 'var(--cyan)' }}>open, AI-native, and on-chain-aware</strong>. Legacy terminal vendors are building walls. We&apos;re tearing them down.
+                  We believe the future of financial data is <strong style={{ color: 'var(--accent)' }}>open, AI-native, and on-chain-aware</strong>. Legacy terminal vendors are building walls. We&apos;re tearing them down.
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                {[['Remote-first', 'var(--cyan)'], ['Ship daily', 'var(--blue)'], ['AI-augmented', 'var(--green)']].map(([label, color]) => (
+                {[['Remote-first', 'var(--accent)'], ['Ship daily', 'var(--blue)'], ['AI-augmented', 'var(--green)']].map(([label, color]) => (
                   <div key={label as string} style={{ textAlign: 'center' }}>
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: color as string, margin: '0 auto 6px' }} />
                     <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{label as string}</div>
@@ -1077,7 +1077,7 @@ export default function DeckPage() {
           padding: '80px clamp(24px, 8vw, 120px)',
           position: 'relative',
           borderTop: '1px solid var(--b2)',
-          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,212,170,0.07) 0%, transparent 70%)',
+          background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(232,165,52,0.07) 0%, transparent 70%)',
           overflow: 'hidden',
         }}>
           {/* Grid overlay */}
@@ -1085,8 +1085,8 @@ export default function DeckPage() {
             position: 'absolute',
             inset: 0,
             backgroundImage: `
-              linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px)
+              linear-gradient(rgba(232,165,52,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(232,165,52,0.03) 1px, transparent 1px)
             `,
             backgroundSize: '60px 60px',
             pointerEvents: 'none',
@@ -1097,7 +1097,7 @@ export default function DeckPage() {
             <SlideLabel>The Opportunity</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(32px, 5vw, 60px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '24px', lineHeight: 1.1 }}>
               Join us in building the<br />
-              <span style={{ color: 'var(--cyan)' }}>Bloomberg Terminal for Web3</span>.
+              <span style={{ color: 'var(--accent)' }}>Bloomberg Terminal for Web3</span>.
             </h2>
             <p style={{ fontSize: '20px', color: 'var(--text2)', lineHeight: 1.6, marginBottom: '48px', maxWidth: '600px', margin: '0 auto 48px' }}>
               We&apos;re raising a seed round to scale data infrastructure, grow the team, and capture the institutional market.
@@ -1105,7 +1105,7 @@ export default function DeckPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '48px' }}>
               {[
-                { label: 'Seed Round Target', value: '$2M', color: 'var(--cyan)' },
+                { label: 'Seed Round Target', value: '$2M', color: 'var(--accent)' },
                 { label: 'Revenue Target (Y1)', value: '$500K ARR', color: 'var(--blue)' },
                 { label: 'User Target (Y1)', value: '10,000 users', color: 'var(--green)' },
               ].map(item => (
@@ -1119,7 +1119,7 @@ export default function DeckPage() {
             <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
               <a href={STRIPE_PRO} target="_blank" rel="noopener" style={{
                 padding: '16px 40px',
-                background: 'var(--cyan)',
+                background: 'var(--accent)',
                 color: 'var(--bg)',
                 border: 'none',
                 borderRadius: '4px',
@@ -1136,7 +1136,7 @@ export default function DeckPage() {
               <a href="mailto:invest@chainintelterminal.com" style={{
                 padding: '16px 40px',
                 background: 'transparent',
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
                 border: '1px solid var(--cyan-border)',
                 borderRadius: '4px',
                 fontFamily: 'var(--mono)',
@@ -1158,7 +1158,7 @@ export default function DeckPage() {
               ].map(link => (
                 <div key={link.label} style={{ textAlign: 'center' }}>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>{link.label}</div>
-                  <a href={link.href} style={{ fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--cyan)', textDecoration: 'none' }}>{link.display}</a>
+                  <a href={link.href} style={{ fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--accent)', textDecoration: 'none' }}>{link.display}</a>
                 </div>
               ))}
             </div>
@@ -1187,14 +1187,14 @@ function SlideLabel({ children }: { children: React.ReactNode }) {
       fontFamily: 'var(--mono)',
       fontSize: '10px',
       letterSpacing: '0.18em',
-      color: 'var(--cyan)',
+      color: 'var(--accent)',
       textTransform: 'uppercase',
       marginBottom: '16px',
       display: 'flex',
       alignItems: 'center',
       gap: '10px',
     }}>
-      <span style={{ display: 'inline-block', width: '24px', height: '1px', background: 'var(--cyan)', opacity: 0.5 }} />
+      <span style={{ display: 'inline-block', width: '24px', height: '1px', background: 'var(--accent)', opacity: 0.5 }} />
       {children}
     </div>
   );
@@ -1212,7 +1212,7 @@ function ComparisonRow({ label, bloomberg, chainintel, win }: { label: string; b
     }}>
       <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>{label}</div>
       <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: 'var(--red)', textAlign: 'center' }}>{bloomberg}</div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: win ? 'var(--cyan)' : 'var(--text)', textAlign: 'center', fontWeight: win ? 600 : 400 }}>{chainintel}</div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: '12px', color: win ? 'var(--accent)' : 'var(--text)', textAlign: 'center', fontWeight: win ? 600 : 400 }}>{chainintel}</div>
     </div>
   );
 }

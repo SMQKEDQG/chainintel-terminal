@@ -118,7 +118,7 @@ export default function RegulatoryTab() {
 
   const btnStyle = (s: Sentiment): React.CSSProperties => {
     const base: React.CSSProperties = { fontFamily: 'var(--mono)', fontSize: '7px', padding: '2px 10px', cursor: 'pointer', letterSpacing: '0.08em' };
-    if (s === 'all') return { ...base, background: activeFilter === 'all' ? 'var(--cyan)' : 'var(--s3)', color: activeFilter === 'all' ? '#000' : 'var(--text2)', border: activeFilter === 'all' ? 'none' : '1px solid var(--b2)', fontWeight: activeFilter === 'all' ? 700 : 400 };
+    if (s === 'all') return { ...base, background: activeFilter === 'all' ? 'var(--accent)' : 'var(--s3)', color: activeFilter === 'all' ? '#000' : 'var(--text2)', border: activeFilter === 'all' ? 'none' : '1px solid var(--b2)', fontWeight: activeFilter === 'all' ? 700 : 400 };
     const colorMap: Record<string, string> = { bullish: 'var(--green)', bearish: 'var(--red)', neutral: 'var(--gold)' };
     const borderMap: Record<string, string> = { bullish: 'rgba(16,185,129,0.3)', bearish: 'rgba(239,68,68,0.3)', neutral: 'rgba(240,192,64,0.3)' };
     return { ...base, background: activeFilter === s ? borderMap[s] : 'var(--s3)', color: colorMap[s], border: `1px solid ${borderMap[s]}` };
@@ -127,9 +127,9 @@ export default function RegulatoryTab() {
   const viewBtnStyle = (v: ViewMode): React.CSSProperties => ({
     fontFamily: 'var(--mono)', fontSize: '7px', padding: '3px 12px', cursor: 'pointer',
     letterSpacing: '0.1em', textTransform: 'uppercase' as const,
-    background: viewMode === v ? 'var(--cyan)' : 'transparent',
+    background: viewMode === v ? 'var(--accent)' : 'transparent',
     color: viewMode === v ? '#000' : 'var(--text2)',
-    border: viewMode === v ? '1px solid var(--cyan)' : '1px solid var(--b2)',
+    border: viewMode === v ? '1px solid var(--accent)' : '1px solid var(--b2)',
     fontWeight: viewMode === v ? 700 : 400,
   });
 
@@ -187,7 +187,7 @@ export default function RegulatoryTab() {
           {/* Top cards */}
           <div style={{ background: 'var(--s1)', border: '1px solid var(--b2)', marginBottom: '6px' }}>
             <div style={{ padding: '6px 12px', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--cyan)' }}>◈ REGULATORY INTELLIGENCE — {isLive ? 'LIVE DATABASE + RSS FEEDS' : 'CACHED'}</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--accent)' }}>◈ REGULATORY INTELLIGENCE — {isLive ? 'LIVE DATABASE + RSS FEEDS' : 'CACHED'}</span>
               <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>{data.stats.total} DB entries · {rssItems.length} RSS items · Auto-refresh 2m</span>
             </div>
             <div style={{ padding: '8px' }}>
@@ -240,8 +240,8 @@ export default function RegulatoryTab() {
             <div className="panel panel-hover">
               <div className="ph">
                 <div className="pt">RSS Live Wire — Multi-Source Aggregator</div>
-                <div className="tag tag-live" style={{ background: 'rgba(0,212,170,0.1)', color: 'var(--cyan)', fontSize: '7px' }}>
-                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', marginRight: 4, animation: 'pulse 2s infinite' }} />
+                <div className="tag tag-live" style={{ background: 'rgba(232,165,52,0.1)', color: 'var(--accent)', fontSize: '7px' }}>
+                  <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', marginRight: 4, animation: 'pulse 2s infinite' }} />
                   STREAMING
                 </div>
               </div>
@@ -253,7 +253,7 @@ export default function RegulatoryTab() {
                   onClick={() => item.link && window.open(item.link, '_blank')}>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text)', lineHeight: 1.5, marginBottom: '3px' }}>{item.title}</div>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', padding: '1px 6px', background: 'var(--s3)', color: 'var(--cyan)', border: '1px solid var(--b2)' }}>{item.body}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', padding: '1px 6px', background: 'var(--s3)', color: 'var(--accent)', border: '1px solid var(--b2)' }}>{item.body}</span>
                     <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>{item.region}</span>
                     <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>
                       {item.pubDate ? new Date(item.pubDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
@@ -326,7 +326,7 @@ export default function RegulatoryTab() {
           <div style={{ display: 'grid', gap: '1px' }}>
             {UPCOMING_EVENTS.map((evt, idx) => (
               <div key={idx} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 100px 60px', gap: '12px', padding: '10px 8px', background: idx % 2 === 0 ? 'var(--s2)' : 'transparent', alignItems: 'center' }}>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--cyan)', letterSpacing: '0.06em' }}>{evt.date}</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--accent)', letterSpacing: '0.06em' }}>{evt.date}</div>
                 <div>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text)', lineHeight: 1.5 }}>{evt.event}</div>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginTop: '2px' }}>{evt.body}</div>
@@ -385,7 +385,7 @@ export default function RegulatoryTab() {
                     </div>
                     <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--text2)' }}>{src.type}</div>
                     <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: src.auth === 'none' ? 'var(--green)' : 'var(--gold)' }}>{src.auth === 'none' ? 'PUBLIC' : 'KEY'}</div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--cyan)', textAlign: 'right' }}>⟳ {src.refreshRate}</div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--accent)', textAlign: 'right' }}>⟳ {src.refreshRate}</div>
                   </div>
                 ))}
               </div>
@@ -414,7 +414,7 @@ export default function RegulatoryTab() {
                       <td style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: SOURCE_CATEGORIES[src.category]?.color || 'var(--text2)' }}>{src.category}</td>
                       <td style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--text2)' }}>{src.type}</td>
                       <td style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: src.auth === 'none' ? 'var(--green)' : 'var(--gold)' }}>{src.auth === 'none' ? '—' : '🔑'}</td>
-                      <td style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--cyan)' }}>{src.refreshRate}</td>
+                      <td style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--accent)' }}>{src.refreshRate}</td>
                       <td style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>{src.tabs.slice(0, 2).join(', ')}</td>
                     </tr>
                   ))}

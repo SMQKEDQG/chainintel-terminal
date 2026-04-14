@@ -15,12 +15,12 @@ function ChainIntelLogo() {
         xmlns="http://www.w3.org/2000/svg"
       >
         {/* Chain-link icon mark */}
-        <rect x="0" y="8" width="10" height="6" rx="3" fill="#00d4aa" />
-        <rect x="6" y="8" width="10" height="6" rx="3" fill="none" stroke="#00d4aa" strokeWidth="1.5" />
+        <rect x="0" y="8" width="10" height="6" rx="3" fill="#E8A534" />
+        <rect x="6" y="8" width="10" height="6" rx="3" fill="none" stroke="#E8A534" strokeWidth="1.5" />
         <rect x="12" y="8" width="10" height="6" rx="3" fill="none" stroke="#4a6a8c" strokeWidth="1.5" />
 
         {/* Vertical connector dots */}
-        <circle cx="5" cy="22" r="1.5" fill="#00d4aa" />
+        <circle cx="5" cy="22" r="1.5" fill="#E8A534" />
         <circle cx="11" cy="22" r="1.5" fill="#4a6a8c" />
         <circle cx="17" cy="22" r="1.5" fill="#1f3550" />
 
@@ -44,7 +44,7 @@ function ChainIntelLogo() {
           fontSize="16"
           fontWeight="600"
           letterSpacing="0.06em"
-          fill="#00d4aa"
+          fill="#E8A534"
         >
           INTEL
         </text>
@@ -79,10 +79,10 @@ function SectionHeader({ number, title }: { number: string; title: string }) {
       <span style={{
         fontFamily: 'var(--mono)',
         fontSize: '9px',
-        color: 'var(--cyan)',
+        color: 'var(--accent)',
         letterSpacing: '0.16em',
-        background: 'rgba(0,212,170,0.08)',
-        border: '1px solid rgba(0,212,170,0.2)',
+        background: 'rgba(232,165,52,0.08)',
+        border: '1px solid rgba(232,165,52,0.2)',
         padding: '3px 8px',
         flexShrink: 0,
       }}>
@@ -146,7 +146,7 @@ function PricingRow({ tier, price, description }: { tier: string; price: string;
         fontFamily: 'var(--mono)',
         fontSize: '10px',
         fontWeight: 600,
-        color: isFree ? 'var(--text2)' : isEnterprise ? 'var(--gold)' : 'var(--cyan)',
+        color: isFree ? 'var(--text2)' : isEnterprise ? 'var(--gold)' : 'var(--accent)',
         letterSpacing: '0.10em',
         textTransform: 'uppercase',
       }}>
@@ -209,7 +209,7 @@ export default function TermsOfServicePage() {
             fontFamily: 'var(--mono)',
             fontSize: '9px',
             letterSpacing: '0.12em',
-            color: 'var(--cyan)',
+            color: 'var(--accent)',
             textDecoration: 'none',
             textTransform: 'uppercase',
             display: 'flex',
@@ -233,7 +233,7 @@ export default function TermsOfServicePage() {
           <div style={{
             fontFamily: 'var(--mono)',
             fontSize: '9px',
-            color: 'var(--cyan)',
+            color: 'var(--accent)',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             marginBottom: '12px',
@@ -284,8 +284,8 @@ export default function TermsOfServicePage() {
           <div style={{
             marginTop: '20px',
             padding: '14px 16px',
-            background: 'rgba(0,212,170,0.04)',
-            border: '1px solid rgba(0,212,170,0.15)',
+            background: 'rgba(232,165,52,0.04)',
+            border: '1px solid rgba(232,165,52,0.15)',
           }}>
             <p style={{
               ...bodyTextLast,
@@ -452,7 +452,7 @@ export default function TermsOfServicePage() {
                 <span style={{
                   fontFamily: 'var(--mono)',
                   fontSize: '9px',
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                   flexShrink: 0,
                   marginTop: '3px',
                 }}>◆</span>
@@ -633,7 +633,7 @@ export default function TermsOfServicePage() {
               <a href="mailto:support@chainintelterminal.com" style={{
                 fontFamily: 'var(--mono)',
                 fontSize: '11px',
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
                 textDecoration: 'none',
               }}>
                 support@chainintelterminal.com
@@ -651,7 +651,7 @@ export default function TermsOfServicePage() {
               <a href="https://chainintelterminal.com" style={{
                 fontFamily: 'var(--mono)',
                 fontSize: '11px',
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
                 textDecoration: 'none',
               }}>
                 chainintelterminal.com
@@ -705,7 +705,7 @@ export default function TermsOfServicePage() {
               <Link href="/" style={{
                 fontFamily: 'var(--mono)',
                 fontSize: '8px',
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
                 textDecoration: 'none',
                 letterSpacing: '0.10em',
               }}>

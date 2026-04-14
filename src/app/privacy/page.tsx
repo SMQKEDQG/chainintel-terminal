@@ -15,12 +15,12 @@ function ChainIntelLogo() {
         xmlns="http://www.w3.org/2000/svg"
       >
         {/* Chain-link icon mark */}
-        <rect x="0" y="8" width="10" height="6" rx="3" fill="#00d4aa" />
-        <rect x="6" y="8" width="10" height="6" rx="3" fill="none" stroke="#00d4aa" strokeWidth="1.5" />
+        <rect x="0" y="8" width="10" height="6" rx="3" fill="#E8A534" />
+        <rect x="6" y="8" width="10" height="6" rx="3" fill="none" stroke="#E8A534" strokeWidth="1.5" />
         <rect x="12" y="8" width="10" height="6" rx="3" fill="none" stroke="#4a6a8c" strokeWidth="1.5" />
 
         {/* Vertical connector dots */}
-        <circle cx="5" cy="22" r="1.5" fill="#00d4aa" />
+        <circle cx="5" cy="22" r="1.5" fill="#E8A534" />
         <circle cx="11" cy="22" r="1.5" fill="#4a6a8c" />
         <circle cx="17" cy="22" r="1.5" fill="#1f3550" />
 
@@ -44,7 +44,7 @@ function ChainIntelLogo() {
           fontSize="16"
           fontWeight="600"
           letterSpacing="0.06em"
-          fill="#00d4aa"
+          fill="#E8A534"
         >
           INTEL
         </text>
@@ -79,10 +79,10 @@ function SectionHeader({ number, title }: { number: string; title: string }) {
       <span style={{
         fontFamily: 'var(--mono)',
         fontSize: '9px',
-        color: 'var(--cyan)',
+        color: 'var(--accent)',
         letterSpacing: '0.16em',
-        background: 'rgba(0,212,170,0.08)',
-        border: '1px solid rgba(0,212,170,0.2)',
+        background: 'rgba(232,165,52,0.08)',
+        border: '1px solid rgba(232,165,52,0.2)',
         padding: '3px 8px',
         flexShrink: 0,
       }}>
@@ -149,7 +149,7 @@ function DataRow({ category, examples, purpose, legal }: {
         fontFamily: 'var(--mono)',
         fontSize: '9px',
         fontWeight: 600,
-        color: 'var(--cyan)',
+        color: 'var(--accent)',
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         paddingTop: '2px',
@@ -207,7 +207,7 @@ function RightRow({ right, description }: { right: string; description: string }
         fontFamily: 'var(--mono)',
         fontSize: '9px',
         fontWeight: 600,
-        color: 'var(--cyan)',
+        color: 'var(--accent)',
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         minWidth: '160px',
@@ -286,7 +286,7 @@ export default function PrivacyPolicyPage() {
             fontFamily: 'var(--mono)',
             fontSize: '9px',
             letterSpacing: '0.12em',
-            color: 'var(--cyan)',
+            color: 'var(--accent)',
             textDecoration: 'none',
             textTransform: 'uppercase',
             display: 'flex',
@@ -310,7 +310,7 @@ export default function PrivacyPolicyPage() {
           <div style={{
             fontFamily: 'var(--mono)',
             fontSize: '9px',
-            color: 'var(--cyan)',
+            color: 'var(--accent)',
             letterSpacing: '0.18em',
             textTransform: 'uppercase',
             marginBottom: '12px',
@@ -361,8 +361,8 @@ export default function PrivacyPolicyPage() {
           <div style={{
             marginTop: '20px',
             padding: '14px 16px',
-            background: 'rgba(0,212,170,0.04)',
-            border: '1px solid rgba(0,212,170,0.15)',
+            background: 'rgba(232,165,52,0.04)',
+            border: '1px solid rgba(232,165,52,0.15)',
           }}>
             <p style={{
               ...bodyTextLast,
@@ -459,7 +459,7 @@ export default function PrivacyPolicyPage() {
                 <span style={{
                   fontFamily: 'var(--mono)',
                   fontSize: '8px',
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                   flexShrink: 0,
                   marginTop: '4px',
                   letterSpacing: '0.10em',
@@ -631,14 +631,14 @@ export default function PrivacyPolicyPage() {
           <SectionHeader number="4" title="No Sale of Personal Data" />
           <div style={{
             padding: '16px 20px',
-            background: 'rgba(0,212,170,0.04)',
-            border: '1px solid rgba(0,212,170,0.2)',
+            background: 'rgba(232,165,52,0.04)',
+            border: '1px solid rgba(232,165,52,0.2)',
             marginBottom: '16px',
           }}>
             <p style={{
               fontFamily: 'var(--mono)',
               fontSize: '11px',
-              color: 'var(--cyan)',
+              color: 'var(--accent)',
               letterSpacing: '0.06em',
               fontWeight: 600,
               margin: '0 0 8px 0',
@@ -669,7 +669,7 @@ export default function PrivacyPolicyPage() {
                 marginBottom: i < 3 ? '10px' : 0,
                 alignItems: 'flex-start',
               }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--cyan)', flexShrink: 0, marginTop: '3px' }}>◆</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--accent)', flexShrink: 0, marginTop: '3px' }}>◆</span>
                 <span style={{ fontFamily: 'var(--sans)', fontSize: '13px', color: 'var(--text2)', lineHeight: 1.65 }}>{item}</span>
               </div>
             ))}
@@ -706,7 +706,7 @@ export default function PrivacyPolicyPage() {
                 <>
                   <div key={`name-${i}`} style={{ padding: '10px 16px', background: 'var(--s2)', border: '1px solid var(--b1)', borderTop: 'none', fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', letterSpacing: '0.04em', wordBreak: 'break-all' }}>{row.name}</div>
                   <div key={`purpose-${i}`} style={{ padding: '10px 16px', background: 'var(--s2)', border: '1px solid var(--b1)', borderTop: 'none', borderLeft: 'none', fontFamily: 'var(--sans)', fontSize: '12px', color: 'var(--muted)', lineHeight: 1.5 }}>{row.purpose}</div>
-                  <div key={`req-${i}`} style={{ padding: '10px 16px', background: 'var(--s2)', border: '1px solid var(--b1)', borderTop: 'none', borderLeft: 'none', fontFamily: 'var(--mono)', fontSize: '9px', color: row.req === 'Yes' ? 'var(--cyan)' : 'var(--muted)', letterSpacing: '0.08em' }}>{row.req}</div>
+                  <div key={`req-${i}`} style={{ padding: '10px 16px', background: 'var(--s2)', border: '1px solid var(--b1)', borderTop: 'none', borderLeft: 'none', fontFamily: 'var(--mono)', fontSize: '9px', color: row.req === 'Yes' ? 'var(--accent)' : 'var(--muted)', letterSpacing: '0.08em' }}>{row.req}</div>
                 </>
               ))}
             </div>
@@ -745,7 +745,7 @@ export default function PrivacyPolicyPage() {
                 marginBottom: i < arr.length - 1 ? '12px' : 0,
                 alignItems: 'flex-start',
               }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--cyan)', flexShrink: 0, marginTop: '4px', letterSpacing: '0.10em', textTransform: 'uppercase', minWidth: '140px' }}>{item.label}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--accent)', flexShrink: 0, marginTop: '4px', letterSpacing: '0.10em', textTransform: 'uppercase', minWidth: '140px' }}>{item.label}</span>
                 <span style={{ fontFamily: 'var(--sans)', fontSize: '13px', color: 'var(--text2)', lineHeight: 1.65 }}>{item.desc}</span>
               </div>
             ))}
@@ -886,7 +886,7 @@ export default function PrivacyPolicyPage() {
             </div>
             <div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.14em', textTransform: 'uppercase', marginBottom: '6px' }}>Privacy Contact</div>
-              <a href="mailto:support@chainintelterminal.com" style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--cyan)', textDecoration: 'none' }}>
+              <a href="mailto:support@chainintelterminal.com" style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', textDecoration: 'none' }}>
                 support@chainintelterminal.com
               </a>
             </div>
@@ -937,7 +937,7 @@ export default function PrivacyPolicyPage() {
               <Link href="/" style={{
                 fontFamily: 'var(--mono)',
                 fontSize: '8px',
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
                 textDecoration: 'none',
                 letterSpacing: '0.10em',
               }}>

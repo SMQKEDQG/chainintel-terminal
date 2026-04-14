@@ -51,7 +51,7 @@ export default function LoginPage() {
               color: '#fff',
               letterSpacing: '0.06em',
             }}>
-              CHAIN<span style={{ color: 'var(--cyan)' }}>INTEL</span>
+              CHAIN<span style={{ color: 'var(--accent)' }}>INTEL</span>
             </div>
           </Link>
           <div style={{
@@ -110,7 +110,7 @@ export default function LoginPage() {
                   boxSizing: 'border-box',
                   transition: 'border-color 0.15s',
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--cyan)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--b2)'}
                 placeholder="you@example.com"
               />
@@ -143,7 +143,7 @@ export default function LoginPage() {
                   boxSizing: 'border-box',
                   transition: 'border-color 0.15s',
                 }}
-                onFocus={e => e.target.style.borderColor = 'var(--cyan)'}
+                onFocus={e => e.target.style.borderColor = 'var(--accent)'}
                 onBlur={e => e.target.style.borderColor = 'var(--b2)'}
                 placeholder="••••••••"
               />
@@ -168,7 +168,7 @@ export default function LoginPage() {
               disabled={loading}
               style={{
                 width: '100%',
-                background: 'var(--cyan)',
+                background: 'var(--accent)',
                 color: '#000',
                 border: 'none',
                 fontFamily: 'var(--mono)',
@@ -195,7 +195,7 @@ export default function LoginPage() {
           color: 'var(--muted)',
         }}>
           No account?{' '}
-          <Link href="/signup" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>
+          <Link href="/signup" style={{ color: 'var(--accent)', textDecoration: 'none' }}>
             Create one →
           </Link>
         </div>

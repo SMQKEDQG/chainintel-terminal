@@ -50,7 +50,7 @@ export default function StatusBar() {
   }, []);
 
   const healthColor = {
-    operational: 'var(--cyan)',
+    operational: 'var(--accent)',
     degraded: 'var(--gold)',
     down: 'var(--red)',
   };
@@ -83,7 +83,7 @@ export default function StatusBar() {
 
         {/* Latency */}
         <span>
-          LATENCY: <span style={{ color: status.dataLatency < 500 ? 'var(--cyan)' : 'var(--gold)' }}>
+          LATENCY: <span style={{ color: status.dataLatency < 500 ? 'var(--accent)' : 'var(--gold)' }}>
             {formatLatency(status.dataLatency)}
           </span>
         </span>
@@ -106,7 +106,7 @@ export default function StatusBar() {
 
         {/* Network */}
         <span>
-          NET: <span style={{ color: 'var(--cyan)' }}>MAINNET</span>
+          NET: <span style={{ color: 'var(--accent)' }}>MAINNET</span>
         </span>
       </div>
     </div>

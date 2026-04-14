@@ -53,7 +53,7 @@ interface ChainScoreData {
 
 function ScoreBar({ score, max = 20 }: { score: number; max?: number }) {
   const pct = (score / max) * 100;
-  const color = pct >= 80 ? 'var(--cyan)' : pct >= 60 ? 'var(--green)' : pct >= 40 ? 'var(--gold)' : 'var(--red)';
+  const color = pct >= 80 ? 'var(--accent)' : pct >= 60 ? 'var(--green)' : pct >= 40 ? 'var(--gold)' : 'var(--red)';
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
       <div style={{ width: 50, height: 5, background: 'var(--b3)', borderRadius: 2, overflow: 'hidden' }}>
@@ -65,7 +65,7 @@ function ScoreBar({ score, max = 20 }: { score: number; max?: number }) {
 }
 
 function gradeColor(grade: string): string {
-  if (grade.startsWith('A') || grade === 'Institutional Grade' || grade === 'Investment Grade') return 'var(--cyan)';
+  if (grade.startsWith('A') || grade === 'Institutional Grade' || grade === 'Investment Grade') return 'var(--accent)';
   if (grade.startsWith('B') || grade === 'Speculative Grade') return 'var(--green)';
   if (grade.startsWith('C') || grade === 'High Risk') return 'var(--gold)';
   return 'var(--red)';
@@ -80,7 +80,7 @@ function signalColor(signal: string): string {
 function alertTypeColor(type: string): string {
   if (type === 'buy') return 'var(--green)';
   if (type === 'sell') return 'var(--red)';
-  return 'var(--cyan)';
+  return 'var(--accent)';
 }
 
 export default function WhalesTab() {
@@ -149,7 +149,7 @@ export default function WhalesTab() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>WHALE ACTIVITY & CHAINSCORE RATINGS</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
-        <span className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>PRO</span>
+        <span className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>PRO</span>
         <span className="tag tag-live">
           <a className="src-link" href="https://mempool.space" target="_blank" rel="noopener noreferrer">Mempool</a>
           {' · '}
@@ -194,7 +194,7 @@ export default function WhalesTab() {
             </div>
           </div>
           {whaleLoading ? (
-            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)' }}>SCANNING BLOCKCHAIN...</div>
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)' }}>SCANNING BLOCKCHAIN...</div>
           ) : alerts.length === 0 ? (
             <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)' }}>No large transactions in recent blocks</div>
           ) : (
@@ -205,12 +205,12 @@ export default function WhalesTab() {
                   borderBottom: '1px solid var(--b1)',
                   background: a.btcAmount >= 100 ? 'rgba(240,192,64,0.04)' : 'transparent',
                 }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
                   onMouseLeave={e => (e.currentTarget.style.background = a.btcAmount >= 100 ? 'rgba(240,192,64,0.04)' : '')}>
                   {/* Direction icon */}
                   <div style={{
                     width: 28, height: 28, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: a.type === 'buy' ? 'rgba(16,185,129,0.15)' : a.type === 'sell' ? 'rgba(239,68,68,0.15)' : 'rgba(0,212,170,0.1)',
+                    background: a.type === 'buy' ? 'rgba(16,185,129,0.15)' : a.type === 'sell' ? 'rgba(239,68,68,0.15)' : 'rgba(232,165,52,0.1)',
                     fontSize: 12,
                   }}>
                     {a.type === 'buy' ? '↓' : a.type === 'sell' ? '↑' : '↔'}
@@ -221,7 +221,7 @@ export default function WhalesTab() {
                       <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: alertTypeColor(a.type) }}>{a.amt}</span>
                       <span style={{
                         fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', fontWeight: 600,
-                        background: a.type === 'buy' ? 'rgba(16,185,129,0.15)' : a.type === 'sell' ? 'rgba(239,68,68,0.15)' : 'rgba(0,212,170,0.1)',
+                        background: a.type === 'buy' ? 'rgba(16,185,129,0.15)' : a.type === 'sell' ? 'rgba(239,68,68,0.15)' : 'rgba(232,165,52,0.1)',
                         color: alertTypeColor(a.type),
                       }}>{a.dir}</span>
                       {a.btcAmount >= 100 && <span style={{ fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', background: 'rgba(240,192,64,0.2)', color: 'var(--gold)', fontWeight: 700 }}>🐋 MEGA</span>}
@@ -250,7 +250,7 @@ export default function WhalesTab() {
             <div className="tag tag-live">Supabase</div>
           </div>
           {csLoading ? (
-            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)' }}>LOADING RATINGS...</div>
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)' }}>LOADING RATINGS...</div>
           ) : (
             <div style={{ maxHeight: 400, overflowY: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
@@ -268,7 +268,7 @@ export default function WhalesTab() {
                       <tr key={r.asset}
                         onClick={() => setExpandedAsset(expandedAsset === r.asset ? null : r.asset)}
                         style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
-                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
                         onMouseLeave={e => (e.currentTarget.style.background = '')}>
                         <td style={{ padding: '5px 8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -280,9 +280,9 @@ export default function WhalesTab() {
                         <td style={{ textAlign: 'right', padding: '5px 8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>
                             <div style={{ width: 40, height: 5, background: 'var(--b3)', borderRadius: 2, overflow: 'hidden' }}>
-                              <div style={{ width: `${r.score}%`, height: '100%', background: r.score >= 75 ? 'var(--cyan)' : r.score >= 60 ? 'var(--green)' : 'var(--gold)', borderRadius: 2 }} />
+                              <div style={{ width: `${r.score}%`, height: '100%', background: r.score >= 75 ? 'var(--accent)' : r.score >= 60 ? 'var(--green)' : 'var(--gold)', borderRadius: 2 }} />
                             </div>
-                            <span style={{ fontWeight: 700, color: 'var(--cyan)', minWidth: 20 }}>{r.score}</span>
+                            <span style={{ fontWeight: 700, color: 'var(--accent)', minWidth: 20 }}>{r.score}</span>
                           </div>
                         </td>
                         <td style={{ textAlign: 'center', padding: '5px 8px' }}>
@@ -297,7 +297,7 @@ export default function WhalesTab() {
                         </td>
                       </tr>
                       {expandedAsset === r.asset && (
-                        <tr key={`${r.asset}-detail`} style={{ background: 'rgba(0,212,170,0.03)' }}>
+                        <tr key={`${r.asset}-detail`} style={{ background: 'rgba(232,165,52,0.03)' }}>
                           <td colSpan={4} style={{ padding: '10px 16px' }}>
                             <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.1em' }}>FACTOR BREAKDOWN (0-20 each)</div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
@@ -340,8 +340,8 @@ export default function WhalesTab() {
       {/* Synthesis */}
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)' }}>CI · Whale & ChainScore Synthesis</span>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)' }}>CI · Whale & ChainScore Synthesis</span>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginLeft: 'auto' }}>
             {whaleData?.source === 'live' ? 'LIVE' : 'CACHED'} · {whaleData ? new Date(whaleData.timestamp).toLocaleTimeString() : ''}
           </span>

@@ -121,7 +121,7 @@ export default class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBo
                 fontWeight: 600,
                 letterSpacing: '0.1em',
                 padding: '8px 20px',
-                background: 'var(--cyan, #00d4aa)',
+                background: 'var(--cyan, #E8A534)',
                 color: '#000',
                 border: 'none',
                 borderRadius: 3,

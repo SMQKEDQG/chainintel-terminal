@@ -450,7 +450,7 @@ function BtcChart() {
   const { tf, setTf, data, loading, isLive, updatedAt } = useLiveCoinChart('bitcoin');
   const timeAgo = useTimeAgo(updatedAt);
   const opts = makeChartOpts('BTC Price');
-  const chartData = buildChartData(data.labels, data.prices, data.vols, '#00d4aa', 'rgba(0,212,170,0.08)');
+  const chartData = buildChartData(data.labels, data.prices, data.vols, '#E8A534', 'rgba(232,165,52,0.08)');
 
   return (
     <div className="panel panel-hover">
@@ -485,7 +485,7 @@ function EthChart() {
   const { tf, setTf, data, loading, isLive, updatedAt } = useLiveCoinChart('ethereum');
   const timeAgo = useTimeAgo(updatedAt);
   const opts = makeChartOpts('ETH Price');
-  const chartData = buildChartData(data.labels, data.prices, data.vols, '#3b82f6', 'rgba(59,130,246,0.08)');
+  const chartData = buildChartData(data.labels, data.prices, data.vols, '#6B8AFF', 'rgba(107,138,255,0.08)');
 
   return (
     <div className="panel panel-hover">
@@ -554,7 +554,7 @@ function QuickGuide() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '0 14px 12px' }}>
           {items.map(it => (
             <div key={it.label} style={{ background: 'var(--s2)', border: '1px solid var(--b1)', padding: '8px 10px' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--cyan)', marginBottom: 4 }}>{it.label}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--accent)', marginBottom: 4 }}>{it.label}</div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', lineHeight: 1.5 }}>{it.text}</div>
             </div>
           ))}
@@ -602,16 +602,16 @@ function MorningBrief() {
   const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ background: 'var(--s1)', border: '1px solid rgba(0,212,170,0.15)', padding: '12px 14px', position: 'relative', marginBottom: 8 }}>
+    <div style={{ background: 'var(--s1)', border: '1px solid rgba(232,165,52,0.15)', padding: '12px 14px', position: 'relative', marginBottom: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--cyan)', letterSpacing: '0.08em', fontWeight: 600 }}>⬡ CI·AI</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 600 }}>⬡ CI·AI</span>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--text2)' }}>INTELLIGENCE BRIEF</span>
         <div style={{ flex: 1 }} />
         <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>{dateStr}</span>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: sourceColor(source), boxShadow: `0 0 6px ${sourceColor(source)}`, animation: 'pulse 2s infinite' }} />
         <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: `1px solid ${sentimentColor}40`, color: sentimentColor, letterSpacing: '0.08em' }}>{sentiment}</span>
       </div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700, color: 'var(--cyan)', marginBottom: 8, letterSpacing: '-0.01em' }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700, color: 'var(--accent)', marginBottom: 8, letterSpacing: '-0.01em' }}>
         BTC {btcPrice} ({btcChg24h >= 0 ? '+' : ''}{btcChg24h.toFixed(2)}%) · BTC Dom {btcDom}% · Market: {gainers} up / {losers} down
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
@@ -699,7 +699,7 @@ function AskCI() {
   return (
     <div style={{ background: 'var(--b1)', display: 'flex', flexDirection: 'column', gap: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', background: 'var(--s1)', border: '1px solid var(--b2)' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--cyan)', padding: '0 10px', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>ASK CI&gt;</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--accent)', padding: '0 10px', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>ASK CI&gt;</span>
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
@@ -707,7 +707,7 @@ function AskCI() {
           placeholder="Ask anything: 'BTC price target?' · 'Explain MVRV' · 'Best ISO 20022 asset?'"
           style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 11, padding: '8px 0', outline: 'none' }}
         />
-        <button onClick={() => handleAsk()} disabled={loading} style={{ background: loading ? 'var(--s2)' : 'rgba(0,212,170,0.08)', border: '1px solid rgba(0,212,170,0.2)', color: 'var(--cyan)', fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.12em', padding: '6px 14px', cursor: loading ? 'wait' : 'pointer', margin: 4 }}>{loading ? 'ANALYZING...' : 'ANALYZE'}</button>
+        <button onClick={() => handleAsk()} disabled={loading} style={{ background: loading ? 'var(--s2)' : 'rgba(232,165,52,0.08)', border: '1px solid rgba(232,165,52,0.2)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.12em', padding: '6px 14px', cursor: loading ? 'wait' : 'pointer', margin: 4 }}>{loading ? 'ANALYZING...' : 'ANALYZE'}</button>
       </div>
       <div style={{ display: 'flex', gap: 4, padding: '4px 8px', background: 'var(--s1)', flexWrap: 'wrap' }}>
         {chips.map(c => (
@@ -715,14 +715,14 @@ function AskCI() {
         ))}
       </div>
       {loading && (
-        <div style={{ background: 'var(--s1)', padding: '12px 14px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: 'var(--s1)', padding: '12px 14px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>◈</span> CI·AI analyzing your query...
         </div>
       )}
       {response && !loading && (
         <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)', letterSpacing: '0.1em' }}>◈ CI·AI RESPONSE</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', letterSpacing: '0.1em' }}>◈ CI·AI RESPONSE</span>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: source === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
               {source === 'live' ? '● LIVE AI' : source === 'cached' ? '● CACHED INTELLIGENCE' : '● OFFLINE'}
             </span>
@@ -741,7 +741,7 @@ function KPI({ label, value, change, changeDir, source, color }: { label: string
   return (
     <div className="kpi metric-card">
       <div className="kpi-label">{label}</div>
-      <div className="kpi-val" style={{ color: color || 'var(--cyan)' }}>{value}</div>
+      <div className="kpi-val" style={{ color: color || 'var(--accent)' }}>{value}</div>
       <div className={`kpi-chg ${changeDir}`}>{change}</div>
       <div className="kpi-src" dangerouslySetInnerHTML={{ __html: source }} />
     </div>
@@ -790,7 +790,7 @@ function SectorHeat() {
     { label: 'ALTCOIN SEASON', val: String(altcoinIndex), sub: '/100', color: altcoinIndex > 75 ? 'var(--green)' : altcoinIndex > 25 ? 'var(--gold)' : 'var(--red)', bar: altcoinIndex },
     { label: 'TOP SECTOR · 24H', val: topSectorVal, sub: topSectorSub, color: 'var(--green)' },
     { label: 'WORST SECTOR · 24H', val: worstSectorVal, sub: worstSectorSub, color: 'var(--red)' },
-    { label: 'STABLECOIN SUPPLY', val: `$${stableSupply}B`, sub: `${defi ? '● LIVE · DefiLlama' : '● CACHED · DefiLlama'}`, color: 'var(--cyan)' },
+    { label: 'STABLECOIN SUPPLY', val: `$${stableSupply}B`, sub: `${defi ? '● LIVE · DefiLlama' : '● CACHED · DefiLlama'}`, color: 'var(--accent)' },
     { label: 'PERP FUNDING (BTC)', val: fundingStr, sub: fundingSub, color: 'var(--gold)' },
   ];
   return (
@@ -893,12 +893,12 @@ function ETFFlows() {
           <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: f.up ? 'var(--green)' : 'var(--red)' }}>{f.flow}</div>
         </div>
       ))}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(0,212,170,0.04)', borderTop: '1px solid var(--b2)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(232,165,52,0.04)', borderTop: '1px solid var(--b2)' }}>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.08em' }}>Net Flow Today · All BTC ETFs</span>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--green)' }}>+$169.6M</span>
       </div>
-      <div style={{ padding: '8px 12px', borderTop: '1px solid var(--b1)', background: 'rgba(0,212,170,0.02)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)', letterSpacing: '0.06em', marginBottom: 4 }}>⬡ AI Correlation Signal</div>
+      <div style={{ padding: '8px 12px', borderTop: '1px solid var(--b1)', background: 'rgba(232,165,52,0.02)' }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', letterSpacing: '0.06em', marginBottom: 4 }}>⬡ AI Correlation Signal</div>
         <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', lineHeight: 1.5 }}>
           4 consecutive inflow days with <strong>Extreme Fear (13 out of 100)</strong> — historically, this pattern preceded +22% BTC returns within 45 days (2023 precedent). GBTC rotation into IBIT confirms institutional preference for lower-fee products, not a sector exit.
         </div>
@@ -922,7 +922,7 @@ function ChainScore() {
     <div className="panel panel-hover">
       <div className="ph">
         <div className="pt">ChainScore™ — Top Rated</div>
-        <div className="tag" style={{ background: 'rgba(0,212,170,0.08)', color: 'var(--cyan)' }}>Methodology v1.0</div>
+        <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>Methodology v1.0</div>
       </div>
       {scores.map(s => (
         <div key={s.sym} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)' }}>
@@ -932,9 +932,9 @@ function ChainScore() {
             <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)' }}>{s.sym}</span>
           </div>
           <div style={{ flex: 1, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{ width: `${s.score}%`, height: '100%', background: 'linear-gradient(90deg, var(--cyan), var(--blue))', borderRadius: 3 }} />
+            <div style={{ width: `${s.score}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent), var(--blue))', borderRadius: 3 }} />
           </div>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--cyan)', width: 30, textAlign: 'right' }}>{s.score}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--accent)', width: 30, textAlign: 'right' }}>{s.score}</span>
         </div>
       ))}
     </div>
@@ -983,7 +983,7 @@ function MarketTable() {
             const d7 = a.percent_change_7d;
             return (
               <tr key={a.symbol} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
                   onMouseLeave={e => (e.currentTarget.style.background = '')}>
                 <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 9 }}>{a.cmc_rank}</td>
                 <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1062,7 +1062,7 @@ function WhaleFeed() {
     <>
       <div className="ph" style={{ marginTop: 8 }}>
         <div className="pt">Live Whale Alerts</div>
-        <div className="tag" style={{ background: 'rgba(0,212,170,0.08)', color: 'var(--cyan)' }}>
+        <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
           {isLive && <span style={{ color: 'var(--green)', fontSize: 7, marginRight: 4 }}>●</span>}
           <a className="src-link" href="https://whale-alert.io" target="_blank" rel="noopener noreferrer">Whale Alert API</a>
         </div>
@@ -1087,7 +1087,7 @@ function WhaleFeed() {
 function BloombergCallout() {
   const features = ['On-chain analytics', 'Top 100 live prices', 'Whale surveillance', 'DeFi intelligence', 'ISO 20022 tracking', 'AI synthesis layer'];
   return (
-    <div style={{ margin: '12px 0 0', background: 'linear-gradient(90deg,rgba(239,68,68,0.06),rgba(59,130,246,0.06))', border: '1px solid rgba(59,130,246,0.15)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+    <div style={{ margin: '12px 0 0', background: 'linear-gradient(90deg,rgba(239,68,68,0.06),rgba(107,138,255,0.06))', border: '1px solid rgba(107,138,255,0.15)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
       <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.14em', color: 'var(--blue)', flexShrink: 0 }}>BLOOMBERG CANNOT DO THIS ↓</span>
       {features.map(f => (
         <span key={f} style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>{f} <span style={{ color: 'var(--red)' }}>✗ Bloomberg</span></span>
@@ -1110,7 +1110,7 @@ function LiveFngKpi() {
   }, []);
   const val = fng?.value ?? 13;
   const label = fng?.label ?? 'Extreme Fear';
-  const color = val <= 25 ? 'var(--red)' : val <= 50 ? 'var(--gold)' : val <= 75 ? 'var(--green)' : 'var(--cyan)';
+  const color = val <= 25 ? 'var(--red)' : val <= 50 ? 'var(--gold)' : val <= 75 ? 'var(--green)' : 'var(--accent)';
   return <KPI label="Fear & Greed Index" value={String(val)} change={`${label} (${val}/100)${val <= 20 ? ' \u00b7 Historic low' : ''}`} changeDir={val > 50 ? 'up' : 'dn'} color={color} source={`<span style="color:${fng ? 'var(--green)' : 'var(--gold)'};font-size:7px">\u25cf</span> ${fng ? 'LIVE' : 'CACHED'} \u00b7 <a class="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank">Fear &amp; Greed Index</a>`} />;
 }
 
@@ -1201,7 +1201,7 @@ export default function OverviewTab() {
           <ChainScore />
         </div>
         <div className="panel panel-hover">
-          <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(0,212,170,0.08)', color: 'var(--cyan)' }}>ChainIntel AI</div></div>
+          <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>ChainIntel AI</div></div>
           <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
             <strong style={{ color: 'var(--text)' }}>Bitcoin holding $73K at Extreme Fear (13/100).</strong> Price stability against capitulation-level sentiment historically precedes 8–15% bounces. ETF flows constructive: IBIT +$224M, net +$169.6M, 4th consecutive inflow day. Exchange reserves −42,800 BTC in 30 days. LTH supply at 74.8%. <strong style={{ color: 'var(--text)' }}>Setup cautiously bullish for 90+ day horizon.</strong>
           </div>

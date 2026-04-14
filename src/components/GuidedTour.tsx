@@ -120,11 +120,11 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
     position: 'fixed',
     zIndex: 100002,
     background: 'var(--s1)',
-    border: '1px solid var(--cyan)',
+    border: '1px solid var(--accent)',
     borderRadius: 6,
     padding: '16px 20px',
     width: 320,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 12px rgba(0,212,170,0.15)',
+    boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 12px rgba(232,165,52,0.15)',
   };
 
   if (highlight) {
@@ -167,10 +167,10 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
             left: highlight.left - 4,
             width: highlight.width + 8,
             height: highlight.height + 8,
-            border: '2px solid var(--cyan)',
+            border: '2px solid var(--accent)',
             borderRadius: 4,
             zIndex: 100001,
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(0,212,170,0.2)',
+            boxShadow: '0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(232,165,52,0.2)',
             pointerEvents: 'none',
           }}
         />
@@ -196,11 +196,11 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
         <div className="w-full h-0.5 rounded mb-3" style={{ background: 'var(--b2)' }}>
           <div
             className="h-full rounded transition-all duration-300"
-            style={{ background: 'var(--cyan)', width: `${((step + 1) / TOUR_STEPS.length) * 100}%` }}
+            style={{ background: 'var(--accent)', width: `${((step + 1) / TOUR_STEPS.length) * 100}%` }}
           />
         </div>
 
-        <h3 className="font-mono text-[11px] font-bold mb-2" style={{ color: 'var(--cyan)' }}>
+        <h3 className="font-mono text-[11px] font-bold mb-2" style={{ color: 'var(--accent)' }}>
           {currentStep.title}
         </h3>
         <p className="font-mono text-[9px] leading-relaxed mb-4" style={{ color: 'var(--text2)' }}>
@@ -212,7 +212,7 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
           <button
             onClick={prev}
             disabled={step === 0}
-            className="font-mono text-[8px] tracking-wider px-3 py-1.5 border transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)] disabled:opacity-30"
+            className="font-mono text-[8px] tracking-wider px-3 py-1.5 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-30"
             style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
           >
             ← PREV
@@ -220,7 +220,7 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
           <button
             onClick={next}
             className="font-mono text-[8px] tracking-wider px-3 py-1.5 transition-opacity hover:opacity-80"
-            style={{ background: 'var(--cyan)', color: '#000', fontWeight: 700 }}
+            style={{ background: 'var(--accent)', color: '#000', fontWeight: 700 }}
           >
             {step === TOUR_STEPS.length - 1 ? 'FINISH' : 'NEXT →'}
           </button>

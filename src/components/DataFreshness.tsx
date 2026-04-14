@@ -32,8 +32,8 @@ export function DataFreshness({ lastUpdated, source, isLive }: DataFreshnessProp
       <div
         className="w-1.5 h-1.5 rounded-full"
         style={{
-          background: isLive ? 'var(--cyan)' : 'var(--gold)',
-          boxShadow: isLive ? '0 0 6px var(--cyan)' : 'none',
+          background: isLive ? 'var(--accent)' : 'var(--gold)',
+          boxShadow: isLive ? '0 0 6px var(--accent)' : 'none',
           animation: isLive ? 'pulse 2s ease-in-out infinite' : 'none',
         }}
       />
@@ -113,7 +113,7 @@ export function ErrorState({ message = 'Failed to fetch data', onRetry }: ErrorS
       {onRetry && (
         <button
           onClick={onRetry}
-          className="font-mono text-[8px] tracking-wider px-3 py-1.5 border transition-colors hover:border-[var(--cyan)] hover:text-[var(--cyan)]"
+          className="font-mono text-[8px] tracking-wider px-3 py-1.5 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
           style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
         >
           RETRY

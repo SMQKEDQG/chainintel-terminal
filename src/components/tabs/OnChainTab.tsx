@@ -113,12 +113,12 @@ export default function OnChainTab() {
 
   // KPI cards — top 9 metrics, all from live data
   const kpiCards = [
-    { label: 'Hash Rate · BTC', value: hr > 0 ? `${hr.toFixed(1)} EH/s` : 'Loading...', sub: hr > 800 ? 'Near ATH zone — miners confident' : hr > 600 ? 'Healthy network security' : 'Loading hashrate...', color: 'var(--cyan)', delta: hr > 800 ? 'ATH Zone' : hr > 0 ? 'Healthy' : '—', deltaColor: hr > 800 ? 'var(--cyan)' : 'var(--green)' },
+    { label: 'Hash Rate · BTC', value: hr > 0 ? `${hr.toFixed(1)} EH/s` : 'Loading...', sub: hr > 800 ? 'Near ATH zone — miners confident' : hr > 600 ? 'Healthy network security' : 'Loading hashrate...', color: 'var(--accent)', delta: hr > 800 ? 'ATH Zone' : hr > 0 ? 'Healthy' : '—', deltaColor: hr > 800 ? 'var(--accent)' : 'var(--green)' },
     { label: 'Block Height', value: blk > 0 ? blk.toLocaleString() : 'Loading...', sub: 'Latest confirmed Bitcoin mainnet block', color: 'var(--text)' },
-    { label: 'BTC Fee · Fast', value: fees.fast > 0 ? `${fees.fast} sat/vB` : 'Loading...', sub: fees.normal > 0 ? `Normal: ${fees.normal} · Economy: ${fees.economy} sat/vB` : 'Loading fee estimates...', color: 'var(--cyan)', delta: fees.fast > 50 ? '▲ High' : fees.fast > 20 ? '◆ Normal' : fees.fast > 0 ? '▼ Low' : '', deltaColor: fees.fast > 50 ? 'var(--red)' : fees.fast > 20 ? 'var(--gold)' : 'var(--green)' },
+    { label: 'BTC Fee · Fast', value: fees.fast > 0 ? `${fees.fast} sat/vB` : 'Loading...', sub: fees.normal > 0 ? `Normal: ${fees.normal} · Economy: ${fees.economy} sat/vB` : 'Loading fee estimates...', color: 'var(--accent)', delta: fees.fast > 50 ? '▲ High' : fees.fast > 20 ? '◆ Normal' : fees.fast > 0 ? '▼ Low' : '', deltaColor: fees.fast > 50 ? 'var(--red)' : fees.fast > 20 ? 'var(--gold)' : 'var(--green)' },
     { label: 'Avg MVRV · 12 Assets', value: avgMvrv > 0 ? avgMvrv.toFixed(2) : 'Loading...', sub: mvrvSignal, color: 'var(--gold)', delta: avgMvrv < 2 ? '▲ Accumulation' : '▼ Caution', deltaColor: avgMvrv < 2 ? 'var(--gold)' : 'var(--red)' },
     { label: 'Net Exchange Flow', value: assets.length > 0 ? `${netExchangeFlow > 0 ? '+' : ''}${(netExchangeFlow / 1000).toFixed(1)}K` : 'Loading...', sub: `30d aggregate across ${assets.length} assets — ${flowDir}`, color: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)', delta: netExchangeFlow < 0 ? '▲ Bullish' : '▼ Bearish', deltaColor: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)' },
-    { label: 'Top On-Chain Score', value: topScorer ? `${topScorer.symbol} · ${topScorer.onchainScore}` : 'Loading...', sub: topScorer ? `Strongest on-chain profile of ${assets.length} tracked assets` : '', color: 'var(--cyan)', delta: topScorer ? `#1 of ${assets.length}` : '', deltaColor: 'var(--cyan)' },
+    { label: 'Top On-Chain Score', value: topScorer ? `${topScorer.symbol} · ${topScorer.onchainScore}` : 'Loading...', sub: topScorer ? `Strongest on-chain profile of ${assets.length} tracked assets` : '', color: 'var(--accent)', delta: topScorer ? `#1 of ${assets.length}` : '', deltaColor: 'var(--accent)' },
     { label: btc ? `BTC MVRV` : 'BTC MVRV', value: btc ? btc.mvrv.toFixed(2) : 'Loading...', sub: btc ? `${btc.mvrv < 1 ? 'Undervalued zone' : btc.mvrv < 2.4 ? 'Fair value (1.0–2.4)' : 'Overheated zone'}` : '', color: 'var(--gold)' },
     { label: btc ? `BTC LTH Supply` : 'BTC LTH Supply', value: btc ? `${btc.lthSupplyPct.toFixed(1)}%` : 'Loading...', sub: btc ? `Est. % held 155+ days — ${btc.lthSupplyPct > 70 ? 'strong conviction' : 'moderate'}` : '', color: 'var(--green)' },
     { label: '30d Biggest Mover', value: biggestMover30d ? `${biggestMover30d.symbol} ${biggestMover30d.change30d >= 0 ? '+' : ''}${biggestMover30d.change30d.toFixed(1)}%` : 'Loading...', sub: biggestMover30d ? `Largest 30-day price move in tracked universe` : '', color: biggestMover30d && biggestMover30d.change30d >= 0 ? 'var(--green)' : 'var(--red)' },
@@ -149,7 +149,7 @@ export default function OnChainTab() {
         <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>BITCOIN ON-CHAIN INTELLIGENCE</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
         <DataFreshness lastUpdated={lastUpdated} source="CoinGecko · Mempool" isLive={isLive} />
-        <span className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>PRO</span>
+        <span className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>PRO</span>
       </div>
 
       {/* KPI Grid — 100% live */}
@@ -212,13 +212,13 @@ export default function OnChainTab() {
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: flowColor }}>{flowStr}</td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.lthSupplyPct.toFixed(1)}%</td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.nvt.toFixed(1)}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: a.hashrate > 0 ? 'var(--cyan)' : 'var(--muted)' }}>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: a.hashrate > 0 ? 'var(--accent)' : 'var(--muted)' }}>
                       {a.hashrate > 0 ? a.hashrate.toFixed(0) : '—'}
                     </td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, color: 'var(--cyan)' }}>{a.onchainScore}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, color: 'var(--accent)' }}>{a.onchainScore}</td>
                     <td style={{ padding: '5px 8px' }}>
                       <div style={{ height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-                        <div style={{ width: `${a.onchainScore}%`, height: '100%', background: 'linear-gradient(90deg, var(--cyan), var(--blue))', borderRadius: 3, transition: 'width 0.5s ease' }} />
+                        <div style={{ width: `${a.onchainScore}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent), var(--blue))', borderRadius: 3, transition: 'width 0.5s ease' }} />
                       </div>
                     </td>
                   </tr>
@@ -233,19 +233,19 @@ export default function OnChainTab() {
       {assets.length > 0 && (
         <div className="data-fresh" style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <div className="heartbeat" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)' }} />
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)', letterSpacing: '0.08em' }}>On-Chain AI Synthesis · Live Analysis</span>
+            <div className="heartbeat" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', letterSpacing: '0.08em' }}>On-Chain AI Synthesis · Live Analysis</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.5 }}>
             <div style={{ display: 'flex', gap: 8 }}>
-              <span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span>
+              <span style={{ color: 'var(--accent)', flexShrink: 0 }}>▸</span>
               <span>
                 <strong style={{ color: 'var(--text)' }}>BTC hashrate {hr > 0 ? `${hr.toFixed(0)} EH/s` : 'loading'}</strong> — {hr > 800 ? 'near all-time high zone. Miners confident in future price action.' : hr > 600 ? 'healthy network security levels.' : 'data loading.'}
                 {mempool && <> Difficulty: {mempool.difficulty.toFixed(2)}T.</>}
               </span>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span>
+              <span style={{ color: 'var(--accent)', flexShrink: 0 }}>▸</span>
               <span>
                 <strong style={{ color: 'var(--text)' }}>Net exchange flow {netExchangeFlow > 0 ? '+' : ''}{(netExchangeFlow / 1000).toFixed(1)}K</strong> across {assets.length} assets (30d) — {netExchangeFlow < 0 ? 'coins moving to cold storage, structural accumulation signal' : 'increased exchange deposits, watch for selling pressure'}.
                 {btc && <> BTC LTH supply {btc.lthSupplyPct.toFixed(1)}% — {btc.lthSupplyPct > 70 ? 'strong conviction holding.' : 'moderate conviction.'}</>}

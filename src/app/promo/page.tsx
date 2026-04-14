@@ -7,13 +7,13 @@ const STRIPE_PRO = 'https://buy.stripe.com/dRm6oI94hf428Sq7pgbwk01';
 const STRIPE_ENT = 'https://buy.stripe.com/dRm6oI94hf428Sq7pgbwk02';
 
 const MODULES = [
-  { id: 'OVERVIEW', icon: '◈', color: 'var(--cyan)', desc: 'AI-synthesized market briefings, Fear & Greed, macro signals.' },
+  { id: 'OVERVIEW', icon: '◈', color: 'var(--accent)', desc: 'AI-synthesized market briefings, Fear & Greed, macro signals.' },
   { id: 'MARKETS', icon: '◉', color: 'var(--blue)', desc: 'Top 500 assets ranked by cap, volume, dominance, 24h change.' },
   { id: 'ON-CHAIN', icon: '⬡', color: 'var(--green)', desc: 'MVRV, NVT, exchange flows, miner reserve, hash rate trends.' },
   { id: 'DeFi', icon: '◫', color: 'var(--purple)', desc: '50+ protocols. TVL rankings, yields, stablecoin supply monitor.' },
   { id: 'ETF & INST', icon: '◧', color: 'var(--gold)', desc: 'Spot ETF inflows, institutional holdings, fund comparison.' },
   { id: 'REGULATORY', icon: '◩', color: 'var(--orange)', desc: 'SEC, CFTC, EU MiCA, GENIUS Act — live regulatory feed.' },
-  { id: 'ISO 20022', icon: '⬢', color: 'var(--cyan)', desc: 'SWIFT banking standard: XRP, XLM, HBAR, QNT, ADA, IOTA.' },
+  { id: 'ISO 20022', icon: '⬢', color: 'var(--accent)', desc: 'SWIFT banking standard: XRP, XLM, HBAR, QNT, ADA, IOTA.' },
   { id: 'SENTIMENT', icon: '◌', color: 'var(--blue)', desc: 'Social volume, Twitter trends, GitHub developer activity.' },
   { id: 'DERIVATIVES', icon: '◎', color: 'var(--green)', desc: 'Funding rates, open interest, liquidation maps, basis trades.' },
   { id: 'WHALES', icon: '◕', color: 'var(--red)', desc: '$10M+ on-chain movements scored by ChainIntel AI.' },
@@ -97,7 +97,7 @@ export default function PromoPage() {
         zIndex: 100,
         background: 'rgba(8,13,22,0.92)',
         backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(0,212,170,0.1)',
+        borderBottom: '1px solid rgba(232,165,52,0.1)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 32px',
@@ -126,15 +126,15 @@ export default function PromoPage() {
         {/* Logo center */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-label="ChainIntel">
-            <polygon points="12,2 22,7.5 22,16.5 12,22 2,16.5 2,7.5" stroke="var(--cyan)" strokeWidth="1.5" fill="rgba(0,212,170,0.07)"/>
-            <circle cx="12" cy="12" r="3.5" fill="var(--cyan)"/>
-            <line x1="12" y1="5.5" x2="12" y2="8.5" stroke="var(--cyan)" strokeWidth="1.2" opacity="0.4"/>
-            <line x1="12" y1="15.5" x2="12" y2="18.5" stroke="var(--cyan)" strokeWidth="1.2" opacity="0.4"/>
-            <line x1="5.5" y1="8.5" x2="8.5" y2="10" stroke="var(--cyan)" strokeWidth="1.2" opacity="0.4"/>
-            <line x1="15.5" y1="14" x2="18.5" y2="15.5" stroke="var(--cyan)" strokeWidth="1.2" opacity="0.4"/>
+            <polygon points="12,2 22,7.5 22,16.5 12,22 2,16.5 2,7.5" stroke="var(--accent)" strokeWidth="1.5" fill="rgba(232,165,52,0.07)"/>
+            <circle cx="12" cy="12" r="3.5" fill="var(--accent)"/>
+            <line x1="12" y1="5.5" x2="12" y2="8.5" stroke="var(--accent)" strokeWidth="1.2" opacity="0.4"/>
+            <line x1="12" y1="15.5" x2="12" y2="18.5" stroke="var(--accent)" strokeWidth="1.2" opacity="0.4"/>
+            <line x1="5.5" y1="8.5" x2="8.5" y2="10" stroke="var(--accent)" strokeWidth="1.2" opacity="0.4"/>
+            <line x1="15.5" y1="14" x2="18.5" y2="15.5" stroke="var(--accent)" strokeWidth="1.2" opacity="0.4"/>
           </svg>
           <span style={{ fontFamily: 'var(--mono)', fontSize: '15px', fontWeight: 600, letterSpacing: '0.08em', color: '#fff' }}>
-            CHAIN<span style={{ color: 'var(--cyan)' }}>INTEL</span>
+            CHAIN<span style={{ color: 'var(--accent)' }}>INTEL</span>
           </span>
         </div>
 
@@ -152,7 +152,7 @@ export default function PromoPage() {
             fontSize: '10px',
             letterSpacing: '0.08em',
             color: 'var(--bg)',
-            background: 'var(--cyan)',
+            background: 'var(--accent)',
             textDecoration: 'none',
             padding: '8px 20px',
             borderRadius: '3px',
@@ -190,7 +190,7 @@ export default function PromoPage() {
             transform: 'translateX(-50%)',
             width: '900px',
             height: '500px',
-            background: 'radial-gradient(ellipse, rgba(0,212,170,0.12) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse, rgba(232,165,52,0.12) 0%, transparent 70%)',
           }} />
           {/* Blue accent */}
           <div style={{
@@ -199,15 +199,15 @@ export default function PromoPage() {
             right: '-10%',
             width: '600px',
             height: '600px',
-            background: 'radial-gradient(ellipse, rgba(59,130,246,0.08) 0%, transparent 70%)',
+            background: 'radial-gradient(ellipse, rgba(107,138,255,0.08) 0%, transparent 70%)',
           }} />
           {/* Grid */}
           <div style={{
             position: 'absolute',
             inset: 0,
             backgroundImage: `
-              linear-gradient(rgba(0,212,170,0.035) 1px, transparent 1px),
-              linear-gradient(90deg, rgba(0,212,170,0.035) 1px, transparent 1px)
+              linear-gradient(rgba(232,165,52,0.035) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(232,165,52,0.035) 1px, transparent 1px)
             `,
             backgroundSize: '80px 80px',
           }} />
@@ -238,7 +238,7 @@ export default function PromoPage() {
           fontFamily: 'var(--mono)',
           fontSize: '10px',
           letterSpacing: '0.18em',
-          color: 'var(--cyan)',
+          color: 'var(--accent)',
           textTransform: 'uppercase',
           marginBottom: '28px',
           padding: '7px 18px',
@@ -247,7 +247,7 @@ export default function PromoPage() {
           background: 'var(--cyan-dim)',
           position: 'relative',
         }}>
-          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--cyan)', display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
+          <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
           Perplexity Billion Dollar Build 2026
         </div>
 
@@ -267,7 +267,7 @@ export default function PromoPage() {
           The Bloomberg Terminal
           <br />
           <span style={{
-            background: 'linear-gradient(135deg, var(--cyan) 0%, var(--blue) 100%)',
+            background: 'linear-gradient(135deg, var(--accent) 0%, var(--blue) 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -322,12 +322,12 @@ export default function PromoPage() {
           }}>VS</div>
           <div style={{
             padding: '18px 28px',
-            background: 'rgba(0,212,170,0.08)',
-            border: '1px solid rgba(0,212,170,0.25)',
+            background: 'rgba(232,165,52,0.08)',
+            border: '1px solid rgba(232,165,52,0.25)',
             borderRadius: '0 4px 4px 0',
             textAlign: 'center',
           }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: '28px', fontWeight: 700, color: 'var(--cyan)', letterSpacing: '-0.02em', lineHeight: 1 }}>$0</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '28px', fontWeight: 700, color: 'var(--accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>$0</div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginTop: '4px' }}>ChainIntel (Free)</div>
           </div>
         </div>
@@ -337,7 +337,7 @@ export default function PromoPage() {
           <a href="/" style={{
             display: 'inline-block',
             padding: '18px 44px',
-            background: 'linear-gradient(135deg, var(--cyan) 0%, #00b896 100%)',
+            background: 'linear-gradient(135deg, var(--accent) 0%, #00b896 100%)',
             color: 'var(--bg)',
             textDecoration: 'none',
             borderRadius: '4px',
@@ -346,7 +346,7 @@ export default function PromoPage() {
             fontWeight: 700,
             letterSpacing: '0.1em',
             textTransform: 'uppercase',
-            boxShadow: '0 0 40px rgba(0,212,170,0.2), 0 0 80px rgba(0,212,170,0.08)',
+            boxShadow: '0 0 40px rgba(232,165,52,0.2), 0 0 80px rgba(232,165,52,0.08)',
           }}>
             Launch Terminal — Free
           </a>
@@ -354,7 +354,7 @@ export default function PromoPage() {
             display: 'inline-block',
             padding: '18px 44px',
             background: 'transparent',
-            color: 'var(--cyan)',
+            color: 'var(--accent)',
             textDecoration: 'none',
             borderRadius: '4px',
             fontFamily: 'var(--mono)',
@@ -380,9 +380,9 @@ export default function PromoPage() {
           gap: '8px',
           opacity: 0.5,
         }}>
-          <div style={{ width: '1px', height: '48px', background: 'linear-gradient(to bottom, transparent, var(--cyan))' }} />
+          <div style={{ width: '1px', height: '48px', background: 'linear-gradient(to bottom, transparent, var(--accent))' }} />
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <path d="M1 4L6 9L11 4" stroke="var(--cyan)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M1 4L6 9L11 4" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
       </section>
@@ -408,7 +408,7 @@ export default function PromoPage() {
                 fontFamily: 'var(--mono)',
                 fontSize: 'clamp(40px, 6vw, 64px)',
                 fontWeight: 700,
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
                 letterSpacing: '-0.03em',
                 lineHeight: 1,
                 marginBottom: '8px',
@@ -441,7 +441,7 @@ export default function PromoPage() {
               display: 'inline-block',
               fontFamily: 'var(--mono)',
               fontSize: '10px',
-              color: 'var(--cyan)',
+              color: 'var(--accent)',
               letterSpacing: '0.18em',
               textTransform: 'uppercase',
               marginBottom: '16px',
@@ -532,11 +532,11 @@ export default function PromoPage() {
       }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
               Verified Data Infrastructure
             </div>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '16px' }}>
-              <span style={{ color: 'var(--cyan)' }}>89</span> verified sources.<br />
+              <span style={{ color: 'var(--accent)' }}>89</span> verified sources.<br />
               Zero black boxes.
             </h2>
             <p style={{ fontSize: '18px', color: 'var(--text2)', maxWidth: '480px', margin: '0 auto', lineHeight: 1.6 }}>
@@ -574,7 +574,7 @@ export default function PromoPage() {
               background: 'var(--cyan-dim)',
               fontFamily: 'var(--mono)',
               fontSize: '11px',
-              color: 'var(--cyan)',
+              color: 'var(--accent)',
               letterSpacing: '0.06em',
             }}>
               +65 more verified sources
@@ -592,11 +592,11 @@ export default function PromoPage() {
             flexWrap: 'wrap',
           }}>
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <path d="M14 3L25 8.5V14C25 19.5 20.5 24.5 14 26C7.5 24.5 3 19.5 3 14V8.5L14 3Z" stroke="var(--cyan)" strokeWidth="1.5" fill="rgba(0,212,170,0.08)"/>
-              <path d="M9 14L12.5 17.5L19 11" stroke="var(--cyan)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M14 3L25 8.5V14C25 19.5 20.5 24.5 14 26C7.5 24.5 3 19.5 3 14V8.5L14 3Z" stroke="var(--accent)" strokeWidth="1.5" fill="rgba(232,165,52,0.08)"/>
+              <path d="M9 14L12.5 17.5L19 11" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--cyan)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '4px' }}>
                 Our Verification Standard
               </div>
               <div style={{ fontSize: '14px', color: 'var(--text2)', lineHeight: 1.5 }}>
@@ -614,12 +614,12 @@ export default function PromoPage() {
       }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
               Why Switch
             </div>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
               Built for crypto.<br />
-              <span style={{ color: 'var(--cyan)' }}>Not retrofitted</span> for it.
+              <span style={{ color: 'var(--accent)' }}>Not retrofitted</span> for it.
             </h2>
           </div>
 
@@ -645,9 +645,9 @@ export default function PromoPage() {
               },
               {
                 label: 'ChainIntel Terminal',
-                color: 'var(--cyan)',
-                bgColor: 'rgba(0,212,170,0.04)',
-                borderColor: 'rgba(0,212,170,0.2)',
+                color: 'var(--accent)',
+                bgColor: 'rgba(232,165,52,0.04)',
+                borderColor: 'rgba(232,165,52,0.2)',
                 items: [
                   'Free to start — Pro at $49/month',
                   'Full on-chain suite (MVRV, NVT, flows)',
@@ -700,7 +700,7 @@ export default function PromoPage() {
       }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
               Transparent Pricing
             </div>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 5vw, 52px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.1, marginBottom: '16px' }}>
@@ -727,7 +727,7 @@ export default function PromoPage() {
                 tier: 'PRO',
                 price: '$49',
                 period: '/month',
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
                 highlight: true,
                 items: ['All Free features', 'Full on-chain suite', 'Whale tracking', 'ISO 20022 monitor', 'AI morning briefs', 'Full derivatives'],
                 cta: 'Subscribe Now',
@@ -748,7 +748,7 @@ export default function PromoPage() {
                 padding: '32px 24px',
                 border: `1px solid ${plan.highlight ? 'var(--cyan-border)' : 'var(--b3)'}`,
                 borderRadius: '6px',
-                background: plan.highlight ? 'rgba(0,212,170,0.04)' : 'var(--s2)',
+                background: plan.highlight ? 'rgba(232,165,52,0.04)' : 'var(--s2)',
                 position: 'relative',
                 textAlign: 'center',
                 display: 'flex',
@@ -761,7 +761,7 @@ export default function PromoPage() {
                     left: 0,
                     right: 0,
                     height: '3px',
-                    background: 'linear-gradient(90deg, var(--cyan), var(--blue))',
+                    background: 'linear-gradient(90deg, var(--accent), var(--blue))',
                     borderRadius: '6px 6px 0 0',
                   }} />
                 )}
@@ -787,7 +787,7 @@ export default function PromoPage() {
                   letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                   textDecoration: 'none',
-                  background: plan.highlight ? 'var(--cyan)' : 'transparent',
+                  background: plan.highlight ? 'var(--accent)' : 'transparent',
                   color: plan.highlight ? 'var(--bg)' : plan.color,
                   border: plan.highlight ? 'none' : `1px solid ${plan.color}50`,
                 }}>
@@ -806,7 +806,7 @@ export default function PromoPage() {
             letterSpacing: '0.06em',
           }}>
             Bloomberg Terminal costs $24,000/year. ChainIntel Pro: $588/year.{' '}
-            <span style={{ color: 'var(--cyan)' }}>Save $23,412 annually.</span>
+            <span style={{ color: 'var(--accent)' }}>Save $23,412 annually.</span>
           </div>
         </div>
       </section>
@@ -817,22 +817,22 @@ export default function PromoPage() {
         borderTop: '1px solid var(--b2)',
         position: 'relative',
         overflow: 'hidden',
-        background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(0,212,170,0.07) 0%, transparent 70%)',
+        background: 'radial-gradient(ellipse 80% 60% at 50% 50%, rgba(232,165,52,0.07) 0%, transparent 70%)',
       }}>
         {/* Grid */}
         <div style={{
           position: 'absolute',
           inset: 0,
           backgroundImage: `
-            linear-gradient(rgba(0,212,170,0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0,212,170,0.03) 1px, transparent 1px)
+            linear-gradient(rgba(232,165,52,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(232,165,52,0.03) 1px, transparent 1px)
           `,
           backgroundSize: '60px 60px',
           pointerEvents: 'none',
         }} />
 
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center', position: 'relative' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
             Join the Waitlist
           </div>
           <h2 style={{
@@ -845,7 +845,7 @@ export default function PromoPage() {
             marginBottom: '16px',
           }}>
             Be first when<br />
-            <span style={{ color: 'var(--cyan)' }}>Pro features drop.</span>
+            <span style={{ color: 'var(--accent)' }}>Pro features drop.</span>
           </h2>
           <p style={{ fontSize: '17px', color: 'var(--text2)', lineHeight: 1.6, marginBottom: '40px' }}>
             Get notified when new intelligence modules, AI features, and institutional tools go live. No spam — only signal.
@@ -862,11 +862,11 @@ export default function PromoPage() {
               gap: '16px',
             }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="var(--cyan)" strokeWidth="1.5"/>
-                <path d="M8 12L11 15L16 9" stroke="var(--cyan)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <circle cx="12" cy="12" r="10" stroke="var(--accent)" strokeWidth="1.5"/>
+                <path d="M8 12L11 15L16 9" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <div style={{ textAlign: 'left' }}>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--cyan)', marginBottom: '4px' }}>You&apos;re on the list.</div>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '13px', color: 'var(--accent)', marginBottom: '4px' }}>You&apos;re on the list.</div>
                 <div style={{ fontSize: '13px', color: 'var(--text2)' }}>We&apos;ll notify you at <strong>{email}</strong> when new features drop.</div>
               </div>
             </div>
@@ -900,7 +900,7 @@ export default function PromoPage() {
                   disabled={loading}
                   style={{
                     padding: '16px 32px',
-                    background: loading ? 'var(--s3)' : 'var(--cyan)',
+                    background: loading ? 'var(--s3)' : 'var(--accent)',
                     color: 'var(--bg)',
                     border: 'none',
                     borderRadius: '4px',
@@ -927,7 +927,7 @@ export default function PromoPage() {
             <a href={STRIPE_PRO} target="_blank" rel="noopener" style={{
               display: 'inline-block',
               padding: '14px 32px',
-              background: 'linear-gradient(135deg, var(--cyan), #00b896)',
+              background: 'linear-gradient(135deg, var(--accent), #00b896)',
               color: 'var(--bg)',
               textDecoration: 'none',
               borderRadius: '4px',
@@ -950,7 +950,7 @@ export default function PromoPage() {
               fontSize: '12px',
               letterSpacing: '0.1em',
               textTransform: 'uppercase',
-              border: '1px solid rgba(59,130,246,0.3)',
+              border: '1px solid rgba(107,138,255,0.3)',
             }}>
               Enterprise — $499/mo
             </a>

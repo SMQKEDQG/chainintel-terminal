@@ -36,7 +36,7 @@ function FadeIn({ children, delay = 0, style = {} }: { children: React.ReactNode
   );
 }
 
-function SectionLabel({ children, color = 'var(--cyan)' }: { children: React.ReactNode; color?: string }) {
+function SectionLabel({ children, color = 'var(--accent)' }: { children: React.ReactNode; color?: string }) {
   return (
     <div style={{
       display: 'flex',
@@ -61,8 +61,8 @@ function PullQuote({ children, author }: { children: React.ReactNode; author?: s
       <blockquote style={{
         margin: '48px 0',
         padding: '28px 36px',
-        borderLeft: '3px solid var(--cyan)',
-        background: 'rgba(0,212,170,0.04)',
+        borderLeft: '3px solid var(--accent)',
+        background: 'rgba(232,165,52,0.04)',
         borderRadius: '0 4px 4px 0',
       }}>
         <p style={{
@@ -94,7 +94,7 @@ function PullQuote({ children, author }: { children: React.ReactNode; author?: s
   );
 }
 
-function DataCallout({ value, label, sub, color = 'var(--cyan)' }: { value: string; label: string; sub?: string; color?: string }) {
+function DataCallout({ value, label, sub, color = 'var(--accent)' }: { value: string; label: string; sub?: string; color?: string }) {
   return (
     <FadeIn>
       <div style={{
@@ -172,13 +172,13 @@ export default function WhyChainIntelPage() {
         left: 0,
         right: 0,
         height: '3px',
-        background: 'rgba(0,212,170,0.1)',
+        background: 'rgba(232,165,52,0.1)',
         zIndex: 200,
       }}>
         <div style={{
           height: '100%',
           width: `${readProgress}%`,
-          background: 'linear-gradient(90deg, var(--cyan), var(--blue))',
+          background: 'linear-gradient(90deg, var(--accent), var(--blue))',
           transition: 'width 0.1s',
         }} />
       </div>
@@ -192,7 +192,7 @@ export default function WhyChainIntelPage() {
         zIndex: 100,
         background: 'rgba(8,13,22,0.94)',
         backdropFilter: 'blur(16px)',
-        borderBottom: '1px solid rgba(0,212,170,0.08)',
+        borderBottom: '1px solid rgba(232,165,52,0.08)',
         display: 'flex',
         alignItems: 'center',
         padding: '0 clamp(16px, 4vw, 48px)',
@@ -221,11 +221,11 @@ export default function WhyChainIntelPage() {
         {/* Logo */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}>
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-label="ChainIntel">
-            <polygon points="10,2 18,6.5 18,13.5 10,18 2,13.5 2,6.5" stroke="var(--cyan)" strokeWidth="1.5" fill="rgba(0,212,170,0.07)"/>
-            <circle cx="10" cy="10" r="3" fill="var(--cyan)"/>
+            <polygon points="10,2 18,6.5 18,13.5 10,18 2,13.5 2,6.5" stroke="var(--accent)" strokeWidth="1.5" fill="rgba(232,165,52,0.07)"/>
+            <circle cx="10" cy="10" r="3" fill="var(--accent)"/>
           </svg>
           <span style={{ fontFamily: 'var(--mono)', fontSize: '13px', fontWeight: 600, letterSpacing: '0.08em', color: '#fff' }}>
-            CHAIN<span style={{ color: 'var(--cyan)' }}>INTEL</span>
+            CHAIN<span style={{ color: 'var(--accent)' }}>INTEL</span>
           </span>
         </div>
 
@@ -237,7 +237,7 @@ export default function WhyChainIntelPage() {
             fontFamily: 'var(--mono)',
             fontSize: '10px',
             letterSpacing: '0.08em',
-            color: 'var(--cyan)',
+            color: 'var(--accent)',
             textDecoration: 'none',
             border: '1px solid var(--cyan-border)',
             padding: '7px 16px',
@@ -266,7 +266,7 @@ export default function WhyChainIntelPage() {
             fontFamily: 'var(--mono)',
             fontSize: '10px',
             letterSpacing: '0.18em',
-            color: 'var(--cyan)',
+            color: 'var(--accent)',
             textTransform: 'uppercase',
             marginBottom: '28px',
             padding: '6px 14px',
@@ -274,7 +274,7 @@ export default function WhyChainIntelPage() {
             borderRadius: '2px',
             background: 'var(--cyan-dim)',
           }}>
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--cyan)', display: 'inline-block' }} />
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
             Editorial · ChainIntel Intelligence
           </div>
 
@@ -308,7 +308,7 @@ export default function WhyChainIntelPage() {
                 width: '32px',
                 height: '32px',
                 borderRadius: '50%',
-                background: 'linear-gradient(135deg, var(--cyan), var(--blue))',
+                background: 'linear-gradient(135deg, var(--accent), var(--blue))',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -326,7 +326,7 @@ export default function WhyChainIntelPage() {
             <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.06em' }}>12 min read</div>
             <div style={{ height: '20px', width: '1px', background: 'var(--b3)' }} />
             <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', letterSpacing: '0.06em' }}>
-              <span style={{ color: 'var(--cyan)' }}>v5.18</span> · terminal intelligence
+              <span style={{ color: 'var(--accent)' }}>v5.18</span> · terminal intelligence
             </div>
           </div>
         </div>
@@ -415,7 +415,7 @@ export default function WhyChainIntelPage() {
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '12px' }}>
                 {[
-                  { domain: 'On-Chain Analytics', tools: 'Glassnode, CryptoQuant, IntoTheBlock', color: 'var(--cyan)' },
+                  { domain: 'On-Chain Analytics', tools: 'Glassnode, CryptoQuant, IntoTheBlock', color: 'var(--accent)' },
                   { domain: 'DeFi Intelligence', tools: 'DefiLlama, DeFi Pulse, Dune Analytics', color: 'var(--purple)' },
                   { domain: 'ETF & Institutional', tools: 'CoinShares, Bloomberg (TradFi only)', color: 'var(--gold)' },
                   { domain: 'Regulatory Signals', tools: 'SEC EDGAR, CFTC (scattered)', color: 'var(--orange)' },
@@ -436,7 +436,7 @@ export default function WhyChainIntelPage() {
                   </div>
                 ))}
               </div>
-              <div style={{ marginTop: '16px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--cyan)', letterSpacing: '0.06em' }}>
+              <div style={{ marginTop: '16px', fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', letterSpacing: '0.06em' }}>
                 ChainIntel is the first terminal to unify all six domains in one interface.
               </div>
             </div>
@@ -461,13 +461,13 @@ export default function WhyChainIntelPage() {
           <FadeIn delay={100}>
             <div style={{
               padding: '28px 32px',
-              border: '1px solid rgba(0,212,170,0.2)',
+              border: '1px solid rgba(232,165,52,0.2)',
               borderRadius: '4px',
-              background: 'rgba(0,212,170,0.04)',
+              background: 'rgba(232,165,52,0.04)',
               marginBottom: '24px',
-              borderLeft: '3px solid var(--cyan)',
+              borderLeft: '3px solid var(--accent)',
             }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '10px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: '10px' }}>
                 Catalyst 01 — ISO 20022 Migration Complete
               </div>
               <p style={{ fontSize: '16px', color: 'var(--text2)', lineHeight: 1.65, margin: 0 }}>
@@ -479,9 +479,9 @@ export default function WhyChainIntelPage() {
           <FadeIn delay={150}>
             <div style={{
               padding: '28px 32px',
-              border: '1px solid rgba(59,130,246,0.2)',
+              border: '1px solid rgba(107,138,255,0.2)',
               borderRadius: '4px',
-              background: 'rgba(59,130,246,0.04)',
+              background: 'rgba(107,138,255,0.04)',
               marginBottom: '24px',
               borderLeft: '3px solid var(--blue)',
             }}>
@@ -593,10 +593,10 @@ export default function WhyChainIntelPage() {
                 borderRadius: '4px',
                 background: 'var(--cyan-dim)',
               }}>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '12px' }}>
                   ChainIntel Access
                 </div>
-                <div style={{ fontFamily: 'var(--mono)', fontSize: '28px', fontWeight: 700, color: 'var(--cyan)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
+                <div style={{ fontFamily: 'var(--mono)', fontSize: '28px', fontWeight: 700, color: 'var(--accent)', marginBottom: '8px', letterSpacing: '-0.02em' }}>
                   $0 → $49/mo
                 </div>
                 <div style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.5 }}>
@@ -687,7 +687,7 @@ export default function WhyChainIntelPage() {
               padding: '40px',
               border: '1px solid var(--cyan-border)',
               borderRadius: '6px',
-              background: 'rgba(0,212,170,0.04)',
+              background: 'rgba(232,165,52,0.04)',
               position: 'relative',
               overflow: 'hidden',
             }}>
@@ -697,9 +697,9 @@ export default function WhyChainIntelPage() {
                 left: 0,
                 right: 0,
                 height: '2px',
-                background: 'linear-gradient(90deg, var(--cyan), var(--blue))',
+                background: 'linear-gradient(90deg, var(--accent), var(--blue))',
               }} />
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.18em', textTransform: 'uppercase', marginBottom: '16px' }}>
                 Ready to Start
               </div>
               <h3 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(22px, 3vw, 32px)', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em', lineHeight: 1.2, marginBottom: '16px' }}>
@@ -712,7 +712,7 @@ export default function WhyChainIntelPage() {
                 <a href="/" style={{
                   display: 'inline-block',
                   padding: '14px 32px',
-                  background: 'var(--cyan)',
+                  background: 'var(--accent)',
                   color: 'var(--bg)',
                   textDecoration: 'none',
                   borderRadius: '4px',
@@ -728,7 +728,7 @@ export default function WhyChainIntelPage() {
                   display: 'inline-block',
                   padding: '14px 32px',
                   background: 'transparent',
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                   textDecoration: 'none',
                   borderRadius: '4px',
                   fontFamily: 'var(--mono)',
@@ -796,12 +796,12 @@ export default function WhyChainIntelPage() {
               Key Numbers
             </div>
             {[
-              { label: 'Data Sources', value: '89', color: 'var(--cyan)' },
+              { label: 'Data Sources', value: '89', color: 'var(--accent)' },
               { label: 'Asset Coverage', value: '500+', color: 'var(--blue)' },
               { label: 'Intel Modules', value: '12', color: 'var(--green)' },
               { label: 'Bloomberg Cost', value: '$24K/yr', color: 'var(--red)' },
-              { label: 'ChainIntel Free', value: '$0/mo', color: 'var(--cyan)' },
-              { label: 'ChainIntel Pro', value: '$49/mo', color: 'var(--cyan)' },
+              { label: 'ChainIntel Free', value: '$0/mo', color: 'var(--accent)' },
+              { label: 'ChainIntel Pro', value: '$49/mo', color: 'var(--accent)' },
               { label: 'Price Difference', value: '40x', color: 'var(--gold)' },
             ].map(stat => (
               <div key={stat.label} style={{
@@ -828,10 +828,10 @@ export default function WhyChainIntelPage() {
               Explore
             </div>
             {[
-              { label: 'View Pitch Deck', href: '/deck', color: 'var(--cyan)' },
+              { label: 'View Pitch Deck', href: '/deck', color: 'var(--accent)' },
               { label: 'See All Features', href: '/promo', color: 'var(--blue)' },
               { label: 'Launch Terminal', href: '/', color: 'var(--green)' },
-              { label: 'Pro — $49/mo', href: STRIPE_PRO, color: 'var(--cyan)', external: true },
+              { label: 'Pro — $49/mo', href: STRIPE_PRO, color: 'var(--accent)', external: true },
             ].map(link => (
               <a key={link.label} href={link.href} target={link.external ? '_blank' : undefined} rel={link.external ? 'noopener' : undefined} style={{
                 display: 'flex',

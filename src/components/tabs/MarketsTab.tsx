@@ -215,8 +215,8 @@ export default function MarketsTab() {
             ⚠ {error} · Showing {coins.length} assets
           </span>
           <button onClick={handleRetry} style={{
-            fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)', background: 'none',
-            border: '1px solid var(--cyan)', padding: '3px 8px', cursor: 'pointer', letterSpacing: '0.08em',
+            fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', background: 'none',
+            border: '1px solid var(--accent)', padding: '3px 8px', cursor: 'pointer', letterSpacing: '0.08em',
           }}>
             RETRY
           </button>
@@ -236,7 +236,7 @@ export default function MarketsTab() {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
         <div className="panel" style={{ padding: '10px 14px' }}>
           <div className="oc-lbl">Total Market Cap</div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: 'var(--cyan)' }}>{formatMcap(totalMcap)}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: 'var(--accent)' }}>{formatMcap(totalMcap)}</div>
         </div>
         <div className="panel" style={{ padding: '10px 14px' }}>
           <div className="oc-lbl">24h Volume (Top 100)</div>
@@ -286,7 +286,7 @@ export default function MarketsTab() {
                 const sig = getSignal(c.price_change_percentage_24h);
                 return (
                   <tr key={c.id} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
                       onMouseLeave={e => (e.currentTarget.style.background = '')}>
                     <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 9 }}>{c.market_cap_rank}</td>
                     <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -317,7 +317,7 @@ export default function MarketsTab() {
 
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-          <span style={{ color: 'var(--cyan)', fontFamily: 'var(--mono)', fontSize: 9, flexShrink: 0 }}>⬡ CI·AI</span>
+          <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 9, flexShrink: 0 }}>⬡ CI·AI</span>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
             Market breadth analysis: {gainers} of {coins.length} assets positive in 24h. BTC dominance {coins.length > 0 ? ((coins[0]?.market_cap / totalMcap) * 100).toFixed(1) : '—'}% — capital rotating to safety.
             {dataSource === 'fallback' && <span style={{ color: 'var(--gold)' }}> Data may be delayed — live feed will resume when API is available.</span>}

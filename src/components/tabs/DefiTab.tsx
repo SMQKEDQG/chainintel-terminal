@@ -136,10 +136,10 @@ const FALLBACK: DefiData = {
   ],
   tvlHistory: [],
   stablecoins: [
-    { label: 'USDT', value: 116.2, color: '#00d4aa' },
-    { label: 'USDC', value: 44.8, color: '#3b82f6' },
-    { label: 'DAI', value: 5.3, color: '#f0c040' },
-    { label: 'FDUSD', value: 3.8, color: '#10b981' },
+    { label: 'USDT', value: 116.2, color: '#E8A534' },
+    { label: 'USDC', value: 44.8, color: '#6B8AFF' },
+    { label: 'DAI', value: 5.3, color: '#A78BFA' },
+    { label: 'FDUSD', value: 3.8, color: '#34D399' },
     { label: 'Others', value: 11.2, color: '#4a6a8c' },
   ],
 };
@@ -207,8 +207,8 @@ function TvlLineChart({ data }: { data: TvlPoint[] }) {
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="none">
       <defs>
         <linearGradient id="tvlGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#00d4aa" stopOpacity="0.25" />
-          <stop offset="100%" stopColor="#00d4aa" stopOpacity="0.01" />
+          <stop offset="0%" stopColor="#E8A534" stopOpacity="0.25" />
+          <stop offset="100%" stopColor="#E8A534" stopOpacity="0.01" />
         </linearGradient>
       </defs>
 
@@ -229,7 +229,7 @@ function TvlLineChart({ data }: { data: TvlPoint[] }) {
       <path d={fillD} fill="url(#tvlGrad)" />
 
       {/* Line */}
-      <path d={pathD} fill="none" stroke="#00d4aa" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d={pathD} fill="none" stroke="#E8A534" strokeWidth="1.5" strokeLinejoin="round" />
 
       {/* X axis ticks */}
       {uniqueXTicks.map((idx) => {
@@ -450,7 +450,7 @@ export default function DefiTab() {
             (a: Stablecoin, b: Stablecoin) => (b.circulating?.peggedUSD || 0) - (a.circulating?.peggedUSD || 0)
           );
 
-          const COLORS = ['#00d4aa', '#3b82f6', '#f0c040', '#10b981', '#a855f7', '#f97316'];
+          const COLORS = ['#E8A534', '#6B8AFF', '#34D399', '#A78BFA', '#FB923C', '#F87171'];
           const TOP_SYMBOLS = ['USDT', 'USDC', 'FDUSD', 'DAI', 'USDS', 'PYUSD'];
           const topCoins = sorted.filter((c: Stablecoin) => TOP_SYMBOLS.includes(c.symbol)).slice(0, 4);
           const topSet = new Set(topCoins.map((c: Stablecoin) => c.id));
@@ -657,7 +657,7 @@ export default function DefiTab() {
                       <div className="defi-rank">{p.rank}</div>
                       <div className="defi-name">
                         <div className="defi-pname">
-                          <a href={p.url} target="_blank" rel="noreferrer" style={{ color: 'var(--cyan)', textDecoration: 'none' }}>{p.name}</a>
+                          <a href={p.url} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', textDecoration: 'none' }}>{p.name}</a>
                         </div>
                         <div className="defi-pcat">{p.cat}</div>
                       </div>
@@ -710,7 +710,7 @@ export default function DefiTab() {
         <div className="g5">
           <div className="kpi">
             <div className="kpi-label">RLUSD Price</div>
-            <div className="kpi-val" style={{ color: 'var(--cyan)' }}>
+            <div className="kpi-val" style={{ color: 'var(--accent)' }}>
               {rlusdLoading ? <PulseBox height="20px" /> : `$${(rlusd?.price ?? 1.0).toFixed(4)}`}
             </div>
             <div className={`kpi-chg ${(rlusd?.pegDeviation ?? 0) < 0.1 ? 'up' : 'dn'}`}>
@@ -771,7 +771,7 @@ export default function DefiTab() {
                 <div key={r.type} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', flex: '0 0 160px' }}>{r.type}</span>
                   <div style={{ flex: 1, height: '8px', background: 'var(--s3)', borderRadius: '1px', overflow: 'hidden' }}>
-                    <div style={{ width: `${r.pct}%`, height: '100%', background: r.pct > 50 ? 'var(--cyan)' : r.pct > 10 ? 'var(--blue)' : 'var(--gold)', borderRadius: '1px', transition: 'width 0.6s ease' }} />
+                    <div style={{ width: `${r.pct}%`, height: '100%', background: r.pct > 50 ? 'var(--accent)' : r.pct > 10 ? 'var(--blue)' : 'var(--gold)', borderRadius: '1px', transition: 'width 0.6s ease' }} />
                   </div>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)', flex: '0 0 35px', textAlign: 'right' }}>{r.pct}%</span>
                 </div>
@@ -785,7 +785,7 @@ export default function DefiTab() {
                 <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', flex: '0 0 160px' }}>{c.name}</span>
                   <div style={{ flex: 1, height: '8px', background: 'var(--s3)', borderRadius: '1px', overflow: 'hidden' }}>
-                    <div style={{ width: `${c.share}%`, height: '100%', background: c.name === 'XRP Ledger' ? 'var(--cyan)' : 'var(--blue)', borderRadius: '1px', transition: 'width 0.6s ease' }} />
+                    <div style={{ width: `${c.share}%`, height: '100%', background: c.name === 'XRP Ledger' ? 'var(--accent)' : 'var(--blue)', borderRadius: '1px', transition: 'width 0.6s ease' }} />
                   </div>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)', flex: '0 0 35px', textAlign: 'right' }}>{c.share}%</span>
                 </div>
@@ -820,7 +820,7 @@ export default function DefiTab() {
                 {[
                   { label: 'Issuer', value: 'Ripple Labs Inc.', color: 'var(--text)' },
                   { label: 'Backed By', value: '1:1 USD reserves (deposits + T-bills)', color: 'var(--green)' },
-                  { label: 'Networks', value: 'XRP Ledger + Ethereum', color: 'var(--cyan)' },
+                  { label: 'Networks', value: 'XRP Ledger + Ethereum', color: 'var(--accent)' },
                   { label: 'Regulatory', value: 'NYDFS-regulated stablecoin', color: 'var(--gold)' },
                   { label: 'Launch', value: 'December 2024', color: 'var(--text2)' },
                   { label: 'Competitors', value: 'USDT, USDC, PYUSD', color: 'var(--text2)' },
@@ -846,7 +846,7 @@ export default function DefiTab() {
         <div className="g5">
           <div className="kpi">
             <div className="kpi-label">Total RWA Value</div>
-            <div className="kpi-val" style={{ color: 'var(--cyan)' }}>
+            <div className="kpi-val" style={{ color: 'var(--accent)' }}>
               {rwaLoading ? <PulseBox height="20px" /> : fmtBillions(rwa?.totalRwaValue ?? 29250000000)}
             </div>
             <div className="kpi-chg up">{rwaLoading ? '—' : `+${(rwa?.totalRwaChange30d ?? 7.99).toFixed(1)}% 30d`}</div>
@@ -941,7 +941,7 @@ export default function DefiTab() {
                     <div key={ch.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
                       <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)', flex: '0 0 80px' }}>{ch.name}</span>
                       <div style={{ flex: 1, height: '7px', background: 'var(--s3)', borderRadius: '1px', overflow: 'hidden' }}>
-                        <div style={{ width: `${ch.share}%`, height: '100%', background: 'var(--cyan)', borderRadius: '1px', opacity: Math.max(0.3, ch.share / 60), transition: 'width 0.6s ease' }} />
+                        <div style={{ width: `${ch.share}%`, height: '100%', background: 'var(--accent)', borderRadius: '1px', opacity: Math.max(0.3, ch.share / 60), transition: 'width 0.6s ease' }} />
                       </div>
                       <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text)', flex: '0 0 50px', textAlign: 'right' }}>{fmtBillions(ch.rwaValue)}</span>
                       <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', flex: '0 0 35px', textAlign: 'right' }}>{ch.share.toFixed(1)}%</span>
@@ -968,7 +968,7 @@ export default function DefiTab() {
                         <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)' }}>{p.ticker}</div>
                         <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>{p.issuer}</div>
                       </div>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--cyan)', textAlign: 'right' }}>{fmtBillions(p.value)}</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--accent)', textAlign: 'right' }}>{fmtBillions(p.value)}</span>
                       {p.apy > 0 && (
                         <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--gold)', width: '40px', textAlign: 'right' }}>{p.apy.toFixed(2)}%</span>
                       )}
@@ -1026,7 +1026,7 @@ export default function DefiTab() {
           </div>
           <div className="ai-text">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span><span><strong>DeFi TVL at {fmtBillions(d.totalTvl)}</strong> — Ethereum holds {ethShare}% share. Stablecoin supply at {fmtBillions(d.stablecoinSupply)} represents dry powder waiting to deploy.</span></div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>▸</span><span><strong>DeFi TVL at {fmtBillions(d.totalTvl)}</strong> — Ethereum holds {ethShare}% share. Stablecoin supply at {fmtBillions(d.stablecoinSupply)} represents dry powder waiting to deploy.</span></div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--green)', flexShrink: 0 }}>▸</span><span><strong>RWA market at {fmtBillions(rwa?.totalRwaValue ?? 29250000000)} (+{(rwa?.totalRwaChange30d ?? 7.99).toFixed(1)}% 30d)</strong> — tokenized Treasuries dominate at {fmtBillions(rwa?.assetClasses?.[0]?.value ?? 13530000000)}, averaging {(rwa?.treasuryAvgApy ?? 3.34).toFixed(2)}% APY. BlackRock BUIDL + Circle USYC + Ondo USDY hold $7B combined.</span></div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--gold)', flexShrink: 0 }}>▸</span><span><strong>RLUSD at {fmtBillions(rlusd?.marketCap ?? 1440000000)}</strong> — Ripple&apos;s NYDFS-regulated stablecoin on XRPL + Ethereum. 1:1 USD reserve-backed. Growing challenger to USDT/USDC dominance.</span></div>
               <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--blue)', flexShrink: 0 }}>▸</span><span><strong>Keyrock/Securitize forecast: $400B tokenized RWA by 2030</strong> — currently &lt;0.01% of $400T global addressable market. Treasury yield on-chain outperformed DeFi stablecoin rates 98% of Q1 2026 days.</span></div>

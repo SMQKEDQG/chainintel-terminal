@@ -60,11 +60,11 @@ const TAB_NAMES: Record<TabId, string> = {
 function TabLoadingFallback() {
   return (
     <div style={{ padding: '40px', textAlign: 'center' }}>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--cyan)', letterSpacing: '0.1em', marginBottom: '8px' }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', letterSpacing: '0.1em', marginBottom: '8px' }}>
         LOADING MODULE...
       </div>
       <div style={{ width: '120px', height: '2px', background: 'var(--b2)', margin: '0 auto', borderRadius: '1px', overflow: 'hidden' }}>
-        <div style={{ width: '40%', height: '100%', background: 'var(--cyan)', borderRadius: '1px', animation: 'shimmer 1.5s infinite ease-in-out' }} />
+        <div style={{ width: '40%', height: '100%', background: 'var(--accent)', borderRadius: '1px', animation: 'shimmer 1.5s infinite ease-in-out' }} />
       </div>
     </div>
   );

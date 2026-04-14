@@ -124,10 +124,10 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
           maxWidth: '90vw',
           maxHeight: '60vh',
           background: 'var(--s1)',
-          border: '1px solid var(--cyan)',
+          border: '1px solid var(--accent)',
           borderRadius: 6,
           zIndex: 100001,
-          boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0,212,170,0.1)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(232,165,52,0.1)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden',
@@ -135,7 +135,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
       >
         {/* Search input */}
         <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--b2)' }}>
-          <span style={{ color: 'var(--cyan)', fontSize: 14, fontWeight: 700 }}>⌘</span>
+          <span style={{ color: 'var(--accent)', fontSize: 14, fontWeight: 700 }}>⌘</span>
           <input
             ref={inputRef}
             value={query}
@@ -143,7 +143,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
             onKeyDown={handleKeyDown}
             placeholder="Search commands, navigate tabs..."
             className="flex-1 bg-transparent outline-none font-mono text-[11px]"
-            style={{ color: 'var(--text)', caretColor: 'var(--cyan)' }}
+            style={{ color: 'var(--text)', caretColor: 'var(--accent)' }}
             autoComplete="off"
             spellCheck={false}
           />
@@ -177,13 +177,13 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                       onMouseEnter={() => setSelectedIndex(idx)}
                       className="flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors"
                       style={{
-                        background: isSelected ? 'rgba(0,212,170,0.08)' : 'transparent',
-                        borderLeft: isSelected ? '2px solid var(--cyan)' : '2px solid transparent',
+                        background: isSelected ? 'rgba(232,165,52,0.08)' : 'transparent',
+                        borderLeft: isSelected ? '2px solid var(--accent)' : '2px solid transparent',
                       }}
                     >
                       <span style={{ fontSize: 14, width: 24, textAlign: 'center' }}>{item.icon}</span>
                       <div className="flex-1 min-w-0">
-                        <div className="font-mono text-[10px] font-semibold" style={{ color: isSelected ? 'var(--cyan)' : 'var(--text)' }}>
+                        <div className="font-mono text-[10px] font-semibold" style={{ color: isSelected ? 'var(--accent)' : 'var(--text)' }}>
                           {item.label}
                         </div>
                         <div className="font-mono text-[8px]" style={{ color: 'var(--muted)' }}>
@@ -191,7 +191,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
                         </div>
                       </div>
                       {isSelected && (
-                        <span className="font-mono text-[8px]" style={{ color: 'var(--cyan)' }}>↵</span>
+                        <span className="font-mono text-[8px]" style={{ color: 'var(--accent)' }}>↵</span>
                       )}
                     </div>
                   );
@@ -209,7 +209,7 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
           <span>↑↓ navigate</span>
           <span>↵ select</span>
           <span>ESC close</span>
-          <span style={{ marginLeft: 'auto', color: 'var(--cyan)', opacity: 0.5 }}>CHAININTEL</span>
+          <span style={{ marginLeft: 'auto', color: 'var(--accent)', opacity: 0.5 }}>CHAININTEL</span>
         </div>
       </div>
     </>

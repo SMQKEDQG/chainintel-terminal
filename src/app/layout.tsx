@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono, Inter } from 'next/font/google';
+import { JetBrains_Mono, Space_Grotesk } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth-context';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import './globals.css';
@@ -11,10 +11,10 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   variable: '--font-sans',
-  weight: ['400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700'],
   display: 'swap',
 });
 
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} ${inter.variable}`}>
+    <html lang="en" className={`${jetbrainsMono.variable} ${spaceGrotesk.variable}`}>
       <body className="min-h-screen bg-[var(--bg)] text-[var(--text)] antialiased">
         <ErrorBoundary>
           <AuthProvider>

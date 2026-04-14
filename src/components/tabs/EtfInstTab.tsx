@@ -222,7 +222,7 @@ export default function EtfInstTab() {
       {/* ── PENDING ETF APPLICATIONS ─────────────────────────────────── */}
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b2)', margin: '1px 0' }}>
         <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--b2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--cyan)' }}>◈ ETF PIPELINE — APPROVED & PENDING · {altcoinData ? `${5 + altcoinData.pending.length}` : '10'} FILINGS</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.14em', color: 'var(--accent)' }}>◈ ETF PIPELINE — APPROVED & PENDING · {altcoinData ? `${5 + altcoinData.pending.length}` : '10'} FILINGS</span>
           <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>Source: SEC EDGAR · SoSoValue</span>
         </div>
         <div id="etfAppsFeed" style={{ overflowX: 'auto', padding: '8px 12px' }}>
@@ -264,7 +264,7 @@ export default function EtfInstTab() {
         <div className="kpi"><div className="kpi-label">Net Flow · Today</div><div className="kpi-val" style={{ color: 'var(--green)' }}>+$169.6M</div><div className="kpi-chg up">All BTC ETFs</div><div className="kpi-src"><a className="src-link" href="https://farside.co.uk/bitcoin-etf-flow-all-data/" target="_blank" rel="noreferrer">Farside Investors</a></div></div>
         <div className="kpi"><div className="kpi-label">7-Day Net Flow</div><div className="kpi-val" style={{ color: 'var(--green)' }}>+$1.04B</div><div className="kpi-chg up">Cumulative 7 days</div><div className="kpi-src"><a className="src-link" href="https://farside.co.uk/bitcoin-etf-flow-all-data/" target="_blank" rel="noreferrer">Farside Investors</a></div></div>
         <div className="kpi"><div className="kpi-label">Total AUM · BTC ETFs</div><div className="kpi-val" style={{ color: 'var(--text)' }}>$118.4B</div><div className="kpi-chg">All issuers</div><div className="kpi-src">Bloomberg ETF</div></div>
-        <div className="kpi"><div className="kpi-label">Inflow Streak</div><div className="kpi-val" style={{ color: 'var(--cyan)' }}>4 Days</div><div className="kpi-chg up">Since Apr 3</div><div className="kpi-src"><a className="src-link" href="https://farside.co.uk/bitcoin-etf-flow-all-data/" target="_blank" rel="noreferrer">Farside Investors</a></div></div>
+        <div className="kpi"><div className="kpi-label">Inflow Streak</div><div className="kpi-val" style={{ color: 'var(--accent)' }}>4 Days</div><div className="kpi-chg up">Since Apr 3</div><div className="kpi-src"><a className="src-link" href="https://farside.co.uk/bitcoin-etf-flow-all-data/" target="_blank" rel="noreferrer">Farside Investors</a></div></div>
         <div className="kpi"><div className="kpi-label">IBIT AUM Rank</div><div className="kpi-val gold">#1 Global</div><div className="kpi-chg">BlackRock ETF</div><div className="kpi-src">Bloomberg ETF</div></div>
       </div>
 
@@ -334,7 +334,7 @@ export default function EtfInstTab() {
       <div className="g5">
         <div className="kpi">
           <div className="kpi-label">Altcoin ETF AUM</div>
-          <div className="kpi-val" style={{ color: 'var(--cyan)' }}>
+          <div className="kpi-val" style={{ color: 'var(--accent)' }}>
             {altcoinLoading ? <PulseBox height="20px" /> : fmtAum(altcoinData?.totalAltcoinEtfAum ?? 2730)}
           </div>
           <div className="kpi-chg up">XRP + SOL combined</div>
@@ -378,7 +378,7 @@ export default function EtfInstTab() {
       {altcoinLoading ? (
         <div className="panel" style={{ padding: '20px' }}><PulseBox height="120px" /></div>
       ) : altcoinData?.xrp ? (
-        <AltcoinFundTable data={altcoinData.xrp} asset="XRP" accentColor="var(--cyan)" />
+        <AltcoinFundTable data={altcoinData.xrp} asset="XRP" accentColor="var(--accent)" />
       ) : null}
 
       {/* SOL ETF Fund Table */}
@@ -399,9 +399,9 @@ export default function EtfInstTab() {
             {altcoinData.milestones.map((m, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                 <div style={{
-                  width: '6px', height: '6px', borderRadius: '50%', background: 'var(--cyan)',
+                  width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)',
                   flexShrink: 0, marginTop: '4px',
-                  boxShadow: i === altcoinData.milestones.length - 1 ? '0 0 6px var(--cyan)' : 'none'
+                  boxShadow: i === altcoinData.milestones.length - 1 ? '0 0 6px var(--accent)' : 'none'
                 }} />
                 <div style={{ display: 'flex', gap: '8px', flex: 1, alignItems: 'baseline' }}>
                   <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', flex: '0 0 70px' }}>{m.date}</span>
@@ -419,7 +419,7 @@ export default function EtfInstTab() {
         <div className="ai-text">
           <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--green)', flexShrink: 0 }}>▸</span><span><strong>IBIT +$224M today</strong> — 4th consecutive inflow day. 7-day net: +$1.04B. Institutional accumulation at Extreme Fear.</span></div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span><span><strong>XRP ETFs at {altcoinData ? fmtAum(altcoinData.xrp.totalAum) : '$1.8B'} AUM</strong> — 7 spot funds absorbing institutional demand post-commodity classification. {altcoinData?.xrp?.inflowStreak ? `${altcoinData.xrp.inflowStreak}-day inflow streak.` : ''}</span></div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--accent)', flexShrink: 0 }}>▸</span><span><strong>XRP ETFs at {altcoinData ? fmtAum(altcoinData.xrp.totalAum) : '$1.8B'} AUM</strong> — 7 spot funds absorbing institutional demand post-commodity classification. {altcoinData?.xrp?.inflowStreak ? `${altcoinData.xrp.inflowStreak}-day inflow streak.` : ''}</span></div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--blue)', flexShrink: 0 }}>▸</span><span><strong>SOL ETFs gaining traction</strong> — {altcoinData ? fmtAum(altcoinData.sol.totalAum) : '$890M'} AUM across {altcoinData?.sol?.fundCount ?? 5} funds. Franklin Templeton&apos;s 0.19% fee driving competitive pressure.</span></div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--gold)', flexShrink: 0 }}>▸</span><span><strong>Pipeline active:</strong> DOGE, LTC, ADA, AVAX, DOT ETFs in SEC review. CLARITY Act markup targeting late April — could accelerate approvals.</span></div>
           </div>

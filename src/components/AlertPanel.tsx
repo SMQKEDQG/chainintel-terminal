@@ -31,7 +31,7 @@ const typeIcons: Record<string, string> = {
 const severityColors: Record<string, string> = {
   critical: 'var(--red)',
   warning: 'var(--gold)',
-  info: 'var(--cyan)',
+  info: 'var(--accent)',
 };
 
 export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
@@ -166,7 +166,7 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
-                className="font-mono text-[7px] tracking-wider transition-colors hover:text-[var(--cyan)]"
+                className="font-mono text-[7px] tracking-wider transition-colors hover:text-[var(--accent)]"
                 style={{ color: 'var(--muted)' }}
               >
                 MARK ALL READ
@@ -190,8 +190,8 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
               onClick={() => setFilter(f)}
               className="font-mono text-[7px] tracking-wider px-2 py-1 whitespace-nowrap transition-colors"
               style={{
-                color: filter === f ? 'var(--cyan)' : 'var(--muted)',
-                borderBottom: filter === f ? '1px solid var(--cyan)' : '1px solid transparent',
+                color: filter === f ? 'var(--accent)' : 'var(--muted)',
+                borderBottom: filter === f ? '1px solid var(--accent)' : '1px solid transparent',
               }}
             >
               {f === 'all' ? 'ALL' : `${typeIcons[f] || ''} ${f.toUpperCase()}`}
@@ -241,7 +241,7 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
                     </span>
                   </div>
                   {!alert.read && (
-                    <div className="w-2 h-2 rounded-full" style={{ background: 'var(--cyan)' }} />
+                    <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent)' }} />
                   )}
                 </div>
                 <p className="font-mono text-[8px] leading-relaxed mb-1.5" style={{ color: 'var(--text2)' }}>

@@ -103,7 +103,7 @@ export default function IsoTab() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>ISO 20022 BANKING INTEGRATION TRACKER</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
-        <span className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>PRO · {ISO_ASSETS.length} Assets</span>
+        <span className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>PRO · {ISO_ASSETS.length} Assets</span>
         <span className="tag tag-live">
           <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CMC</a>
           {' · '}
@@ -160,7 +160,7 @@ export default function IsoTab() {
               const p = prices[a.sym];
               return (
                 <tr key={a.sym} style={{ borderBottom: '1px solid var(--b1)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
                   onMouseLeave={e => (e.currentTarget.style.background = '')}>
                   <td style={{ padding: '5px 8px' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text)' }}>{a.sym}</div>
@@ -183,12 +183,12 @@ export default function IsoTab() {
                   <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>
                     {p ? fmtMcap(p.market_cap) : '—'}
                   </td>
-                  <td style={{ textAlign: 'center', padding: '5px 8px', color: 'var(--cyan)' }}>{a.banks}</td>
+                  <td style={{ textAlign: 'center', padding: '5px 8px', color: 'var(--accent)' }}>{a.banks}</td>
                   <td style={{ textAlign: 'center', padding: '5px 8px', color: 'var(--text2)' }}>{a.txSpeed}</td>
-                  <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, color: 'var(--cyan)' }}>{a.score}</td>
+                  <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, color: 'var(--accent)' }}>{a.score}</td>
                   <td style={{ padding: '5px 8px' }}>
                     <div style={{ height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-                      <div style={{ width: `${a.score}%`, height: '100%', background: 'linear-gradient(90deg, var(--cyan), var(--blue))', borderRadius: 3 }} />
+                      <div style={{ width: `${a.score}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent), var(--blue))', borderRadius: 3 }} />
                     </div>
                   </td>
                 </tr>
@@ -208,7 +208,7 @@ export default function IsoTab() {
           <div style={{ padding: '8px 12px' }}>
             {ISO_ASSETS.filter(a => a.status === 'CERTIFIED').map(a => (
               <div key={a.sym} style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--b1)' }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700, color: 'var(--cyan)', minWidth: 36 }}>{a.sym}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700, color: 'var(--accent)', minWidth: 36 }}>{a.sym}</span>
                 <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', lineHeight: 1.4 }}>{a.useCase}</span>
               </div>
             ))}
@@ -226,15 +226,15 @@ export default function IsoTab() {
                 <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 12 }}>
                   <div style={{
                     width: 8, height: 8, borderRadius: '50%',
-                    background: t.done ? 'var(--cyan)' : 'var(--b3)',
+                    background: t.done ? 'var(--accent)' : 'var(--b3)',
                     border: t.done ? 'none' : '1px solid var(--muted)',
                   }} />
                   {i < TIMELINE.length - 1 && (
-                    <div style={{ width: 1, height: 20, background: t.done ? 'var(--cyan)' : 'var(--b2)', opacity: 0.4, marginTop: 2 }} />
+                    <div style={{ width: 1, height: 20, background: t.done ? 'var(--accent)' : 'var(--b2)', opacity: 0.4, marginTop: 2 }} />
                   )}
                 </div>
                 <div>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600, color: t.done ? 'var(--cyan)' : 'var(--gold)' }}>{t.date}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600, color: t.done ? 'var(--accent)' : 'var(--gold)' }}>{t.date}</span>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', marginTop: 1 }}>{t.event}</div>
                 </div>
               </div>
@@ -246,13 +246,13 @@ export default function IsoTab() {
       {/* Synthesis */}
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)' }}>CI · ISO 20022 Intelligence</span>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 2s infinite' }} />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)' }}>CI · ISO 20022 Intelligence</span>
         </div>
         <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--text)' }}>The SWIFT ISO 20022 migration is complete — this isn&apos;t future speculation, it&apos;s live infrastructure.</strong>{' '}
           {certifiedCount} assets have full certification for banking message compatibility. XRP leads with 300+ banking partnerships and the fastest settlement at 3-5 seconds.
-          {totalMcap > 0 && <>{' '}Combined sector market cap of <strong style={{ color: 'var(--cyan)' }}>{fmtMcap(totalMcap)}</strong> for exposure to $150T+ annual payment flows — the asymmetry here is the most compelling in all of crypto.</>}
+          {totalMcap > 0 && <>{' '}Combined sector market cap of <strong style={{ color: 'var(--accent)' }}>{fmtMcap(totalMcap)}</strong> for exposure to $150T+ annual payment flows — the asymmetry here is the most compelling in all of crypto.</>}
         </div>
       </div>
     </div>

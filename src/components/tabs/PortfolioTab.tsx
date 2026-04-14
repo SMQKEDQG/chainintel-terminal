@@ -42,7 +42,7 @@ const SUPPORTED_ASSETS = new Set([
 const ISO_ASSETS = new Set(['XRP', 'XLM', 'HBAR', 'QNT', 'ADA', 'IOTA', 'XDC', 'ALGO']);
 
 const CHART_COLORS = [
-  '#00d4aa', '#3b82f6', '#f0c040', '#10b981', '#ef4444',
+  '#E8A534', '#6B8AFF', '#34D399', '#A78BFA', '#FB923C',
   '#a78bfa', '#fb923c', '#06b6d4', '#ec4899', '#84cc16',
   '#f472b6', '#14b8a6', '#8b5cf6', '#f97316',
 ];
@@ -350,7 +350,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                 fontFamily: 'var(--mono)',
                 fontSize: '8px',
                 letterSpacing: '0.14em',
-                color: 'var(--cyan)',
+                color: 'var(--accent)',
               }}
             >
               ◈ LIVE PORTFOLIO SNAPSHOT
@@ -393,7 +393,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                   fontFamily: 'var(--mono)',
                   fontSize: '18px',
                   fontWeight: 700,
-                  color: 'var(--cyan)',
+                  color: 'var(--accent)',
                   lineHeight: 1.1,
                 }}
               >
@@ -526,7 +526,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                       style={{
                         fontFamily: 'var(--mono)',
                         fontSize: '9px',
-                        color: 'var(--cyan)',
+                        color: 'var(--accent)',
                         fontWeight: 700,
                         letterSpacing: '0.08em',
                       }}
@@ -686,12 +686,12 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
           </button>
           <div
             style={{
-              background: 'rgba(0,212,170,0.06)',
-              borderLeft: '2px solid var(--cyan)',
+              background: 'rgba(232,165,52,0.06)',
+              borderLeft: '2px solid var(--accent)',
               padding: '6px 10px',
               fontFamily: 'var(--mono)',
               fontSize: '8px',
-              color: 'var(--cyan)',
+              color: 'var(--accent)',
               marginTop: '6px',
             }}
           >
@@ -851,7 +851,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                       textAlign: 'center',
                       gap: '14px',
                       background:
-                        'linear-gradient(180deg,rgba(0,212,170,0.02) 0%,transparent 100%)',
+                        'linear-gradient(180deg,rgba(232,165,52,0.02) 0%,transparent 100%)',
                     }}
                   >
                     <div
@@ -859,8 +859,8 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                         width: '52px',
                         height: '52px',
                         borderRadius: '12px',
-                        background: 'rgba(0,212,170,0.08)',
-                        border: '1px solid rgba(0,212,170,0.15)',
+                        background: 'rgba(232,165,52,0.08)',
+                        border: '1px solid rgba(232,165,52,0.15)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -896,7 +896,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                       <button
                         onClick={loadDemoPortfolio}
                         style={{
-                          background: 'var(--cyan)',
+                          background: 'var(--accent)',
                           color: '#000',
                           fontFamily: 'var(--mono)',
                           fontSize: '8px',
@@ -914,11 +914,11 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                         onClick={focusAddHolding}
                         style={{
                           background: 'transparent',
-                          color: 'var(--cyan)',
+                          color: 'var(--accent)',
                           fontFamily: 'var(--mono)',
                           fontSize: '8px',
                           padding: '8px 16px',
-                          border: '1px solid rgba(0,212,170,0.3)',
+                          border: '1px solid rgba(232,165,52,0.3)',
                           borderRadius: '3px',
                           cursor: 'pointer',
                           letterSpacing: '0.06em',
@@ -956,7 +956,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                     <td style={{ textAlign: 'right', padding: '7px 8px', color: 'var(--text2)' }}>
                       ${fmtPrice(h.avgCost)}
                     </td>
-                    <td style={{ textAlign: 'right', padding: '7px 8px', color: 'var(--cyan)' }}>
+                    <td style={{ textAlign: 'right', padding: '7px 8px', color: 'var(--accent)' }}>
                       ${fmtPrice(getPrice(h.asset))}
                     </td>
                     <td style={{ textAlign: 'right', padding: '7px 8px', color: 'var(--text)' }}>
@@ -1019,7 +1019,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
               fontFamily: 'var(--mono)',
               fontSize: '8px',
               letterSpacing: '0.14em',
-              color: 'var(--cyan)',
+              color: 'var(--accent)',
             }}
           >
             ◈ PERSONALIZED AI MORNING BRIEF
@@ -1167,7 +1167,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                     fontWeight: 700,
                     color:
                       parseFloat(isoExposurePct) > 40
-                        ? 'var(--cyan)'
+                        ? 'var(--accent)'
                         : parseFloat(isoExposurePct) > 20
                         ? 'var(--gold)'
                         : 'var(--text2)',
@@ -1193,7 +1193,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                         borderBottom: '1px solid var(--b1)',
                       }}
                     >
-                      <span style={{ color: 'var(--cyan)' }}>{h.asset}</span>
+                      <span style={{ color: 'var(--accent)' }}>{h.asset}</span>
                       <span>
                         ${fmt(getValue(h))} (
                         {totalValue > 0

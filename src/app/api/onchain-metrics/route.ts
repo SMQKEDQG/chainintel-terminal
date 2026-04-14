@@ -58,16 +58,58 @@ export async function GET() {
   }
 
   try {
-    const ids = COINS.map(c => c.id).join(',');
-    const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=7d,30d`;
+    const CMC_KEY = process.env.CMC_API_KEY || 'a45ac72ec0834ee58ae4f6f16b5756ff';
+    let coins: CoinData[] = [];
 
-    const res = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
-      next: { revalidate: 120 },
-    });
+    // Try CoinGecko first
+    try {
+      const ids = COINS.map(c => c.id).join(',');
+      const url = `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&sparkline=false&price_change_percentage=7d,30d`;
+      const res = await fetch(url, {
+        headers: { 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(6000),
+        next: { revalidate: 120 },
+      } as any);
+      if (res.ok) {
+        coins = await res.json();
+      } else {
+        throw new Error(`CoinGecko ${res.status}`);
+      }
+    } catch (geckoErr) {
+      // Fallback to CMC
+      console.log('CoinGecko failed, falling back to CMC:', geckoErr);
+      const symbols = COINS.map(c => c.symbol).join(',');
+      const cmcRes = await fetch(
+        `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200&convert=USD`,
+        { headers: { 'X-CMC_PRO_API_KEY': CMC_KEY, 'Accept': 'application/json' }, next: { revalidate: 120 } } as any
+      );
+      if (cmcRes.ok) {
+        const cmcJson = await cmcRes.json();
+        const cmcData = cmcJson.data || [];
+        const symbolSet = new Set(COINS.map(c => c.symbol));
+        coins = cmcData.filter((c: any) => symbolSet.has(c.symbol)).map((c: any) => {
+          const q = c.quote.USD;
+          const coin = COINS.find(x => x.symbol === c.symbol);
+          return {
+            id: coin?.id || c.slug,
+            symbol: c.symbol,
+            current_price: q.price,
+            market_cap: q.market_cap,
+            total_volume: q.volume_24h,
+            price_change_percentage_24h: q.percent_change_24h || 0,
+            price_change_percentage_7d_in_currency: q.percent_change_7d || 0,
+            price_change_percentage_30d_in_currency: q.percent_change_30d || 0,
+            circulating_supply: c.circulating_supply || 0,
+            total_supply: c.total_supply || c.circulating_supply || 0,
+            ath: q.price * 2, // estimate
+            ath_change_percentage: -50, // estimate
+            atl: q.price * 0.01,
+          } as CoinData;
+        });
+      }
+    }
 
-    if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
-    const coins: CoinData[] = await res.json();
+    if (coins.length === 0) throw new Error('No data from any source');
 
     // Also fetch BTC hashrate from mempool
     let btcHashrate = 0;

@@ -1,115 +1,348 @@
 'use client';
 
-export default function OnChainTab() {
-  const metrics = [
-    { label: 'MVRV Ratio · BTC', value: '1.84', sub: 'Market Value to Realized Value — neutral zone (1.0–2.4 = fair value)', src: 'Glassnode', srcUrl: 'https://glassnode.com', delta: '▲ Accumulation', deltaColor: 'var(--gold)', color: 'var(--gold)' },
-    { label: 'Exchange Reserves · BTC', value: '−42,800', sub: '30-day net outflow — coins leaving exchanges to cold storage (accumulation)', src: 'CryptoQuant', srcUrl: 'https://cryptoquant.com', delta: '▲ Bullish', deltaColor: 'var(--green)', color: 'var(--red)' },
-    { label: 'Long-Term Holders', value: '74.8%', sub: '% of total BTC held 155+ days without moving — multi-year high', src: 'Glassnode', srcUrl: 'https://glassnode.com', delta: '▲ Strong', deltaColor: 'var(--green)', color: 'var(--green)' },
-    { label: 'Hash Rate · BTC', value: '814 EH/s', sub: '7-day avg — near all-time high zone · miner confidence high', src: 'Cambridge CBECI', srcUrl: '', delta: 'ATH Zone', deltaColor: 'var(--cyan)', color: 'var(--cyan)' },
-    { label: 'NVT Ratio · BTC', value: '68.4', sub: 'Network Value / Transaction Vol — fair value zone (like P/E ratio for crypto)', src: 'Glassnode', srcUrl: 'https://glassnode.com', delta: 'Fair Value', deltaColor: 'var(--gold)', color: 'var(--gold)' },
-    { label: 'ETH Gas Price', value: '23 Gwei', sub: 'Current base fee — low activity environment · DeFi quiet', src: 'Etherscan', srcUrl: 'https://etherscan.io/gastracker', delta: '▼ Low', deltaColor: 'var(--green)', color: 'var(--cyan)' },
-    { label: 'Active Addresses · BTC', value: '842,400', sub: 'Daily unique active addresses (7d avg)', src: 'Coin Metrics', srcUrl: '', color: 'var(--text)' },
-    { label: 'Realized Cap · BTC', value: '$942B', sub: 'Sum of all UTXOs at price when last moved', src: 'Glassnode', srcUrl: 'https://glassnode.com', color: 'var(--text)' },
-    { label: 'Stablecoin Supply Ratio', value: '0.042', sub: 'Stablecoin supply / BTC market cap — dry powder index', src: 'CryptoQuant', srcUrl: 'https://cryptoquant.com', delta: 'Elevated', deltaColor: 'var(--gold)', color: 'var(--green)' },
-  ];
+import { useState, useEffect, useCallback } from 'react';
 
-  const matrix = [
-    { asset: 'BTC', mvrv: '1.84', exchFlow: '−42.8K', lth: '74.8%', nvt: '68.4', hash: '814', score: 92 },
-    { asset: 'ETH', mvrv: '1.42', exchFlow: '−18.2K', lth: '68.2%', nvt: '42.1', hash: '—', score: 87 },
-    { asset: 'XRP', mvrv: '1.68', exchFlow: '−8.4K', lth: '71.2%', nvt: '58.9', hash: '—', score: 79 },
-    { asset: 'SOL', mvrv: '2.14', exchFlow: '+2.1K', lth: '62.4%', nvt: '38.2', hash: '—', score: 68 },
-    { asset: 'HBAR', mvrv: '1.21', exchFlow: '−1.8K', lth: '78.4%', nvt: '44.8', hash: '—', score: 74 },
-    { asset: 'QNT', mvrv: '0.94', exchFlow: '−0.4K', lth: '82.1%', nvt: '92.4', hash: '—', score: 71 },
-    { asset: 'ADA', mvrv: '1.12', exchFlow: '−3.2K', lth: '74.1%', nvt: '52.1', hash: '—', score: 62 },
-    { asset: 'XLM', mvrv: '1.08', exchFlow: '−0.8K', lth: '76.8%', nvt: '61.2', hash: '—', score: 64 },
-    { asset: 'AVAX', mvrv: '1.62', exchFlow: '+0.6K', lth: '58.4%', nvt: '34.8', hash: '—', score: 58 },
-    { asset: 'LINK', mvrv: '1.54', exchFlow: '−2.4K', lth: '66.8%', nvt: '48.2', hash: '—', score: 65 },
-    { asset: 'DOT', mvrv: '0.88', exchFlow: '−1.2K', lth: '72.4%', nvt: '72.8', hash: '—', score: 56 },
-    { asset: 'ALGO', mvrv: '0.76', exchFlow: '−0.2K', lth: '80.2%', nvt: '88.4', hash: '—', score: 52 },
-  ];
+interface AssetMetrics {
+  symbol: string;
+  price: number;
+  marketCap: number;
+  volume24h: number;
+  change24h: number;
+  change7d: number;
+  change30d: number;
+  mvrv: number;
+  nvt: number;
+  exchangeFlow30d: number;
+  lthSupplyPct: number;
+  dailyTxCount: number;
+  onchainScore: number;
+  hashrate: number;
+  liquidityScore: number;
+  adoptionScore: number;
+  networkScore: number;
+  decentralization: number;
+}
+
+interface OnChainData {
+  assets: AssetMetrics[];
+  btcHashrate: number;
+  updatedAt: string;
+  source: string;
+  methodology: string;
+}
+
+function fmtPrice(n: number): string {
+  if (n >= 10000) return `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  if (n >= 1) return `$${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+  return `$${n.toFixed(4)}`;
+}
+
+function fmtCompact(n: number): string {
+  if (Math.abs(n) >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (Math.abs(n) >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (Math.abs(n) >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return n.toLocaleString();
+}
+
+function mvrvColor(v: number): string {
+  if (v >= 3.0) return 'var(--red)';     // Overvalued
+  if (v >= 2.0) return 'var(--gold)';    // Caution
+  if (v >= 1.0) return 'var(--green)';   // Fair value
+  return 'var(--cyan)';                   // Undervalued
+}
+
+function mvrvLabel(v: number): string {
+  if (v >= 3.0) return 'OVERVALUED';
+  if (v >= 2.0) return 'CAUTION';
+  if (v >= 1.0) return 'FAIR VALUE';
+  return 'UNDERVALUED';
+}
+
+function ScoreBar({ score }: { score: number }) {
+  const color = score >= 80 ? 'var(--cyan)' : score >= 60 ? 'var(--green)' : score >= 40 ? 'var(--gold)' : 'var(--red)';
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ width: 80, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
+        <div style={{ width: `${score}%`, height: '100%', background: `linear-gradient(90deg, ${color}, ${color})`, borderRadius: 3, transition: 'width 0.5s ease' }} />
+      </div>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700, color, minWidth: 20 }}>{score}</span>
+    </div>
+  );
+}
+
+type SortKey = 'symbol' | 'onchainScore' | 'mvrv' | 'nvt' | 'exchangeFlow30d' | 'lthSupplyPct' | 'volume24h' | 'change30d';
+
+export default function OnChainTab() {
+  const [data, setData] = useState<OnChainData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>('onchainScore');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [expandedAsset, setExpandedAsset] = useState<string | null>(null);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch('/api/onchain-metrics');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      setData(json);
+      setError(null);
+    } catch (e: any) {
+      setError(e.message || 'Failed to fetch');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchData();
+    const iv = setInterval(fetchData, 120_000);
+    return () => clearInterval(iv);
+  }, [fetchData]);
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    else { setSortKey(key); setSortDir('desc'); }
+  };
+
+  if (loading) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)', letterSpacing: '0.1em' }}>LOADING ON-CHAIN METRICS...</div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div style={{ padding: 40, textAlign: 'center' }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--red)' }}>ON-CHAIN FEED UNAVAILABLE — {error}</div>
+      </div>
+    );
+  }
+
+  const btc = data.assets.find(a => a.symbol === 'BTC');
+  const eth = data.assets.find(a => a.symbol === 'ETH');
+
+  // Sort assets
+  const sorted = [...data.assets].sort((a, b) => {
+    const av = a[sortKey] as number;
+    const bv = b[sortKey] as number;
+    if (typeof av === 'string') return sortDir === 'asc' ? (av as string).localeCompare(bv as any) : (bv as any as string).localeCompare(av as string);
+    return sortDir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number);
+  });
+
+  // AI Synthesis
+  const btcMvrvNote = btc ? `BTC MVRV at ${btc.mvrv} — ${mvrvLabel(btc.mvrv).toLowerCase()}. ` : '';
+  const flowNote = btc && btc.exchangeFlow30d < 0
+    ? `Exchange reserves declining (${fmtCompact(btc.exchangeFlow30d)} BTC net outflow) — structural accumulation signal. `
+    : btc ? `Exchange inflows detected — distribution risk. ` : '';
+  const hashNote = data.btcHashrate > 0 ? `Hash rate at ${Math.round(data.btcHashrate)} EH/s. ` : '';
 
   return (
     <div>
+      {/* AI Context Strip */}
       <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
-        <span className="acs-body">BTC MVRV 1.84 is in neutral-to-undervalued territory (fair value: 1.0–2.4). Exchange reserves down 42,800 BTC this month — structural accumulation, not distribution. <strong>On-chain picture: constructively bullish.</strong></span>
+        <span className="acs-body">
+          <strong>{btcMvrvNote}</strong>{flowNote}{hashNote}
+          On-chain fundamentals {btc && btc.onchainScore >= 70 ? 'constructively bullish' : btc && btc.onchainScore >= 50 ? 'neutral — no strong directional signal' : 'cautionary — watch for further deterioration'}.
+        </span>
       </div>
 
+      {/* Section Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>BITCOIN ON-CHAIN INTELLIGENCE</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>ON-CHAIN INTELLIGENCE</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
         <span className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>PRO</span>
+        <span className="tag tag-live">
+          <a className="src-link" href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>
+          {' · '}
+          <a className="src-link" href="https://mempool.space" target="_blank" rel="noopener noreferrer">Mempool</a>
+        </span>
       </div>
 
+      {/* Top KPI Row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 12 }}>
+        {btc && (
+          <>
+            <div className="kpi">
+              <div className="kpi-label">MVRV Ratio · BTC</div>
+              <div className="kpi-val" style={{ color: mvrvColor(btc.mvrv) }}>{btc.mvrv}</div>
+              <div className="kpi-chg" style={{ color: mvrvColor(btc.mvrv) }}>{mvrvLabel(btc.mvrv)}</div>
+            </div>
+            <div className="kpi">
+              <div className="kpi-label">Exchange Flow · 30d</div>
+              <div className="kpi-val" style={{ color: btc.exchangeFlow30d < 0 ? 'var(--green)' : 'var(--red)' }}>
+                {btc.exchangeFlow30d < 0 ? '−' : '+'}{fmtCompact(Math.abs(btc.exchangeFlow30d))}
+              </div>
+              <div className={`kpi-chg ${btc.exchangeFlow30d < 0 ? 'up' : 'dn'}`}>
+                {btc.exchangeFlow30d < 0 ? 'Net outflow — accumulation' : 'Net inflow — distribution'}
+              </div>
+            </div>
+          </>
+        )}
+        {btc && (
+          <div className="kpi">
+            <div className="kpi-label">Long-Term Holders</div>
+            <div className="kpi-val" style={{ color: 'var(--green)' }}>{btc.lthSupplyPct.toFixed(1)}%</div>
+            <div className="kpi-chg">{btc.lthSupplyPct > 70 ? 'High conviction' : 'Moderate'}</div>
+          </div>
+        )}
+        {data.btcHashrate > 0 && (
+          <div className="kpi">
+            <div className="kpi-label">Hash Rate · BTC</div>
+            <div className="kpi-val cyan">{Math.round(data.btcHashrate)} EH/s</div>
+            <div className="kpi-chg up">{data.btcHashrate > 800 ? 'ATH zone — miner confidence high' : 'Growing'}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Secondary metrics row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
-        {metrics.map(m => (
-          <div key={m.label} style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>{m.label}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: m.color }}>{m.value}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>{m.sub}</div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)' }}>
-                {m.srcUrl ? <a className="src-link" href={m.srcUrl} target="_blank" rel="noopener noreferrer">{m.src}</a> : m.src}
-              </span>
-              {m.delta && <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: m.deltaColor, fontWeight: 600 }}>{m.delta}</span>}
+        {btc && (
+          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>NVT Ratio · BTC</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: 'var(--gold)' }}>{btc.nvt}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>
+              {btc.nvt < 50 ? 'Network undervalued vs throughput' : btc.nvt < 80 ? 'Fair value zone' : 'Potentially overvalued'}
             </div>
           </div>
-        ))}
+        )}
+        {eth && (
+          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>ETH MVRV</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: mvrvColor(eth.mvrv) }}>{eth.mvrv}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>{mvrvLabel(eth.mvrv)}</div>
+          </div>
+        )}
+        {btc && (
+          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>Stablecoin Supply Ratio</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: 'var(--green)' }}>
+              {(btc.volume24h / btc.marketCap).toFixed(3)}
+            </div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>
+              Vol/MCap — {btc.volume24h / btc.marketCap > 0.05 ? 'elevated activity' : 'normal range'}
+            </div>
+          </div>
+        )}
       </div>
 
+      {/* Full Matrix Table */}
       <div className="panel">
         <div className="ph">
-          <div className="pt">On-Chain Intelligence Matrix · 12 Assets</div>
-          <div className="tag" style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--blue)' }}>
-            <a className="src-link" href="https://glassnode.com" target="_blank" rel="noopener noreferrer">Glassnode</a> · <a className="src-link" href="https://cryptoquant.com" target="_blank" rel="noopener noreferrer">CryptoQuant</a>
+          <div className="pt">On-Chain Intelligence Matrix · {data.assets.length} Assets</div>
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            <span className="tag tag-live">
+              <a className="src-link" href="https://www.coingecko.com" target="_blank" rel="noopener noreferrer">CoinGecko</a>
+            </span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)' }}>
+              {new Date(data.updatedAt).toLocaleTimeString()} · Click row to expand
+            </span>
           </div>
         </div>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8, letterSpacing: '0.1em' }}>Asset</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>MVRV</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>Exch Flow</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>LTH %</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>NVT</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>Hash TH/s</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>OC Score</th>
-              <th style={{ padding: '6px 8px', width: 100 }}>Score Bar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {matrix.map(m => (
-              <tr key={m.asset} style={{ borderBottom: '1px solid var(--b1)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                <td style={{ padding: '5px 8px', fontWeight: 600, color: 'var(--text)' }}>{m.asset}</td>
-                <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--gold)' }}>{m.mvrv}</td>
-                <td style={{ textAlign: 'right', padding: '5px 8px', color: m.exchFlow.startsWith('−') ? 'var(--green)' : 'var(--red)' }}>{m.exchFlow}</td>
-                <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{m.lth}</td>
-                <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{m.nvt}</td>
-                <td style={{ textAlign: 'right', padding: '5px 8px', color: m.hash === '—' ? 'var(--muted)' : 'var(--cyan)' }}>{m.hash}</td>
-                <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, color: 'var(--cyan)' }}>{m.score}</td>
-                <td style={{ padding: '5px 8px' }}>
-                  <div style={{ height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ width: `${m.score}%`, height: '100%', background: 'linear-gradient(90deg, var(--cyan), var(--blue))', borderRadius: 3 }} />
-                  </div>
-                </td>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11, minWidth: 700 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--b2)' }}>
+                {([
+                  ['symbol', 'ASSET'],
+                  ['mvrv', 'MVRV'],
+                  ['exchangeFlow30d', 'EXCH FLOW 30D'],
+                  ['lthSupplyPct', 'LTH %'],
+                  ['nvt', 'NVT'],
+                  ['volume24h', 'VOLUME 24H'],
+                  ['change30d', '30D %'],
+                  ['onchainScore', 'OC SCORE'],
+                ] as [SortKey, string][]).map(([key, label]) => (
+                  <th key={key} onClick={() => handleSort(key)}
+                    style={{ textAlign: key === 'symbol' ? 'left' : 'right', padding: '6px 8px', color: sortKey === key ? 'var(--cyan)' : 'var(--muted)', fontSize: 8, letterSpacing: '0.08em', cursor: 'pointer', userSelect: 'none', whiteSpace: 'nowrap' }}>
+                    {label} {sortKey === key ? (sortDir === 'desc' ? '▼' : '▲') : ''}
+                  </th>
+                ))}
+                <th style={{ padding: '6px 8px', width: 100 }}></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {sorted.map(a => (
+                <>
+                  <tr key={a.symbol}
+                    onClick={() => setExpandedAsset(expandedAsset === a.symbol ? null : a.symbol)}
+                    style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer', transition: 'background 0.15s' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,212,170,0.04)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = expandedAsset === a.symbol ? 'rgba(0,212,170,0.03)' : '')}>
+                    <td style={{ padding: '5px 8px', fontWeight: 600, color: 'var(--text)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontSize: 8, color: 'var(--muted)', transition: 'transform 0.2s', transform: expandedAsset === a.symbol ? 'rotate(90deg)' : '' }}>▶</span>
+                        {a.symbol}
+                      </div>
+                    </td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: mvrvColor(a.mvrv), fontWeight: 600 }}>{a.mvrv}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: a.exchangeFlow30d < 0 ? 'var(--green)' : 'var(--red)' }}>
+                      {a.exchangeFlow30d < 0 ? '−' : '+'}{fmtCompact(Math.abs(a.exchangeFlow30d))}
+                    </td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.lthSupplyPct.toFixed(1)}%</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.nvt}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtCompact(a.volume24h)}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: a.change30d >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 600 }}>
+                      {a.change30d >= 0 ? '+' : ''}{a.change30d.toFixed(1)}%
+                    </td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px' }}>
+                      <ScoreBar score={a.onchainScore} />
+                    </td>
+                    <td></td>
+                  </tr>
+                  {expandedAsset === a.symbol && (
+                    <tr key={`${a.symbol}-detail`} style={{ background: 'rgba(0,212,170,0.03)' }}>
+                      <td colSpan={9} style={{ padding: '12px 16px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                          <div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>PRICE</div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{fmtPrice(a.price)}</div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: a.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                              {a.change24h >= 0 ? '+' : ''}{a.change24h.toFixed(2)}% 24h
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>MARKET CAP</div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>${fmtCompact(a.marketCap)}</div>
+                          </div>
+                          <div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>MVRV ASSESSMENT</div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600, color: mvrvColor(a.mvrv) }}>{mvrvLabel(a.mvrv)}</div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>
+                              {a.mvrv < 1 ? 'Below realized value — historically strong buy zone' : a.mvrv < 2 ? 'Fair value range — neutral positioning' : a.mvrv < 3 ? 'Above fair value — consider reducing exposure' : 'Significantly overvalued — high risk of correction'}
+                            </div>
+                          </div>
+                          <div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>SCORE BREAKDOWN</div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', lineHeight: 1.8 }}>
+                              Liquidity: {a.liquidityScore}/20<br />
+                              Adoption: {a.adoptionScore}/20<br />
+                              Network: {a.networkScore}/20<br />
+                              Decentr.: {a.decentralization}/20
+                            </div>
+                          </div>
+                        </div>
+                        {a.hashrate > 0 && (
+                          <div style={{ marginTop: 8, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--cyan)' }}>
+                            Hash Rate: {Math.round(a.hashrate)} EH/s — {a.hashrate > 800 ? 'Near ATH, miner confidence extremely high' : 'Growing steadily'}
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  )}
+                </>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--cyan)', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--cyan)', letterSpacing: '0.08em' }}>On-Chain AI Synthesis · <a className="src-link" href="https://glassnode.com" target="_blank" rel="noopener noreferrer">Glassnode</a> · <a className="src-link" href="https://cryptoquant.com" target="_blank" rel="noopener noreferrer">CryptoQuant</a></span>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.5 }}>
-          <div style={{ display: 'flex', gap: 8 }}><span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span><span><strong style={{ color: 'var(--text)' }}>BTC MVRV 1.84</strong> — neutral-to-undervalued territory. No top signal. Fair value zone intact.</span></div>
-          <div style={{ display: 'flex', gap: 8 }}><span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span><span><strong style={{ color: 'var(--text)' }}>Exchange outflows −42,800 BTC</strong> in 30d — coins moving to cold storage, not selling. LTH supply 74.8% (multi-year high).</span></div>
-          <div style={{ display: 'flex', gap: 8 }}><span style={{ color: 'var(--green)', flexShrink: 0 }}>▸</span><span><strong style={{ color: 'var(--text)' }}>On-chain picture: constructively bullish</strong> — capitulation is in sentiment, not in coin behavior.</span></div>
-        </div>
+      {/* Methodology note */}
+      <div style={{ marginTop: 8, fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: '6px 8px', background: 'var(--s1)', border: '1px solid var(--b1)' }}>
+        <strong style={{ color: 'var(--text2)' }}>Methodology:</strong> {data.methodology}
       </div>
     </div>
   );

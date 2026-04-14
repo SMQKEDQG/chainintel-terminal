@@ -101,7 +101,7 @@ export default function IsoTab() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>ISO 20022 BANKING INTEGRATION TRACKER</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', color: 'var(--text2)' }}>ISO 20022 BANKING INTEGRATION TRACKER</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
         <span className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>PRO · {ISO_ASSETS.length} Assets</span>
         <span className="tag tag-live">
@@ -143,15 +143,15 @@ export default function IsoTab() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>ASSET</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>NETWORK</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>STATUS</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>PRICE</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>24H %</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>MKT CAP</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>BANKS</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>TX SPEED</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>CI SCORE</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>ASSET</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>NETWORK</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>STATUS</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>PRICE</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>24H %</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>MKT CAP</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>BANKS</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>TX SPEED</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>CI SCORE</th>
               <th style={{ padding: '6px 8px', width: 80 }}></th>
             </tr>
           </thead>
@@ -164,12 +164,12 @@ export default function IsoTab() {
                   onMouseLeave={e => (e.currentTarget.style.background = '')}>
                   <td style={{ padding: '5px 8px' }}>
                     <div style={{ fontWeight: 600, color: 'var(--text)' }}>{a.sym}</div>
-                    <div style={{ fontSize: 8, color: 'var(--muted)' }}>{a.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>{a.name}</div>
                   </td>
-                  <td style={{ padding: '5px 8px', fontSize: 9, color: 'var(--text2)' }}>{a.network}</td>
+                  <td style={{ padding: '5px 8px', fontSize: 11, color: 'var(--text2)' }}>{a.network}</td>
                   <td style={{ textAlign: 'center', padding: '5px 8px' }}>
                     <span style={{
-                      fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 8px', fontWeight: 600,
+                      fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 8px', fontWeight: 600,
                       background: a.status === 'CERTIFIED' ? 'rgba(16,185,129,0.15)' : 'rgba(240,192,64,0.12)',
                       color: a.statusColor, borderRadius: 2,
                     }}>{a.status}</span>
@@ -208,8 +208,8 @@ export default function IsoTab() {
           <div style={{ padding: '8px 12px' }}>
             {ISO_ASSETS.filter(a => a.status === 'CERTIFIED').map(a => (
               <div key={a.sym} style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--b1)' }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 700, color: 'var(--accent)', minWidth: 36 }}>{a.sym}</span>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', lineHeight: 1.4 }}>{a.useCase}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--accent)', minWidth: 36 }}>{a.sym}</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.4 }}>{a.useCase}</span>
               </div>
             ))}
           </div>
@@ -234,8 +234,8 @@ export default function IsoTab() {
                   )}
                 </div>
                 <div>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 600, color: t.done ? 'var(--accent)' : 'var(--gold)' }}>{t.date}</span>
-                  <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', marginTop: 1 }}>{t.event}</div>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600, color: t.done ? 'var(--accent)' : 'var(--gold)' }}>{t.date}</span>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', marginTop: 1 }}>{t.event}</div>
                 </div>
               </div>
             ))}
@@ -247,9 +247,9 @@ export default function IsoTab() {
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)' }}>CI · ISO 20022 Intelligence</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>CI · ISO 20022 Intelligence</span>
         </div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--text)' }}>The SWIFT ISO 20022 migration is complete — this isn&apos;t future speculation, it&apos;s live infrastructure.</strong>{' '}
           {certifiedCount} assets have full certification for banking message compatibility. XRP leads with 300+ banking partnerships and the fastest settlement at 3-5 seconds.
           {totalMcap > 0 && <>{' '}Combined sector market cap of <strong style={{ color: 'var(--accent)' }}>{fmtMcap(totalMcap)}</strong> for exposure to $150T+ annual payment flows — the asymmetry here is the most compelling in all of crypto.</>}

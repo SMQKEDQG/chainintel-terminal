@@ -149,7 +149,7 @@ export default function OnChainTab() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>BITCOIN ON-CHAIN INTELLIGENCE</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', color: 'var(--text2)' }}>BITCOIN ON-CHAIN INTELLIGENCE</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
         <DataFreshness lastUpdated={lastUpdated} source="CoinGecko · Mempool" isLive={isLive} />
         <span className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>PRO</span>
@@ -162,11 +162,11 @@ export default function OnChainTab() {
         <div className="data-fresh" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
           {kpiCards.map(m => (
             <div key={m.label} className="metric-card" style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>{m.label}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 2 }}>{m.label}</div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 600, color: m.color }}>{m.value}</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)', marginTop: 2 }}>{m.sub}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', marginTop: 2 }}>{m.sub}</div>
               {m.delta && (
-                <div style={{ marginTop: 4, fontFamily: 'var(--mono)', fontSize: 8, color: m.deltaColor, fontWeight: 600 }}>{m.delta}</div>
+                <div style={{ marginTop: 4, fontFamily: 'var(--mono)', fontSize: 12, color: m.deltaColor, fontWeight: 600 }}>{m.delta}</div>
               )}
             </div>
           ))}
@@ -191,9 +191,9 @@ export default function OnChainTab() {
             <thead>
               <tr style={{ borderBottom: '1px solid var(--b2)' }}>
                 {['Asset', 'Price', 'MVRV', 'Exch Flow 30d', 'LTH %', 'NVT', 'Hash EH/s', 'OC Score'].map(h => (
-                  <th key={h} style={{ textAlign: h === 'Asset' ? 'left' : 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8, letterSpacing: '0.1em' }}>{h}</th>
+                  <th key={h} style={{ textAlign: h === 'Asset' ? 'left' : 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12, letterSpacing: '0.1em' }}>{h}</th>
                 ))}
-                <th style={{ padding: '6px 8px', width: 100, fontSize: 8, color: 'var(--muted)' }}>Score Bar</th>
+                <th style={{ padding: '6px 8px', width: 100, fontSize: 12, color: 'var(--muted)' }}>Score Bar</th>
               </tr>
             </thead>
             <tbody>
@@ -208,7 +208,7 @@ export default function OnChainTab() {
                   <tr key={a.symbol} className="row-alive" style={{ borderBottom: '1px solid var(--b1)', transition: 'background 0.12s' }}>
                     <td style={{ padding: '5px 8px', fontWeight: 600, color: 'var(--text)' }}>
                       {a.symbol}
-                      <span style={{ marginLeft: 6, fontSize: 8, color: a.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                      <span style={{ marginLeft: 6, fontSize: 12, color: a.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
                         {(a.change24h ?? 0) >= 0 ? '▲' : '▼'}{Math.abs(a.change24h ?? 0).toFixed(1)}%
                       </span>
                     </td>
@@ -239,9 +239,9 @@ export default function OnChainTab() {
         <div className="data-fresh" style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
             <div className="heartbeat" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', letterSpacing: '0.08em' }}>On-Chain AI Synthesis · Live Analysis</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', letterSpacing: '0.08em' }}>On-Chain AI Synthesis · Live Analysis</span>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.5 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.5 }}>
             <div style={{ display: 'flex', gap: 8 }}>
               <span style={{ color: 'var(--accent)', flexShrink: 0 }}>▸</span>
               <span>

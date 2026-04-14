@@ -59,7 +59,7 @@ function ScoreBar({ score, max = 20 }: { score: number; max?: number }) {
       <div style={{ width: 50, height: 5, background: 'var(--b3)', borderRadius: 2, overflow: 'hidden' }}>
         <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.5s ease' }} />
       </div>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color, minWidth: 14, textAlign: 'right' }}>{score}</span>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color, minWidth: 14, textAlign: 'right' }}>{score}</span>
     </div>
   );
 }
@@ -147,7 +147,7 @@ export default function WhalesTab() {
 
       {/* Section Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>WHALE ACTIVITY & CHAINSCORE RATINGS</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', color: 'var(--text2)' }}>WHALE ACTIVITY & CHAINSCORE RATINGS</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
         <span className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>PRO</span>
         <span className="tag tag-live">
@@ -194,9 +194,9 @@ export default function WhalesTab() {
             </div>
           </div>
           {whaleLoading ? (
-            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)' }}>SCANNING BLOCKCHAIN...</div>
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>SCANNING BLOCKCHAIN...</div>
           ) : alerts.length === 0 ? (
-            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)' }}>No large transactions in recent blocks</div>
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>No large transactions in recent blocks</div>
           ) : (
             <div style={{ maxHeight: 400, overflowY: 'auto' }}>
               {alerts.map((a, i) => (
@@ -220,20 +220,20 @@ export default function WhalesTab() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: alertTypeColor(a.type) }}>{a.amt}</span>
                       <span style={{
-                        fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', fontWeight: 600,
+                        fontFamily: 'var(--mono)', fontSize: 11, padding: '1px 4px', fontWeight: 600,
                         background: a.type === 'buy' ? 'rgba(16,185,129,0.15)' : a.type === 'sell' ? 'rgba(239,68,68,0.15)' : 'rgba(232,165,52,0.1)',
                         color: alertTypeColor(a.type),
                       }}>{a.dir}</span>
-                      {a.btcAmount >= 100 && <span style={{ fontFamily: 'var(--mono)', fontSize: 7, padding: '1px 4px', background: 'rgba(240,192,64,0.2)', color: 'var(--gold)', fontWeight: 700 }}>🐋 MEGA</span>}
+                      {a.btcAmount >= 100 && <span style={{ fontFamily: 'var(--mono)', fontSize: 11, padding: '1px 4px', background: 'rgba(240,192,64,0.2)', color: 'var(--gold)', fontWeight: 700 }}>🐋 MEGA</span>}
                     </div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginTop: 1 }}>{a.route}</div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>{a.route}</div>
                   </div>
 
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)' }}>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)' }}>
                       <a href={`https://mempool.space/tx/${a.txid.replace('...', '')}`} target="_blank" rel="noopener noreferrer" className="src-link">{a.txid}</a>
                     </div>
-                    <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginTop: 1 }}>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginTop: 1 }}>
                       {a.minsAgo}m ago · #{a.blockHeight}
                     </div>
                   </div>
@@ -250,16 +250,16 @@ export default function WhalesTab() {
             <div className="tag tag-live">Supabase</div>
           </div>
           {csLoading ? (
-            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)' }}>LOADING RATINGS...</div>
+            <div style={{ padding: 20, textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>LOADING RATINGS...</div>
           ) : (
             <div style={{ maxHeight: 400, overflowY: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--b2)', position: 'sticky', top: 0, background: 'var(--s1)' }}>
-                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>ASSET</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>SCORE</th>
-                    <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>GRADE</th>
-                    <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>SIGNAL</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>ASSET</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>SCORE</th>
+                    <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>GRADE</th>
+                    <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>SIGNAL</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -272,9 +272,9 @@ export default function WhalesTab() {
                         onMouseLeave={e => (e.currentTarget.style.background = '')}>
                         <td style={{ padding: '5px 8px' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <span style={{ fontSize: 8, color: 'var(--muted)', transition: 'transform 0.2s', transform: expandedAsset === r.asset ? 'rotate(90deg)' : '' }}>▶</span>
+                            <span style={{ fontSize: 12, color: 'var(--muted)', transition: 'transform 0.2s', transform: expandedAsset === r.asset ? 'rotate(90deg)' : '' }}>▶</span>
                             <span style={{ fontWeight: 600, color: 'var(--text)' }}>{r.asset}</span>
-                            <span style={{ fontSize: 8, color: 'var(--muted)' }}>{r.name}</span>
+                            <span style={{ fontSize: 12, color: 'var(--muted)' }}>{r.name}</span>
                           </div>
                         </td>
                         <td style={{ textAlign: 'right', padding: '5px 8px' }}>
@@ -286,12 +286,12 @@ export default function WhalesTab() {
                           </div>
                         </td>
                         <td style={{ textAlign: 'center', padding: '5px 8px' }}>
-                          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, padding: '2px 6px', fontWeight: 600, color: gradeColor(r.grade), background: `${gradeColor(r.grade)}15` }}>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, padding: '2px 6px', fontWeight: 600, color: gradeColor(r.grade), background: `${gradeColor(r.grade)}15` }}>
                             {r.grade}
                           </span>
                         </td>
                         <td style={{ textAlign: 'center', padding: '5px 8px' }}>
-                          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, padding: '2px 6px', fontWeight: 700, color: signalColor(r.signal) }}>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, padding: '2px 6px', fontWeight: 700, color: signalColor(r.signal) }}>
                             {r.signal}
                           </span>
                         </td>
@@ -299,30 +299,30 @@ export default function WhalesTab() {
                       {expandedAsset === r.asset && (
                         <tr key={`${r.asset}-detail`} style={{ background: 'rgba(232,165,52,0.03)' }}>
                           <td colSpan={4} style={{ padding: '10px 16px' }}>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.1em' }}>FACTOR BREAKDOWN (0-20 each)</div>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.1em' }}>FACTOR BREAKDOWN (0-20 each)</div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
                               <div>
-                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>REGULATORY</div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>REGULATORY</div>
                                 <ScoreBar score={r.factors.regulatory_clarity} />
                               </div>
                               <div>
-                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>ADOPTION</div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>ADOPTION</div>
                                 <ScoreBar score={r.factors.adoption_velocity} />
                               </div>
                               <div>
-                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>DECENTRAL.</div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>DECENTRAL.</div>
                                 <ScoreBar score={r.factors.decentralization} />
                               </div>
                               <div>
-                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>LIQUIDITY</div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>LIQUIDITY</div>
                                 <ScoreBar score={r.factors.liquidity_depth} />
                               </div>
                               <div>
-                                <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginBottom: 2 }}>NETWORK</div>
+                                <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginBottom: 2 }}>NETWORK</div>
                                 <ScoreBar score={r.factors.network_fundamentals} />
                               </div>
                             </div>
-                            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginTop: 6 }}>
+                            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
                               Last scored: {new Date(r.updated).toLocaleDateString()}
                             </div>
                           </td>
@@ -341,12 +341,12 @@ export default function WhalesTab() {
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)' }}>CI · Whale & ChainScore Synthesis</span>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginLeft: 'auto' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>CI · Whale & ChainScore Synthesis</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginLeft: 'auto' }}>
             {whaleData?.source === 'live' ? 'LIVE' : 'CACHED'} · {whaleData ? new Date(whaleData.timestamp).toLocaleTimeString() : ''}
           </span>
         </div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
           <strong style={{ color: 'var(--text)' }}>
             {summary?.netDirection === 'accumulation'
               ? 'Whale activity skews accumulation — large holders are buying, not selling. This aligns with Fear & Greed at extreme lows.'

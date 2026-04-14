@@ -165,7 +165,7 @@ export default function SentimentTab() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.12em', color: 'var(--text2)' }}>SOCIAL SENTIMENT & FEAR INDEX</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', color: 'var(--text2)' }}>SOCIAL SENTIMENT & FEAR INDEX</span>
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
         <DataFreshness lastUpdated={lastUpdated} source="Alternative.me" isLive={isLive} />
         <div className="tag tag-live">
@@ -177,7 +177,7 @@ export default function SentimentTab() {
       <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 8, marginBottom: 8 }}>
         {/* Gauge */}
         <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.12em', marginBottom: 6 }}>CRYPTO FEAR & GREED</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', letterSpacing: '0.12em', marginBottom: 6 }}>CRYPTO FEAR & GREED</div>
           <svg width="120" height="70" viewBox="0 0 120 70">
             <path d="M 10 60 A 50 50 0 0 1 110 60" fill="none" stroke="var(--b3)" strokeWidth="10" strokeLinecap="round"/>
             <path
@@ -195,7 +195,7 @@ export default function SentimentTab() {
               {data.fearGreed.label.toUpperCase()}
             </text>
           </svg>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginTop: 4 }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>
             7d Avg: <span style={{ color: getFngColor(data.stats.avg7d), fontWeight: 600 }}>{data.stats.avg7d}</span>
             <span style={{ marginLeft: 6, color: wowColor }}>{wowSign}{data.stats.weekOverWeek} WoW</span>
           </div>
@@ -203,7 +203,7 @@ export default function SentimentTab() {
 
         {/* 30-day chart */}
         <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 12px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.12em', marginBottom: 4 }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', letterSpacing: '0.12em', marginBottom: 4 }}>
             FEAR & GREED · 30-DAY TREND
           </div>
           {historySlice.length > 1 ? (
@@ -230,7 +230,7 @@ export default function SentimentTab() {
               })()}
             </svg>
           ) : (
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', padding: '16px 0', textAlign: 'center' }}>Loading chart data…</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', padding: '16px 0', textAlign: 'center' }}>Loading chart data…</div>
           )}
           {historySlice.length > 1 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--mono)', fontSize: 6, color: 'var(--muted)' }}>
@@ -271,12 +271,12 @@ export default function SentimentTab() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>ASSET</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>MENTIONS (7d)</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>SENTIMENT</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>DEV ACTIVITY</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>GALAXY SCORE</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>TREND</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>ASSET</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>MENTIONS (7d)</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>SENTIMENT</th>
+              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>DEV ACTIVITY</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>GALAXY SCORE</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>TREND</th>
             </tr>
           </thead>
           <tbody>
@@ -288,10 +288,10 @@ export default function SentimentTab() {
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{s.mentions}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: s.sentiment.startsWith('+') ? 'var(--green)' : 'var(--red)', fontWeight: 600 }}>{s.sentiment}</td>
                 <td style={{ textAlign: 'center', padding: '5px 8px' }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', background: s.devActivity === 'Very High' ? 'rgba(232,165,52,0.15)' : s.devActivity === 'High' ? 'rgba(16,185,129,0.1)' : 'rgba(74,106,140,0.1)', color: s.devActivity === 'Very High' ? 'var(--accent)' : s.devActivity === 'High' ? 'var(--green)' : 'var(--text2)' }}>{s.devActivity}</span>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px', background: s.devActivity === 'Very High' ? 'rgba(232,165,52,0.15)' : s.devActivity === 'High' ? 'rgba(16,185,129,0.1)' : 'rgba(74,106,140,0.1)', color: s.devActivity === 'Very High' ? 'var(--accent)' : s.devActivity === 'High' ? 'var(--green)' : 'var(--text2)' }}>{s.devActivity}</span>
                 </td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 700, color: 'var(--accent)' }}>{s.galaxyScore}</td>
-                <td style={{ padding: '5px 8px', fontSize: 9, color: 'var(--text2)' }}>{s.trend}</td>
+                <td style={{ padding: '5px 8px', fontSize: 11, color: 'var(--text2)' }}>{s.trend}</td>
               </tr>
             ))}
           </tbody>
@@ -302,9 +302,9 @@ export default function SentimentTab() {
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 2s infinite' }} />
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)' }}>Sentiment AI Synthesis · <a className="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Alternative.me</a></span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>Sentiment AI Synthesis · <a className="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank" rel="noopener noreferrer">Alternative.me</a></span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 5, fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
           <div style={{ display: 'flex', gap: 8 }}>
             <span style={{ color: fngColor, flexShrink: 0 }}>▸</span>
             <span><strong style={{ color: 'var(--text)' }}>Fear & Greed Index at {data.fearGreed.value} ({data.fearGreed.label})</strong> — {data.fearGreed.value <= 25 ? 'extreme fear historically precedes 60-day mean reversions of +28%.' : data.fearGreed.value <= 45 ? 'cautious positioning but not capitulation level.' : data.fearGreed.value <= 55 ? 'balanced market with no strong directional bias.' : 'elevated optimism — monitor for overheating.'}</span>

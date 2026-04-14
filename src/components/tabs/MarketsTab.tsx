@@ -190,12 +190,12 @@ export default function MarketsTab() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.14em', color: 'var(--text2)' }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.14em', color: 'var(--text2)' }}>
           TOP 100 MARKETS <span style={{ color: 'var(--muted)' }}>· By Market Cap · Live Feed</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px',
+            fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px',
             background: dataSource.startsWith('live') ? 'rgba(16,185,129,0.15)' : 'rgba(240,192,64,0.15)',
             border: `1px solid ${sourceColor}`,
             color: sourceColor,
@@ -212,11 +212,11 @@ export default function MarketsTab() {
           background: 'rgba(240,192,64,0.08)', border: '1px solid rgba(240,192,64,0.25)',
           padding: '6px 12px', marginBottom: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--gold)' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--gold)' }}>
             ⚠ {error} · Showing {coins.length} assets
           </span>
           <button onClick={handleRetry} style={{
-            fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', background: 'none',
+            fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', background: 'none',
             border: '1px solid var(--accent)', padding: '3px 8px', cursor: 'pointer', letterSpacing: '0.08em',
           }}>
             RETRY
@@ -227,7 +227,7 @@ export default function MarketsTab() {
       <div style={{ display: 'flex', gap: 0, borderBottom: '1px solid var(--b2)', marginBottom: 10 }}>
         {subTabs.map(t => (
           <div key={t.id} onClick={() => setSubTab(t.id)} style={{
-            fontFamily: 'var(--mono)', fontSize: 8, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.1em',
+            fontFamily: 'var(--mono)', fontSize: 12, padding: '6px 14px', cursor: 'pointer', letterSpacing: '0.1em',
             borderBottom: `2px solid ${subTab === t.id ? 'var(--blue)' : 'transparent'}`,
             color: subTab === t.id ? 'var(--blue)' : 'var(--muted)',
           }}>{t.label}</div>
@@ -260,7 +260,7 @@ export default function MarketsTab() {
       <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or ticker..."
           style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 11, padding: '6px 10px', outline: 'none', flex: 1, maxWidth: 280 }} />
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginLeft: 'auto' }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginLeft: 'auto' }}>
           ⟳ AUTO-REFRESH 60s · <a className="src-link" href="https://coinmarketcap.com/api/" target="_blank" rel="noopener noreferrer">API DOCS</a>
         </div>
       </div>
@@ -269,14 +269,14 @@ export default function MarketsTab() {
         <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
           <thead>
             <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 9, letterSpacing: '0.1em', cursor: 'pointer' }} onClick={() => handleSort('rank')}>#</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 9, letterSpacing: '0.1em' }}>ASSET</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 9, cursor: 'pointer' }} onClick={() => handleSort('price')}>PRICE ▾</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 9, cursor: 'pointer' }} onClick={() => handleSort('change24h')}>24H %</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 9 }}>7D %</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 9, cursor: 'pointer' }} onClick={() => handleSort('marketCap')}>MCAP</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 9, cursor: 'pointer' }} onClick={() => handleSort('volume')}>VOL 24H</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 9 }}>SIGNAL</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer' }} onClick={() => handleSort('rank')}>#</th>
+              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, letterSpacing: '0.1em' }}>ASSET</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('price')}>PRICE ▾</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('change24h')}>24H %</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11 }}>7D %</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('marketCap')}>MCAP</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('volume')}>VOL 24H</th>
+              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11 }}>SIGNAL</th>
             </tr>
           </thead>
           <tbody>
@@ -289,12 +289,12 @@ export default function MarketsTab() {
                   <tr key={c.id} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
                       onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
                       onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                    <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 9 }}>{c.market_cap_rank}</td>
+                    <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 11 }}>{c.market_cap_rank}</td>
                     <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <img src={c.image} alt={c.symbol} width={16} height={16} style={{ borderRadius: '50%' }}
                         onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
                       <span style={{ color: 'var(--text)', fontWeight: 500 }}>{c.name}</span>
-                      <span style={{ fontSize: 8, color: 'var(--muted)' }}>{c.symbol.toUpperCase()}</span>
+                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>{c.symbol.toUpperCase()}</span>
                     </td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{formatPrice(c.current_price)}</td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: c.price_change_percentage_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
@@ -306,7 +306,7 @@ export default function MarketsTab() {
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.market_cap)}</td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.total_volume)}</td>
                     <td style={{ textAlign: 'right', padding: '5px 8px' }}>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>{sig.label}</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>{sig.label}</span>
                     </td>
                   </tr>
                 );
@@ -318,8 +318,8 @@ export default function MarketsTab() {
 
       <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-          <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 9, flexShrink: 0 }}>⬡ CI·AI</span>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
+          <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>⬡ CI·AI</span>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
             Market breadth analysis: {gainers} of {coins.length} assets positive in 24h. BTC dominance {coins.length > 0 ? ((coins[0]?.market_cap / totalMcap) * 100).toFixed(1) : '—'}% — capital rotating to safety.
             {dataSource === 'fallback' && <span style={{ color: 'var(--gold)' }}> Data may be delayed — live feed will resume when API is available.</span>}
           </div>

@@ -422,7 +422,7 @@ function ChartSkeleton() {
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: 'var(--mono)',
-      fontSize: 9,
+      fontSize: 13,
       color: 'var(--muted)',
       background: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.03) 0,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 30px)',
     }}>
@@ -439,7 +439,7 @@ function ChartError() {
       alignItems: 'center',
       justifyContent: 'center',
       fontFamily: 'var(--mono)',
-      fontSize: 9,
+      fontSize: 13,
       color: 'var(--red)',
     }}>
       Data unavailable
@@ -472,7 +472,7 @@ function BtcChart() {
       </div>
       <div className="chart-wrap" style={{ height: '145px', position: 'relative' }}>
         {loading && (
-          <div style={{ position: 'absolute', top: 4, right: 4, fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', zIndex: 2, animation: 'pulse 1.5s ease-in-out infinite' }}>
+          <div style={{ position: 'absolute', top: 4, right: 4, fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', zIndex: 2, animation: 'pulse 1.5s ease-in-out infinite' }}>
             Updating...
           </div>
         )}
@@ -507,7 +507,7 @@ function EthChart() {
       </div>
       <div className="chart-wrap" style={{ height: '145px', position: 'relative' }}>
         {loading && (
-          <div style={{ position: 'absolute', top: 4, right: 4, fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', zIndex: 2, animation: 'pulse 1.5s ease-in-out infinite' }}>
+          <div style={{ position: 'absolute', top: 4, right: 4, fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', zIndex: 2, animation: 'pulse 1.5s ease-in-out infinite' }}>
             Updating...
           </div>
         )}
@@ -548,7 +548,7 @@ function QuickGuide() {
   ];
   return (
     <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', marginBottom: 8 }}>
-      <div onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)' }}>
+      <div onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.1em', color: 'var(--muted)' }}>
         <span style={{ transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
         HOW TO READ THIS DASHBOARD — BEGINNER GUIDE
       </div>
@@ -556,8 +556,8 @@ function QuickGuide() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '0 14px 12px' }}>
           {items.map(it => (
             <div key={it.label} style={{ background: 'var(--s2)', border: '1px solid var(--b1)', padding: '8px 10px' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--accent)', marginBottom: 4 }}>{it.label}</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', lineHeight: 1.5 }}>{it.text}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.1em', color: 'var(--accent)', marginBottom: 4 }}>{it.label}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{it.text}</div>
             </div>
           ))}
         </div>
@@ -606,20 +606,20 @@ function MorningBrief() {
   return (
     <div style={{ background: 'var(--s1)', border: '1px solid rgba(232,165,52,0.15)', padding: '12px 14px', position: 'relative', marginBottom: 8 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 600 }}>⬡ CI·AI</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.12em', color: 'var(--text2)' }}>INTELLIGENCE BRIEF</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 600 }}>⬡ CI·AI</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.12em', color: 'var(--text2)' }}>INTELLIGENCE BRIEF</span>
         <div style={{ flex: 1 }} />
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>{dateStr}</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)' }}>{dateStr}</span>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: sourceColor(source), boxShadow: `0 0 6px ${sourceColor(source)}`, animation: 'pulse 2s infinite' }} />
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: `1px solid ${sentimentColor}40`, color: sentimentColor, letterSpacing: '0.08em' }}>{sentiment}</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, padding: '2px 6px', border: `1px solid ${sentimentColor}40`, color: sentimentColor, letterSpacing: '0.08em' }}>{sentiment}</span>
       </div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 700, color: 'var(--accent)', marginBottom: 8, letterSpacing: '-0.01em' }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 700, color: 'var(--accent)', marginBottom: 8, letterSpacing: '-0.01em' }}>
         BTC {btcPrice} ({btcChg24h >= 0 ? '+' : ''}{btcChg24h.toFixed(2)}%) · BTC Dom {btcDom}% · Market: {gainers} up / {losers} down
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
         <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', padding: '8px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--green)', letterSpacing: '0.12em', marginBottom: 4 }}>▲ BULLISH</div>
-          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--green)', letterSpacing: '0.12em', marginBottom: 4 }}>▲ BULLISH</div>
+          <div style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--text)' }}>
             {(() => {
               const topGainers = top20.filter(c => c.percent_change_24h > 0).sort((a, b) => b.percent_change_24h - a.percent_change_24h).slice(0, 3);
               if (topGainers.length === 0) return 'No significant gainers in top 20 today.';
@@ -628,15 +628,15 @@ function MorningBrief() {
           </div>
         </div>
         <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)', padding: '8px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--red)', letterSpacing: '0.12em', marginBottom: 4 }}>▼ WATCH</div>
-          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--red)', letterSpacing: '0.12em', marginBottom: 4 }}>▼ WATCH</div>
+          <div style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--text)' }}>
             {eth ? `ETH ${ethChg7d >= 0 ? '+' : ''}${ethChg7d.toFixed(2)}% over 7 days (${fmtPrice(eth.price)}).` : 'ETH data loading.'}
             {' '}BTC dominance at {btcDom}% — {parseFloat(btcDom) > 60 ? 'capital rotating to safety, altcoin weakness likely' : 'healthy distribution across assets'}.
           </div>
         </div>
         <div style={{ background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.12)', padding: '8px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 4 }}>◈ KEY CATALYST</div>
-          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 4 }}>◈ KEY CATALYST</div>
+          <div style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--text)' }}>
             {fngVal <= 25 ? (
               <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — historically, scores below 25 precede 60-day mean reversions of +28%. Institutional accumulation window.{' '}
               CLARITY Act advancing — first SEC/CFTC joint framework targeting Q2 2026.</>
@@ -649,7 +649,7 @@ function MorningBrief() {
         </div>
       </div>
       <div style={{ borderTop: '1px solid var(--b2)', paddingTop: 8, marginTop: 4 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.12em', marginBottom: 6 }}>RECENT REPORTS — FREE SOURCES</div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.12em', marginBottom: 6 }}>RECENT REPORTS — FREE SOURCES</div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           {[
             { label: 'Glassnode: BTC on-chain →', href: 'https://insights.glassnode.com' },
@@ -658,11 +658,11 @@ function MorningBrief() {
             { label: 'Messari: Protocol analysis →', href: 'https://messari.io/research' },
             { label: 'CryptoQuant: Whale flows →', href: 'https://cryptoquant.com' },
           ].map(s => (
-            <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', background: 'var(--s2)', border: '1px solid var(--b2)', padding: '3px 8px', fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)' }}>{s.label}</a>
+            <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', background: 'var(--s2)', border: '1px solid var(--b2)', padding: '3px 8px', fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)' }}>{s.label}</a>
           ))}
         </div>
       </div>
-      <div style={{ position: 'absolute', bottom: 8, right: 8, fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: 2 }}>Pro unlocks real-time AI analysis</div>
+      <div style={{ position: 'absolute', bottom: 8, right: 8, fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: 2 }}>Pro unlocks real-time AI analysis</div>
     </div>
   );
 }
@@ -701,35 +701,35 @@ function AskCI() {
   return (
     <div style={{ background: 'var(--b1)', display: 'flex', flexDirection: 'column', gap: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', background: 'var(--s1)', border: '1px solid var(--b2)' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--accent)', padding: '0 10px', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>ASK CI&gt;</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--accent)', padding: '0 10px', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>ASK CI&gt;</span>
         <input
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAsk()}
           placeholder="Ask anything: 'BTC price target?' · 'Explain MVRV' · 'Best ISO 20022 asset?'"
-          style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 11, padding: '8px 0', outline: 'none' }}
+          style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 13, padding: '8px 0', outline: 'none' }}
         />
-        <button onClick={() => handleAsk()} disabled={loading} style={{ background: loading ? 'var(--s2)' : 'rgba(232,165,52,0.08)', border: '1px solid rgba(232,165,52,0.2)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.12em', padding: '6px 14px', cursor: loading ? 'wait' : 'pointer', margin: 4 }}>{loading ? 'ANALYZING...' : 'ANALYZE'}</button>
+        <button onClick={() => handleAsk()} disabled={loading} style={{ background: loading ? 'var(--s2)' : 'rgba(232,165,52,0.08)', border: '1px solid rgba(232,165,52,0.2)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.12em', padding: '6px 14px', cursor: loading ? 'wait' : 'pointer', margin: 4 }}>{loading ? 'ANALYZING...' : 'ANALYZE'}</button>
       </div>
       <div style={{ display: 'flex', gap: 4, padding: '4px 8px', background: 'var(--s1)', flexWrap: 'wrap' }}>
         {chips.map(c => (
-          <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 8, padding: '3px 8px', cursor: 'pointer' }}>{c}</button>
+          <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 16, padding: '3px 8px', cursor: 'pointer' }}>{c}</button>
         ))}
       </div>
       {loading && (
-        <div style={{ background: 'var(--s1)', padding: '12px 14px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: 'var(--s1)', padding: '12px 14px', fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>◈</span> CI·AI analyzing your query...
         </div>
       )}
       {response && !loading && (
         <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', letterSpacing: '0.1em' }}>◈ CI·AI RESPONSE</span>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: source === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--accent)', letterSpacing: '0.1em' }}>◈ CI·AI RESPONSE</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: source === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
               {source === 'live' ? '● LIVE AI' : source === 'cached' ? '● CACHED INTELLIGENCE' : '● OFFLINE'}
             </span>
           </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.7 }}
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)', lineHeight: 1.7 }}
             dangerouslySetInnerHTML={{ __html: response.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>') }}
           />
         </div>
@@ -815,9 +815,9 @@ function SectorHeat() {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
       {cells.map(c => (
         <div key={c.label} style={{ background: 'var(--s1)', padding: '7px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>{c.label}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>{c.label}</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: c.bar !== undefined ? 14 : 10, fontWeight: 700, color: c.color }}>
-            {c.val}{c.bar !== undefined && <span style={{ fontSize: 9, color: 'var(--muted)' }}>{c.sub}</span>}
+            {c.val}{c.bar !== undefined && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{c.sub}</span>}
           </div>
           {c.bar !== undefined ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
@@ -826,7 +826,7 @@ function SectorHeat() {
               </div>
             </div>
           ) : (
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)' }}>{c.sub}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)' }}>{c.sub}</div>
           )}
         </div>
       ))}
@@ -903,7 +903,7 @@ function Heatmap() {
       <div className="ph">
         <div className="pt">Market Heatmap — 24h</div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.06em' }}>SIZE = MARKET CAP</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.06em' }}>SIZE = MARKET CAP</span>
           <div className="tag tag-live">
             <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
             {sourceLabel(source)}
@@ -914,7 +914,7 @@ function Heatmap() {
       {/* Heatmap grid */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {loading && topCoins.length === 0 && (
-          <div style={{ padding: '30px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>
+          <div style={{ padding: '30px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)' }}>
             <span style={{ animation: 'pulse 1.5s ease-in-out infinite', display: 'inline-block' }}>Connecting to live feeds...</span>
           </div>
         )}
@@ -984,7 +984,7 @@ function Heatmap() {
                     {isLarge && (
                       <div style={{
                         fontFamily: 'var(--mono)',
-                        fontSize: 8,
+                        fontSize: 16,
                         color: 'rgba(255,255,255,0.6)',
                         lineHeight: 1.3,
                       }}>
@@ -1020,20 +1020,20 @@ function Heatmap() {
           {topCoins[hoveredIdx].image && (
             <img src={topCoins[hoveredIdx].image} alt="" width={18} height={18} style={{ borderRadius: 2 }} />
           )}
-          <span style={{ fontSize: 10, color: 'var(--text)', fontWeight: 600 }}>{topCoins[hoveredIdx].name}</span>
-          <span style={{ fontSize: 9, color: 'var(--muted)' }}>{topCoins[hoveredIdx].symbol}</span>
-          <span style={{ fontSize: 10, color: 'var(--text)', marginLeft: 'auto' }}>
+          <span style={{ fontSize: 16, color: 'var(--text)', fontWeight: 600 }}>{topCoins[hoveredIdx].name}</span>
+          <span style={{ fontSize: 13, color: 'var(--muted)' }}>{topCoins[hoveredIdx].symbol}</span>
+          <span style={{ fontSize: 16, color: 'var(--text)', marginLeft: 'auto' }}>
             <AnimPrice value={topCoins[hoveredIdx].price} format="price" />
           </span>
           <span style={{
-            fontSize: 9,
+            fontSize: 13,
             fontWeight: 600,
             color: topCoins[hoveredIdx].percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)',
           }}>
             <AnimPrice value={topCoins[hoveredIdx].percent_change_24h} format="pct" />
           </span>
-          <span style={{ fontSize: 8, color: 'var(--muted)' }}>MCap {fmtUsd(topCoins[hoveredIdx].market_cap, 1)}</span>
-          <span style={{ fontSize: 8, color: 'var(--muted)' }}>Vol {fmtUsd(topCoins[hoveredIdx].volume_24h, 1)}</span>
+          <span style={{ fontSize: 16, color: 'var(--muted)' }}>MCap {fmtUsd(topCoins[hoveredIdx].market_cap, 1)}</span>
+          <span style={{ fontSize: 16, color: 'var(--muted)' }}>Vol {fmtUsd(topCoins[hoveredIdx].volume_24h, 1)}</span>
         </div>
       )}
 
@@ -1054,27 +1054,27 @@ function Heatmap() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             {selectedCoin.image && <img src={selectedCoin.image} alt="" width={20} height={20} style={{ borderRadius: 2 }} />}
             <div>
-              <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 700 }}>{selectedCoin.name}</div>
-              <div style={{ fontSize: 8, color: 'var(--muted)' }}>#{selectedCoin.cmc_rank}</div>
+              <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 700 }}>{selectedCoin.name}</div>
+              <div style={{ fontSize: 16, color: 'var(--muted)' }}>#{selectedCoin.cmc_rank}</div>
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>PRICE</div>
-            <div style={{ fontSize: 12, color: 'var(--text)', fontWeight: 600 }}><AnimPrice value={selectedCoin.price} /></div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>PRICE</div>
+            <div style={{ fontSize: 16, color: 'var(--text)', fontWeight: 600 }}><AnimPrice value={selectedCoin.price} /></div>
           </div>
           <div>
-            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>24H</div>
-            <div style={{ fontSize: 12, fontWeight: 600, color: selectedCoin.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>24H</div>
+            <div style={{ fontSize: 16, fontWeight: 600, color: selectedCoin.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
               <AnimPrice value={selectedCoin.percent_change_24h} format="pct" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>MCAP</div>
-            <div style={{ fontSize: 11, color: 'var(--text)' }}>{fmtUsd(selectedCoin.market_cap, 1)}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>MCAP</div>
+            <div style={{ fontSize: 13, color: 'var(--text)' }}>{fmtUsd(selectedCoin.market_cap, 1)}</div>
           </div>
           <div>
-            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>VOL 24H</div>
-            <div style={{ fontSize: 11, color: 'var(--text)' }}>{fmtUsd(selectedCoin.volume_24h, 1)}</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>VOL 24H</div>
+            <div style={{ fontSize: 13, color: 'var(--text)' }}>{fmtUsd(selectedCoin.volume_24h, 1)}</div>
           </div>
         </div>
       )}
@@ -1132,17 +1132,17 @@ function ETFFlows() {
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
           <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text)' }}>{f.fund_name}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>{f.issuer.toUpperCase()} · {f.ticker}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text)' }}>{f.fund_name}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>{f.issuer.toUpperCase()} · {f.ticker}</div>
           </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: f.flow >= 0 ? 'var(--green)' : 'var(--red)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: f.flow >= 0 ? 'var(--green)' : 'var(--red)' }}>
             {f.flow >= 0 ? '+' : '−'}${Math.abs(f.flow).toFixed(1)}M
           </div>
         </div>
       ))}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(232,165,52,0.04)', borderTop: '1px solid var(--b2)' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.08em' }}>Net Flow · All BTC ETFs</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: displayNet >= 0 ? 'var(--green)' : 'var(--red)' }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)', letterSpacing: '0.08em' }}>Net Flow · All BTC ETFs</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: displayNet >= 0 ? 'var(--green)' : 'var(--red)' }}>
           {displayNet >= 0 ? '+' : '−'}${Math.abs(displayNet).toFixed(1)}M
         </span>
       </div>
@@ -1191,7 +1191,7 @@ function ChainScore() {
         <div className="pt">ChainScore™ — Top Rated</div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>v1.0</div>
-          {live && <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--green)' }}>● LIVE</span>}
+          {live && <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--green)' }}>● LIVE</span>}
         </div>
       </div>
       {displayScores.map((s, i) => (
@@ -1199,15 +1199,15 @@ function ChainScore() {
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', width: 20 }}>{String(i + 1).padStart(2, '0')}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', width: 20 }}>{String(i + 1).padStart(2, '0')}</span>
           <div style={{ flex: '0 0 90px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text)' }}>{s.name}</div>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)' }}>{s.sym}</span>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text)' }}>{s.name}</div>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)' }}>{s.sym}</span>
           </div>
           <div style={{ flex: 1, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
             <div style={{ width: `${s.score}%`, height: '100%', background: `linear-gradient(90deg, ${bandColor(s.score)}, var(--accent))`, borderRadius: 3, transition: 'width 0.8s ease' }} />
           </div>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: bandColor(s.score), width: 30, textAlign: 'right' }}>{s.score}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: bandColor(s.score), width: 30, textAlign: 'right' }}>{s.score}</span>
         </div>
       ))}
     </div>
@@ -1239,8 +1239,8 @@ function MarketTable() {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-            <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8, letterSpacing: '0.1em' }}>#</th>
-            <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 8, letterSpacing: '0.1em' }}>ASSET</th>
+            <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 16, letterSpacing: '0.1em' }}>#</th>
+            <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 16, letterSpacing: '0.1em' }}>ASSET</th>
             <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>PRICE</th>
             <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>24H</th>
             <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>7D</th>
@@ -1262,7 +1262,7 @@ function MarketTable() {
                 <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
                   <span style={{ color: 'var(--text)', fontWeight: 500 }}>{a.name}</span>
-                  <span style={{ fontSize: 8, color: 'var(--muted)' }}>{a.symbol}</span>
+                  <span style={{ fontSize: 16, color: 'var(--muted)' }}>{a.symbol}</span>
                 </td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{fmtPrice(a.price)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: d1 >= 0 ? 'var(--green)' : 'var(--red)' }}>{d1 >= 0 ? '+' : ''}{d1.toFixed(2)}%</td>
@@ -1270,7 +1270,7 @@ function MarketTable() {
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.market_cap, 1)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.volume_24h, 1)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px' }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 16, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>
                     {sig.label}
                   </span>
                 </td>
@@ -1336,20 +1336,20 @@ function WhaleFeed() {
       <div className="ph" style={{ marginTop: 8 }}>
         <div className="pt">Live Whale Alerts</div>
         <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
-          {isLive && <span style={{ color: 'var(--green)', fontSize: 7, marginRight: 4 }}>●</span>}
+          {isLive && <span style={{ color: 'var(--green)', fontSize: 13, marginRight: 4 }}>●</span>}
           <a className="src-link" href="https://whale-alert.io" target="_blank" rel="noopener noreferrer">Whale Alert API</a>
         </div>
       </div>
       {whales.map((w, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 12px', borderBottom: '1px solid var(--b1)' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 700, color: w.color, padding: '2px 6px', border: `1px solid ${w.color}`, letterSpacing: '0.06em', width: 36, textAlign: 'center' }}>{w.dir}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: w.color, padding: '2px 6px', border: `1px solid ${w.color}`, letterSpacing: '0.06em', width: 36, textAlign: 'center' }}>{w.dir}</span>
           <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600, color: 'var(--text)' }}>{w.amt}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--text2)' }}>{w.asset}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{w.amt}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)' }}>{w.asset}</div>
           </div>
-          <div style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>{w.route}</div>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>{w.age}</span>
-          <a href="https://whale-alert.io" target="_blank" rel="noopener noreferrer" className="src-link" style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', opacity: 0.7 }}>TX ↗</a>
+          <div style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)' }}>{w.route}</div>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)' }}>{w.age}</span>
+          <a href="https://whale-alert.io" target="_blank" rel="noopener noreferrer" className="src-link" style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', opacity: 0.7 }}>TX ↗</a>
         </div>
       ))}
     </>
@@ -1361,11 +1361,11 @@ function BloombergCallout() {
   const features = ['On-chain analytics', 'Top 100 live prices', 'Whale surveillance', 'DeFi intelligence', 'ISO 20022 tracking', 'AI synthesis layer'];
   return (
     <div style={{ margin: '12px 0 0', background: 'linear-gradient(90deg,rgba(239,68,68,0.06),rgba(107,138,255,0.06))', border: '1px solid rgba(107,138,255,0.15)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.14em', color: 'var(--blue)', flexShrink: 0 }}>BLOOMBERG CANNOT DO THIS ↓</span>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.14em', color: 'var(--blue)', flexShrink: 0 }}>BLOOMBERG CANNOT DO THIS ↓</span>
       {features.map(f => (
-        <span key={f} style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>{f} <span style={{ color: 'var(--red)' }}>✗ Bloomberg</span></span>
+        <span key={f} style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)' }}>{f} <span style={{ color: 'var(--red)' }}>✗ Bloomberg</span></span>
       ))}
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginLeft: 'auto', flexShrink: 0 }}>Bloomberg: $24K–$32K/yr · ChainIntel: from $0</span>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)', marginLeft: 'auto', flexShrink: 0 }}>Bloomberg: $24K–$32K/yr · ChainIntel: from $0</span>
     </div>
   );
 }
@@ -1475,7 +1475,7 @@ export default function OverviewTab() {
         </div>
         <div className="panel panel-hover">
           <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>ChainIntel AI</div></div>
-          <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.6 }}>
+          <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)', lineHeight: 1.6 }}>
             <strong style={{ color: 'var(--text)' }}>Bitcoin holding $73K at Extreme Fear (13/100).</strong> Price stability against capitulation-level sentiment historically precedes 8–15% bounces. ETF flows constructive: IBIT +$224M, net +$169.6M, 4th consecutive inflow day. Exchange reserves −42,800 BTC in 30 days. LTH supply at 74.8%. <strong style={{ color: 'var(--text)' }}>Setup cautiously bullish for 90+ day horizon.</strong>
           </div>
           <WhaleFeed />

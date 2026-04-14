@@ -740,10 +740,26 @@ function AskCI() {
 
 /* ── KPI Card ── */
 function KPI({ label, value, change, changeDir, source, color }: { label: string; value: string; change: string; changeDir: 'up' | 'dn' | 'neutral'; source: string; color?: string }) {
+  const prevVal = useRef(value);
+  const [flash, setFlash] = useState(false);
+
+  useEffect(() => {
+    if (value !== prevVal.current) {
+      setFlash(true);
+      prevVal.current = value;
+      const t = setTimeout(() => setFlash(false), 800);
+      return () => clearTimeout(t);
+    }
+  }, [value]);
+
   return (
     <div className="kpi metric-card">
       <div className="kpi-label">{label}</div>
-      <div className="kpi-val" style={{ color: color || 'var(--accent)' }}>{value}</div>
+      <div className="kpi-val" style={{
+        color: color || 'var(--accent)',
+        transition: 'text-shadow 0.3s ease',
+        textShadow: flash ? `0 0 12px ${color || 'rgba(232,165,52,0.6)'}` : 'none',
+      }}>{value}</div>
       <div className={`kpi-chg ${changeDir}`}>{change}</div>
       <div className="kpi-src" dangerouslySetInnerHTML={{ __html: source }} />
     </div>
@@ -818,125 +834,380 @@ function SectorHeat() {
   );
 }
 
-/* ── Heatmap (powered by shared CMC data) ── */
+/* ── Animated price component ── */
+function AnimPrice({ value, format = 'price' }: { value: number; format?: 'price' | 'pct' }) {
+  const prevRef = useRef(value);
+  const [flash, setFlash] = useState<'up' | 'dn' | null>(null);
+
+  useEffect(() => {
+    if (value !== prevRef.current) {
+      setFlash(value > prevRef.current ? 'up' : 'dn');
+      prevRef.current = value;
+      const t = setTimeout(() => setFlash(null), 900);
+      return () => clearTimeout(t);
+    }
+  }, [value]);
+
+  const display = format === 'pct'
+    ? `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+    : fmtPrice(value);
+
+  return (
+    <span style={{
+      transition: 'color 0.3s ease',
+      color: flash === 'up' ? 'var(--green)' : flash === 'dn' ? 'var(--red)' : undefined,
+      textShadow: flash ? `0 0 8px ${flash === 'up' ? 'rgba(52,211,153,0.5)' : 'rgba(248,113,113,0.5)'}` : 'none',
+    }}>
+      {display}
+    </span>
+  );
+}
+
+/* ── Heatmap (powered by shared CMC data) — Treemap-style interactive ── */
 function Heatmap() {
   const { coins, source, loading } = useContext(CmcContext);
-  const topCoins = coins.slice(0, 20);
+  const topCoins = coins.slice(0, 25);
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [selectedCoin, setSelectedCoin] = useState<CmcCoin | null>(null);
 
-  function getSpan(idx: number): { row?: string; col?: string } {
-    if (idx === 0) return { row: 'span 2', col: 'span 2' };
-    if (idx === 1) return { row: 'span 2' };
-    return {};
+  // Compute treemap layout: size cells by market cap
+  const totalMcap = topCoins.reduce((s, c) => s + c.market_cap, 0) || 1;
+
+  // Treemap row layout: split coins into rows proportional to mcap
+  function buildRows(items: CmcCoin[], cols: number): CmcCoin[][] {
+    const rows: CmcCoin[][] = [];
+    let row: CmcCoin[] = [];
+    let rowMcap = 0;
+    const avgRowMcap = totalMcap / Math.ceil(items.length / cols);
+    for (const c of items) {
+      row.push(c);
+      rowMcap += c.market_cap;
+      if (row.length >= cols || rowMcap >= avgRowMcap * 1.2) {
+        rows.push(row);
+        row = [];
+        rowMcap = 0;
+      }
+    }
+    if (row.length > 0) rows.push(row);
+    return rows;
+  }
+
+  const rows = buildRows(topCoins, 6);
+
+  function getIntensity(chg: number): number {
+    return Math.min(0.08 + Math.abs(chg) * 0.05, 0.55);
+  }
+
+  return (
+    <div className="panel panel-hover" style={{ position: 'relative' }}>
+      <div className="ph">
+        <div className="pt">Market Heatmap — 24h</div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.06em' }}>SIZE = MARKET CAP</span>
+          <div className="tag tag-live">
+            <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
+            {sourceLabel(source)}
+          </div>
+        </div>
+      </div>
+
+      {/* Heatmap grid */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        {loading && topCoins.length === 0 && (
+          <div style={{ padding: '30px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>
+            <span style={{ animation: 'pulse 1.5s ease-in-out infinite', display: 'inline-block' }}>Connecting to live feeds...</span>
+          </div>
+        )}
+        {rows.map((row, ri) => {
+          const rowMcap = row.reduce((s, c) => s + c.market_cap, 0);
+          return (
+            <div key={ri} style={{ display: 'flex', gap: 2, height: ri === 0 ? 80 : ri === 1 ? 60 : 48 }}>
+              {row.map((c, ci) => {
+                const chg = c.percent_change_24h;
+                const intensity = getIntensity(chg);
+                const widthPct = (c.market_cap / rowMcap) * 100;
+                const globalIdx = topCoins.indexOf(c);
+                const isHovered = hoveredIdx === globalIdx;
+                const isSelected = selectedCoin?.symbol === c.symbol;
+                const isLarge = ri < 2 && ci < 3;
+
+                return (
+                  <div
+                    key={c.symbol}
+                    onMouseEnter={() => setHoveredIdx(globalIdx)}
+                    onMouseLeave={() => setHoveredIdx(null)}
+                    onClick={() => setSelectedCoin(isSelected ? null : c)}
+                    style={{
+                      width: `${widthPct}%`,
+                      minWidth: 0,
+                      background: chg >= 0
+                        ? `rgba(52,211,153,${intensity})`
+                        : `rgba(248,113,113,${intensity})`,
+                      border: isSelected
+                        ? '1px solid var(--accent)'
+                        : isHovered
+                          ? `1px solid ${chg >= 0 ? 'rgba(52,211,153,0.5)' : 'rgba(248,113,113,0.5)'}`
+                          : '1px solid transparent',
+                      borderRadius: 2,
+                      padding: '4px 5px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      transform: isHovered ? 'scale(1.03)' : 'scale(1)',
+                      zIndex: isHovered ? 2 : 1,
+                      boxShadow: isHovered
+                        ? `0 0 16px ${chg >= 0 ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}` : 'none',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div style={{
+                      fontFamily: 'var(--mono)',
+                      fontSize: isLarge ? 12 : 9,
+                      fontWeight: 700,
+                      color: '#fff',
+                      letterSpacing: '0.04em',
+                      lineHeight: 1,
+                    }}>{c.symbol}</div>
+                    <div style={{
+                      fontFamily: 'var(--mono)',
+                      fontSize: isLarge ? 11 : 8,
+                      fontWeight: 600,
+                      color: chg >= 0 ? '#6ee7b7' : '#fca5a5',
+                      lineHeight: 1.3,
+                    }}>
+                      <AnimPrice value={chg} format="pct" />
+                    </div>
+                    {isLarge && (
+                      <div style={{
+                        fontFamily: 'var(--mono)',
+                        fontSize: 8,
+                        color: 'rgba(255,255,255,0.6)',
+                        lineHeight: 1.3,
+                      }}>
+                        <AnimPrice value={c.price} format="price" />
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Hover tooltip */}
+      {hoveredIdx !== null && topCoins[hoveredIdx] && (
+        <div style={{
+          position: 'absolute',
+          bottom: 6,
+          left: 8,
+          right: 8,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '5px 10px',
+          background: 'rgba(10,10,10,0.92)',
+          border: '1px solid var(--b3)',
+          borderRadius: 3,
+          backdropFilter: 'blur(8px)',
+          zIndex: 10,
+          fontFamily: 'var(--mono)',
+        }}>
+          {topCoins[hoveredIdx].image && (
+            <img src={topCoins[hoveredIdx].image} alt="" width={18} height={18} style={{ borderRadius: 2 }} />
+          )}
+          <span style={{ fontSize: 10, color: 'var(--text)', fontWeight: 600 }}>{topCoins[hoveredIdx].name}</span>
+          <span style={{ fontSize: 9, color: 'var(--muted)' }}>{topCoins[hoveredIdx].symbol}</span>
+          <span style={{ fontSize: 10, color: 'var(--text)', marginLeft: 'auto' }}>
+            <AnimPrice value={topCoins[hoveredIdx].price} format="price" />
+          </span>
+          <span style={{
+            fontSize: 9,
+            fontWeight: 600,
+            color: topCoins[hoveredIdx].percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)',
+          }}>
+            <AnimPrice value={topCoins[hoveredIdx].percent_change_24h} format="pct" />
+          </span>
+          <span style={{ fontSize: 8, color: 'var(--muted)' }}>MCap {fmtUsd(topCoins[hoveredIdx].market_cap, 1)}</span>
+          <span style={{ fontSize: 8, color: 'var(--muted)' }}>Vol {fmtUsd(topCoins[hoveredIdx].volume_24h, 1)}</span>
+        </div>
+      )}
+
+      {/* Selected coin detail panel */}
+      {selectedCoin && (
+        <div style={{
+          marginTop: 6,
+          padding: '8px 12px',
+          background: 'rgba(232,165,52,0.03)',
+          border: '1px solid var(--accent-border)',
+          borderRadius: 3,
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr 1fr 1fr 1fr',
+          gap: '4px 16px',
+          alignItems: 'center',
+          fontFamily: 'var(--mono)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            {selectedCoin.image && <img src={selectedCoin.image} alt="" width={20} height={20} style={{ borderRadius: 2 }} />}
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--text)', fontWeight: 700 }}>{selectedCoin.name}</div>
+              <div style={{ fontSize: 8, color: 'var(--muted)' }}>#{selectedCoin.cmc_rank}</div>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>PRICE</div>
+            <div style={{ fontSize: 12, color: 'var(--text)', fontWeight: 600 }}><AnimPrice value={selectedCoin.price} /></div>
+          </div>
+          <div>
+            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>24H</div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: selectedCoin.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+              <AnimPrice value={selectedCoin.percent_change_24h} format="pct" />
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>MCAP</div>
+            <div style={{ fontSize: 11, color: 'var(--text)' }}>{fmtUsd(selectedCoin.market_cap, 1)}</div>
+          </div>
+          <div>
+            <div style={{ fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>VOL 24H</div>
+            <div style={{ fontSize: 11, color: 'var(--text)' }}>{fmtUsd(selectedCoin.volume_24h, 1)}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ── ETF Flows (live from Supabase + fallback) ── */
+function ETFFlows() {
+  const [flows, setFlows] = useState<{ fund_name: string; ticker: string; issuer: string; flow: number }[]>([]);
+  const [netFlow, setNetFlow] = useState<number | null>(null);
+  const [flowDate, setFlowDate] = useState<string>('');
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/etf-flows').then(r => r.json()).then(d => {
+      if (d.flows && d.flows.length > 0) {
+        const grouped: Record<string, { fund_name: string; ticker: string; issuer: string; flow: number }> = {};
+        for (const f of d.flows) {
+          const key = f.ticker || f.fund_name;
+          if (!grouped[key]) grouped[key] = { fund_name: f.fund_name, ticker: f.ticker, issuer: f.issuer || f.ticker, flow: 0 };
+          grouped[key].flow += (f.flow_usd_millions ?? 0);
+        }
+        const sorted = Object.values(grouped).sort((a, b) => Math.abs(b.flow) - Math.abs(a.flow)).slice(0, 6);
+        setFlows(sorted);
+        setNetFlow(sorted.reduce((s, f) => s + f.flow, 0));
+        setFlowDate(d.flows[0]?.date || '');
+        setLive(true);
+      }
+    }).catch(() => {});
+  }, []);
+
+  // Fallback if API returns nothing
+  const displayFlows = flows.length > 0 ? flows : [
+    { fund_name: 'iShares Bitcoin Trust', ticker: 'IBIT', issuer: 'BlackRock', flow: 224.1 },
+    { fund_name: 'Wise Origin Bitcoin', ticker: 'FBTC', issuer: 'Fidelity', flow: 88.3 },
+    { fund_name: 'ARK 21Shares Bitcoin', ticker: 'ARKB', issuer: 'Ark/21Shares', flow: 31.2 },
+    { fund_name: 'Bitwise Bitcoin ETF', ticker: 'BITB', issuer: 'Bitwise', flow: 18.4 },
+    { fund_name: 'Grayscale Bitcoin Trust', ticker: 'GBTC', issuer: 'Grayscale', flow: -174.0 },
+  ];
+  const displayNet = netFlow ?? displayFlows.reduce((s, f) => s + f.flow, 0);
+
+  return (
+    <div className="panel panel-hover">
+      <div className="ph">
+        <div className="pt">Bitcoin ETF Daily Flows{flowDate ? ` · ${flowDate}` : ''}</div>
+        <div className="tag tag-live">
+          <span style={{ marginRight: 4, color: live ? 'var(--green)' : 'var(--gold)', fontSize: 7 }}>●</span>
+          {live ? 'LIVE' : 'CACHED'} · <a className="src-link" href="https://farside.co.uk/bitcoin-etf-flow-all-data/" target="_blank" rel="noopener noreferrer">Farside</a>
+        </div>
+      </div>
+      {displayFlows.map(f => (
+        <div key={f.ticker} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'default' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text)' }}>{f.fund_name}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>{f.issuer.toUpperCase()} · {f.ticker}</div>
+          </div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: f.flow >= 0 ? 'var(--green)' : 'var(--red)' }}>
+            {f.flow >= 0 ? '+' : '−'}${Math.abs(f.flow).toFixed(1)}M
+          </div>
+        </div>
+      ))}
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(232,165,52,0.04)', borderTop: '1px solid var(--b2)' }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.08em' }}>Net Flow · All BTC ETFs</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: displayNet >= 0 ? 'var(--green)' : 'var(--red)' }}>
+          {displayNet >= 0 ? '+' : '−'}${Math.abs(displayNet).toFixed(1)}M
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ── ChainScore (live from Supabase + fallback) ── */
+function ChainScore() {
+  const [scores, setScores] = useState<{ sym: string; name: string; score: number; band: string }[]>([]);
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/chainscore?all=true').then(r => r.json()).then(d => {
+      if (d.ratings && d.ratings.length > 0) {
+        const sorted = d.ratings
+          .map((r: any) => ({ sym: r.asset_symbol, name: r.asset_name || r.asset_symbol, score: r.total_score ?? 0, band: r.score_band || '' }))
+          .sort((a: any, b: any) => b.score - a.score)
+          .slice(0, 7);
+        setScores(sorted);
+        setLive(true);
+      }
+    }).catch(() => {});
+  }, []);
+
+  const displayScores = scores.length > 0 ? scores : [
+    { sym: 'BTC', name: 'Bitcoin', score: 92, band: 'Institutional Grade' },
+    { sym: 'ETH', name: 'Ethereum', score: 87, band: 'Investment Grade' },
+    { sym: 'XRP', name: 'XRP', score: 79, band: 'Investment Grade' },
+    { sym: 'HBAR', name: 'HBAR', score: 74, band: 'Speculative Grade' },
+    { sym: 'QNT', name: 'Quant', score: 71, band: 'Speculative Grade' },
+    { sym: 'SOL', name: 'Solana', score: 68, band: 'Speculative Grade' },
+    { sym: 'XLM', name: 'Stellar', score: 64, band: 'Speculative Grade' },
+  ];
+
+  function bandColor(score: number): string {
+    if (score >= 90) return 'var(--green)';
+    if (score >= 75) return 'var(--accent)';
+    if (score >= 60) return 'var(--blue)';
+    return 'var(--muted)';
   }
 
   return (
     <div className="panel panel-hover">
       <div className="ph">
-        <div className="pt">Market Heatmap — 24h Performance</div>
-        <div style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>▪ size = market cap</span>
-          <div className="tag tag-live">
-            <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
-            {sourceLabel(source)} · <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CoinMarketCap</a>
-          </div>
-        </div>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 2, position: 'relative' }}>
-        {loading && topCoins.length === 0 && (
-          <div style={{ gridColumn: '1 / -1', padding: '20px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', animation: 'pulse 1.5s ease-in-out infinite' }}>Loading live market data...</div>
-        )}
-        {topCoins.map((c, i) => {
-          const chg = c.percent_change_24h;
-          const span = getSpan(i);
-          return (
-            <div key={c.symbol} style={{
-              background: chg >= 0 ? `rgba(16,185,129,${Math.min(0.06 + Math.abs(chg) * 0.04, 0.4)})` : `rgba(239,68,68,${Math.min(0.06 + Math.abs(chg) * 0.04, 0.4)})`,
-              border: `1px solid ${chg >= 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'}`,
-              padding: '8px 6px',
-              textAlign: 'center',
-              gridRow: span.row,
-              gridColumn: span.col,
-              transition: 'background 0.3s ease',
-            }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600, color: 'var(--text)' }}>{c.symbol}</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: chg >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                {chg >= 0 ? '+' : ''}{chg.toFixed(2)}%
-              </div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', marginTop: 2 }}>{fmtPrice(c.price)}</div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/* ── ETF Flows ── */
-function ETFFlows() {
-  const flows = [
-    { name: 'iShares Bitcoin Trust', issuer: 'BLACKROCK · IBIT', flow: '+$224.1M', up: true },
-    { name: 'Wise Origin Bitcoin', issuer: 'FIDELITY · FBTC', flow: '+$88.3M', up: true },
-    { name: 'ARK 21Shares Bitcoin', issuer: 'ARK INVEST · ARKB', flow: '+$31.2M', up: true },
-    { name: 'Bitwise Bitcoin ETF', issuer: 'BITWISE · BITB', flow: '+$18.4M', up: true },
-    { name: 'Grayscale Bitcoin Trust', issuer: 'GRAYSCALE · GBTC', flow: '−$174.0M', up: false },
-  ];
-  return (
-    <div className="panel panel-hover">
-      <div className="ph">
-        <div className="pt">Bitcoin ETF Daily Flows</div>
-        <div className="tag tag-live"><a className="src-link" href="https://farside.co.uk/bitcoin-etf-flow-all-data/" target="_blank" rel="noopener noreferrer">Farside Investors</a></div>
-      </div>
-      {flows.map(f => (
-        <div key={f.issuer} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--b1)' }}>
-          <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text)' }}>{f.name}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.08em' }}>{f.issuer}</div>
-          </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: f.up ? 'var(--green)' : 'var(--red)' }}>{f.flow}</div>
-        </div>
-      ))}
-      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(232,165,52,0.04)', borderTop: '1px solid var(--b2)' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.08em' }}>Net Flow Today · All BTC ETFs</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--green)' }}>+$169.6M</span>
-      </div>
-      <div style={{ padding: '8px 12px', borderTop: '1px solid var(--b1)', background: 'rgba(232,165,52,0.02)' }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--accent)', letterSpacing: '0.06em', marginBottom: 4 }}>⬡ AI Correlation Signal</div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', lineHeight: 1.5 }}>
-          4 consecutive inflow days with <strong>Extreme Fear (13 out of 100)</strong> — historically, this pattern preceded +22% BTC returns within 45 days (2023 precedent). GBTC rotation into IBIT confirms institutional preference for lower-fee products, not a sector exit.
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ── ChainScore ── */
-function ChainScore() {
-  const scores = [
-    { rank: '01', name: 'Bitcoin', sym: 'BTC', score: 92 },
-    { rank: '02', name: 'Ethereum', sym: 'ETH', score: 87 },
-    { rank: '03', name: 'XRP', sym: 'XRP', score: 79 },
-    { rank: '04', name: 'HBAR', sym: 'HBAR', score: 74 },
-    { rank: '05', name: 'QNT', sym: 'QNT', score: 71 },
-    { rank: '06', name: 'Solana', sym: 'SOL', score: 68 },
-    { rank: '07', name: 'XLM / Stellar', sym: 'XLM', score: 64 },
-  ];
-  return (
-    <div className="panel panel-hover">
-      <div className="ph">
         <div className="pt">ChainScore™ — Top Rated</div>
-        <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>Methodology v1.0</div>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>v1.0</div>
+          {live && <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--green)' }}>● LIVE</span>}
+        </div>
       </div>
-      {scores.map(s => (
-        <div key={s.sym} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', width: 20 }}>{s.rank}</span>
+      {displayScores.map((s, i) => (
+        <div key={s.sym} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'default' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', width: 20 }}>{String(i + 1).padStart(2, '0')}</span>
           <div style={{ flex: '0 0 90px' }}>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text)' }}>{s.name}</div>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)' }}>{s.sym}</span>
           </div>
           <div style={{ flex: 1, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-            <div style={{ width: `${s.score}%`, height: '100%', background: 'linear-gradient(90deg, var(--accent), var(--blue))', borderRadius: 3 }} />
+            <div style={{ width: `${s.score}%`, height: '100%', background: `linear-gradient(90deg, ${bandColor(s.score)}, var(--accent))`, borderRadius: 3, transition: 'width 0.8s ease' }} />
           </div>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--accent)', width: 30, textAlign: 'right' }}>{s.score}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: bandColor(s.score), width: 30, textAlign: 'right' }}>{s.score}</span>
         </div>
       ))}
     </div>

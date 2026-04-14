@@ -8,6 +8,11 @@
 .skeleton{background:linear-gradient(90deg,#111 25%,#1a1a1a 50%,#111 75%);background-size:600px 100%;animation:shimmer 1.5s infinite linear;border-radius:2px}
 .fade-in{animation:fadeIn .3s ease-in}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes priceFlash{0%{opacity:1}50%{opacity:0.6}100%{opacity:1}}
+@keyframes breathe{0%,100%{box-shadow:0 0 4px rgba(52,211,153,0.2)}50%{box-shadow:0 0 10px rgba(52,211,153,0.4)}}
+.live-pulse{animation:breathe 3s ease-in-out infinite;}
+.metric-card{transition:transform 0.15s ease,background 0.15s ease;}
+.metric-card:hover{transform:translateY(-1px);background:var(--s2) !important;}
 
 /* ============================================================
 CHAININTEL TERMINAL v6.0 — OBSIDIAN FORGE

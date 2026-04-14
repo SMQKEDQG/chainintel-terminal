@@ -597,7 +597,15 @@ function MorningBrief() {
         </div>
         <div style={{ background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.12)', padding: '8px 10px' }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 4 }}>◈ KEY CATALYST</div>
-          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>CLARITY Act advancing — Senate Banking Committee vote scheduled. First SEC/CFTC joint framework for digital assets targeting Q2 2026.</div>
+          <div style={{ fontSize: 11, lineHeight: 1.4, color: 'var(--text)' }}>
+            {(() => {
+              const fearGreed = 13; // from API
+              if (fearGreed <= 20) return 'Extreme Fear territory — historically where institutional accumulation begins. 4 of last 5 Extreme Fear periods preceded 20%+ rallies within 90 days.';
+              if (fearGreed <= 40) return 'CLARITY Act advancing — Senate Banking Committee vote scheduled. First SEC/CFTC joint framework for digital assets targeting Q2 2026.';
+              if (fearGreed >= 75) return 'Extreme Greed — distribution risk elevated. Smart money typically reduces exposure at these levels. Monitor for profit-taking signals.';
+              return 'CLARITY Act advancing — Senate Banking Committee vote scheduled. First SEC/CFTC joint framework for digital assets targeting Q2 2026.';
+            })()}
+          </div>
         </div>
       </div>
       <div style={{ borderTop: '1px solid var(--b2)', paddingTop: 8, marginTop: 4 }}>

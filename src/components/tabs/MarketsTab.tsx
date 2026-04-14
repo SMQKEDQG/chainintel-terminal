@@ -182,7 +182,18 @@ export default function MarketsTab() {
     <div>
       <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
-        <span className="acs-body"><strong>Top 100 Assets Live</strong> — Real-time market cap ranking from CoinMarketCap. Signal column uses 24h price direction as proxy. Filter by sector or search by name/ticker.</span>
+        <span className="acs-body">
+          {(() => {
+            const g = coins.filter(c => c.price_change_percentage_24h > 0).length;
+            const l = coins.length - g;
+            const topGainer = [...coins].filter(c => !['usdt','usdc','dai','busd','tusd','fdusd'].includes(c.symbol)).sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h)[0];
+            const totalMcap = coins.reduce((s, c) => s + (c.market_cap || 0), 0);
+            const mcapStr = totalMcap >= 1e12 ? `$${(totalMcap / 1e12).toFixed(2)}T` : `$${(totalMcap / 1e9).toFixed(0)}B`;
+            const ratio = g / Math.max(1, coins.length);
+            const sentiment = ratio > 0.7 ? 'Broad rally' : ratio > 0.5 ? 'Mixed market' : ratio > 0.3 ? 'Selective selling' : 'Broad decline';
+            return <><strong>{sentiment} — {g} up / {l} down</strong> across {coins.length} assets. Total market cap {mcapStr}.{topGainer ? ` Top mover: ${topGainer.name} (${topGainer.symbol.toUpperCase()}) ${topGainer.price_change_percentage_24h >= 0 ? '+' : ''}${topGainer.price_change_percentage_24h.toFixed(1)}%.` : ''}</>;
+          })()}
+        </span>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>

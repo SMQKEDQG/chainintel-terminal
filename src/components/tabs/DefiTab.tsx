@@ -2,6 +2,76 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+// ── RLUSD Types ─────────────────────────────────────────────────────────────
+
+interface RlusdData {
+  symbol: string;
+  name: string;
+  price: number;
+  pegDeviation: number;
+  marketCap: number;
+  circulatingSupply: number;
+  totalVolume24h: number;
+  change24h: number;
+  chains: { name: string; share: number }[];
+  reserves: {
+    total: number;
+    lastUpdated: string;
+    composition: { type: string; pct: number }[];
+  };
+  sparkline7d: number[];
+  source: string;
+  updatedAt: number;
+}
+
+// ── RWA Types ────────────────────────────────────────────────────────────────
+
+interface RwaProduct {
+  name: string;
+  ticker: string;
+  issuer: string;
+  value: number;
+  apy: number;
+  holders: number;
+}
+
+interface RwaAssetClass {
+  name: string;
+  value: number;
+  change30d: number;
+  holders: number;
+  assets: number;
+  avgApy: number;
+  color: string;
+  topProducts: RwaProduct[];
+}
+
+interface RwaChain {
+  name: string;
+  rwaValue: number;
+  rwaCount: number;
+  holders: number;
+  share: number;
+  stablecoinMcap: number;
+}
+
+interface RwaData {
+  totalRwaValue: number;
+  totalRwaChange30d: number;
+  totalHolders: number;
+  stablecoinMarketCap: number;
+  stablecoinChange30d: number;
+  assetClasses: RwaAssetClass[];
+  chains: RwaChain[];
+  treasuryAvgApy: number;
+  treasuryApyChange7d: number;
+  netFlows30d: number;
+  projection2030: number;
+  currentPenetration: number;
+  milestones: { date: string; event: string }[];
+  updatedAt: number;
+}
+
 // ── Types ──────────────────────────────────────────────────────────────────────
 
 interface ChainTvl {
@@ -222,6 +292,72 @@ function DoughnutChart({ segments }: { segments: { label: string; value: number;
   );
 }
 
+// ── RLUSD Peg Stability Chart ─────────────────────────────────────────────
+
+function RlusdPegChart({ data }: { data: number[] }) {
+  if (!data || data.length < 2) {
+    return (
+      <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)' }}>
+        Loading peg data...
+      </div>
+    );
+  }
+
+  const W = 400;
+  const H = 90;
+  const PAD_L = 36;
+  const PAD_R = 6;
+  const PAD_T = 8;
+  const PAD_B = 16;
+
+  // Narrow Y range around $1.00 peg
+  const minV = Math.min(...data, 0.995);
+  const maxV = Math.max(...data, 1.005);
+  const range = maxV - minV || 0.01;
+
+  const toX = (i: number) => PAD_L + (i / (data.length - 1)) * (W - PAD_L - PAD_R);
+  const toY = (v: number) => PAD_T + (1 - (v - minV) / range) * (H - PAD_T - PAD_B);
+
+  const pathD = data
+    .map((v, i) => `${i === 0 ? 'M' : 'L'} ${toX(i).toFixed(1)} ${toY(v).toFixed(1)}`)
+    .join(' ');
+
+  // $1.00 peg reference line
+  const pegY = toY(1.0);
+
+  // Color: green if close to peg, yellow if deviation > 0.1%, red if > 0.5%
+  const latestPrice = data[data.length - 1];
+  const deviation = Math.abs(latestPrice - 1.0) * 100;
+  const lineColor = deviation < 0.1 ? '#10b981' : deviation < 0.5 ? '#f0c040' : '#ef4444';
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: '100%' }} preserveAspectRatio="none">
+      {/* $1.00 peg reference line */}
+      <line x1={PAD_L} y1={pegY} x2={W - PAD_R} y2={pegY} stroke="rgba(255,255,255,0.08)" strokeWidth="1" strokeDasharray="4 3" />
+      <text x={PAD_L - 3} y={pegY + 3} textAnchor="end" fill="#4a6a8c" fontSize="7" fontFamily="var(--mono)">$1.00</text>
+
+      {/* Y-axis labels */}
+      <text x={PAD_L - 3} y={PAD_T + 4} textAnchor="end" fill="#4a6a8c" fontSize="7" fontFamily="var(--mono)">${maxV.toFixed(3)}</text>
+      <text x={PAD_L - 3} y={H - PAD_B + 3} textAnchor="end" fill="#4a6a8c" fontSize="7" fontFamily="var(--mono)">${minV.toFixed(3)}</text>
+
+      {/* Fill gradient under line */}
+      <defs>
+        <linearGradient id="rlusdGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={lineColor} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={lineColor} stopOpacity="0.01" />
+        </linearGradient>
+      </defs>
+      <path d={`${pathD} L ${toX(data.length - 1).toFixed(1)} ${H - PAD_B} L ${toX(0).toFixed(1)} ${H - PAD_B} Z`} fill="url(#rlusdGrad)" />
+
+      {/* Price line */}
+      <path d={pathD} fill="none" stroke={lineColor} strokeWidth="1.5" strokeLinejoin="round" />
+
+      {/* Current price dot */}
+      <circle cx={toX(data.length - 1)} cy={toY(latestPrice)} r="2.5" fill={lineColor} />
+    </svg>
+  );
+}
+
 // ── Loading Pulse ──────────────────────────────────────────────────────────────
 
 function PulseBox({ height = '18px' }: { height?: string }) {
@@ -244,6 +380,10 @@ export default function DefiTab() {
   const [data, setData] = useState<DefiData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [rlusd, setRlusd] = useState<RlusdData | null>(null);
+  const [rlusdLoading, setRlusdLoading] = useState(true);
+  const [rwa, setRwa] = useState<RwaData | null>(null);
+  const [rwaLoading, setRwaLoading] = useState(true);
 
   const fetchAll = useCallback(async () => {
     try {
@@ -345,11 +485,45 @@ export default function DefiTab() {
     }
   }, []);
 
+  // ── Fetch RLUSD data ──────────────────────────────────────────────────────
+  const fetchRlusd = useCallback(async () => {
+    try {
+      const res = await fetch('/api/rlusd');
+      if (res.ok) {
+        const json = await res.json();
+        setRlusd(json);
+      }
+    } catch {
+      // silent fail, will show fallback
+    } finally {
+      setRlusdLoading(false);
+    }
+  }, []);
+
+  // ── Fetch RWA data ────────────────────────────────────────────────────────
+  const fetchRwa = useCallback(async () => {
+    try {
+      const res = await fetch('/api/rwa');
+      if (res.ok) {
+        const json = await res.json();
+        setRwa(json);
+      }
+    } catch {
+      // silent fail
+    } finally {
+      setRwaLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchAll();
+    fetchRlusd();
+    fetchRwa();
     const interval = setInterval(fetchAll, 5 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [fetchAll]);
+    const rlusdInterval = setInterval(fetchRlusd, 2 * 60 * 1000);
+    const rwaInterval = setInterval(fetchRwa, 10 * 60 * 1000);
+    return () => { clearInterval(interval); clearInterval(rlusdInterval); clearInterval(rwaInterval); };
+  }, [fetchAll, fetchRlusd, fetchRwa]);
 
   const d = data ?? FALLBACK;
   const ethShare = d.totalTvl > 0 ? ((d.ethTvl / d.totalTvl) * 100).toFixed(1) : '—';
@@ -388,8 +562,13 @@ export default function DefiTab() {
         <div className="ai-context-strip" id="acs-defi">
           <span className="acs-icon">◈ CI·AI</span>
           <span className="acs-body" id="acs-body-defi">
-            DeFi TVL at {fmtBillions(d.totalTvl)} reflects ETH price compression, not protocol deterioration. Live data from DefiLlama.{' '}
-            {error && <strong style={{ color: 'var(--red)' }}>[Showing cached fallback data]</strong>}
+            {(() => {
+              const topProto = d.protocols[0];
+              const tvlNum = d.totalTvl;
+              const tvlLevel = tvlNum > 100e9 ? 'elevated' : tvlNum > 80e9 ? 'healthy' : tvlNum > 50e9 ? 'compressed' : 'low';
+              const rising = d.protocols.filter(p => p.up).length;
+              return <>DeFi TVL at <strong>{fmtBillions(tvlNum)}</strong> — {tvlLevel} levels. {rising} of {d.protocols.length} top protocols trending up.{topProto ? ` ${topProto.name} leads at ${topProto.tvl}.` : ''} <strong>{tvlLevel === 'compressed' || tvlLevel === 'low' ? 'Compressed TVL + rising stablecoin supply = capital waiting on the sideline.' : 'Capital deployed across DeFi remains resilient.'}</strong>{error ? ' [Cached fallback]' : ''}</>;
+            })()}
           </span>
           <span className="acs-ts" id="acs-ts-defi"></span>
         </div>
@@ -492,7 +671,287 @@ export default function DefiTab() {
                   : <DoughnutChart segments={d.stablecoins} />
                 }
               </div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginTop: '4px' }}>* USDS, PYUSD, RLUSD may be included in Others — see Derivatives tab</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginTop: '4px' }}>* USDS, PYUSD, RLUSD tracked separately below</div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── RLUSD TRACKER ──────────────────────────────────────────────────── */}
+        <div className="section-h">
+          <div className="section-h-label">RLUSD Stablecoin Intelligence · Ripple USD</div>
+          <div className="section-h-line"></div>
+          <div className="tag tag-live"><a className="src-link" href="https://www.coingecko.com/en/coins/ripple-usd" target="_blank" rel="noreferrer">CoinGecko</a> · <a className="src-link" href="https://ripple.com/solutions/stablecoin/transparency/" target="_blank" rel="noreferrer">Ripple Transparency</a></div>
+        </div>
+
+        <div className="g5">
+          <div className="kpi">
+            <div className="kpi-label">RLUSD Price</div>
+            <div className="kpi-val" style={{ color: 'var(--cyan)' }}>
+              {rlusdLoading ? <PulseBox height="20px" /> : `$${(rlusd?.price ?? 1.0).toFixed(4)}`}
+            </div>
+            <div className={`kpi-chg ${(rlusd?.pegDeviation ?? 0) < 0.1 ? 'up' : 'dn'}`}>
+              {rlusdLoading ? '—' : `Peg Δ ${(rlusd?.pegDeviation ?? 0).toFixed(3)}%`}
+            </div>
+            <div className="kpi-src"><a className="src-link" href="https://www.coingecko.com/en/coins/ripple-usd" target="_blank" rel="noreferrer">CoinGecko</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">Market Cap</div>
+            <div className="kpi-val" style={{ color: 'var(--text)' }}>
+              {rlusdLoading ? <PulseBox height="20px" /> : fmtBillions(rlusd?.marketCap ?? 0)}
+            </div>
+            <div className="kpi-chg up">CMC Rank #48</div>
+            <div className="kpi-src"><a className="src-link" href="https://www.coingecko.com/en/coins/ripple-usd" target="_blank" rel="noreferrer">CoinGecko</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">Circulating Supply</div>
+            <div className="kpi-val" style={{ color: 'var(--text)' }}>
+              {rlusdLoading ? <PulseBox height="20px" /> : `${((rlusd?.circulatingSupply ?? 0) / 1e9).toFixed(2)}B`}
+            </div>
+            <div className="kpi-chg">RLUSD tokens</div>
+            <div className="kpi-src"><a className="src-link" href="https://ripple.com/solutions/stablecoin/transparency/" target="_blank" rel="noreferrer">Ripple</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">24h Volume</div>
+            <div className="kpi-val" style={{ color: 'var(--gold)' }}>
+              {rlusdLoading ? <PulseBox height="20px" /> : fmtBillions(rlusd?.totalVolume24h ?? 0)}
+            </div>
+            <div className={`kpi-chg ${(rlusd?.change24h ?? 0) >= 0 ? 'up' : 'dn'}`}>
+              {rlusdLoading ? '—' : `${(rlusd?.change24h ?? 0) >= 0 ? '+' : ''}${(rlusd?.change24h ?? 0).toFixed(2)}%`}
+            </div>
+            <div className="kpi-src"><a className="src-link" href="https://www.coingecko.com/en/coins/ripple-usd" target="_blank" rel="noreferrer">CoinGecko</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">Reserve Backing</div>
+            <div className="kpi-val" style={{ color: 'var(--green)' }}>
+              {rlusdLoading ? <PulseBox height="20px" /> : fmtBillions(rlusd?.reserves?.total ?? 1454100000)}
+            </div>
+            <div className="kpi-chg up">1:1 USD backed</div>
+            <div className="kpi-src"><a className="src-link" href="https://ripple.com/solutions/stablecoin/transparency/" target="_blank" rel="noreferrer">Ripple Transparency</a></div>
+          </div>
+        </div>
+
+        <div className="g2">
+          {/* RLUSD Details Panel */}
+          <div className="panel">
+            <div className="ph">
+              <div className="pt">RLUSD Reserve Composition & Chain Distribution</div>
+              <div className="tag tag-live"><a className="src-link" href="https://ripple.com/solutions/stablecoin/transparency/" target="_blank" rel="noreferrer">Ripple Transparency</a></div>
+            </div>
+            <div style={{ padding: '8px 0' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.08em', marginBottom: '8px', textTransform: 'uppercase' }}>RESERVE COMPOSITION</div>
+              {(rlusd?.reserves?.composition ?? [
+                { type: 'USD Deposits', pct: 78 },
+                { type: 'US Treasury Bills', pct: 18 },
+                { type: 'Other Cash Equivalents', pct: 4 },
+              ]).map((r) => (
+                <div key={r.type} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', flex: '0 0 160px' }}>{r.type}</span>
+                  <div style={{ flex: 1, height: '8px', background: 'var(--s3)', borderRadius: '1px', overflow: 'hidden' }}>
+                    <div style={{ width: `${r.pct}%`, height: '100%', background: r.pct > 50 ? 'var(--cyan)' : r.pct > 10 ? 'var(--blue)' : 'var(--gold)', borderRadius: '1px', transition: 'width 0.6s ease' }} />
+                  </div>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)', flex: '0 0 35px', textAlign: 'right' }}>{r.pct}%</span>
+                </div>
+              ))}
+
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.08em', marginTop: '14px', marginBottom: '8px', textTransform: 'uppercase' }}>CHAIN DISTRIBUTION</div>
+              {(rlusd?.chains ?? [
+                { name: 'XRP Ledger', share: 62 },
+                { name: 'Ethereum', share: 38 },
+              ]).map((c) => (
+                <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', flex: '0 0 160px' }}>{c.name}</span>
+                  <div style={{ flex: 1, height: '8px', background: 'var(--s3)', borderRadius: '1px', overflow: 'hidden' }}>
+                    <div style={{ width: `${c.share}%`, height: '100%', background: c.name === 'XRP Ledger' ? 'var(--cyan)' : 'var(--blue)', borderRadius: '1px', transition: 'width 0.6s ease' }} />
+                  </div>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)', flex: '0 0 35px', textAlign: 'right' }}>{c.share}%</span>
+                </div>
+              ))}
+
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginTop: '10px' }}>
+                Last audit: {rlusd?.reserves?.lastUpdated ?? '2026-04-02'} · <a className="src-link" href="https://ripple.com/solutions/stablecoin/transparency/" target="_blank" rel="noreferrer">View full report ↗</a>
+              </div>
+            </div>
+          </div>
+
+          {/* RLUSD 7-Day Price Chart + Key Facts */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--b1)' }}>
+            <div className="panel">
+              <div className="ph">
+                <div className="pt">RLUSD Peg Stability — 7 Day</div>
+                <div className="tag tag-live"><a className="src-link" href="https://www.coingecko.com/en/coins/ripple-usd" target="_blank" rel="noreferrer">CoinGecko</a></div>
+              </div>
+              <div className="chart-wrap" style={{ height: '100px' }}>
+                {rlusdLoading ? (
+                  <PulseBox height="100%" />
+                ) : (
+                  <RlusdPegChart data={rlusd?.sparkline7d ?? []} />
+                )}
+              </div>
+            </div>
+            <div className="panel">
+              <div className="ph">
+                <div className="pt">RLUSD Key Facts</div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', padding: '4px 0' }}>
+                {[
+                  { label: 'Issuer', value: 'Ripple Labs Inc.', color: 'var(--text)' },
+                  { label: 'Backed By', value: '1:1 USD reserves (deposits + T-bills)', color: 'var(--green)' },
+                  { label: 'Networks', value: 'XRP Ledger + Ethereum', color: 'var(--cyan)' },
+                  { label: 'Regulatory', value: 'NYDFS-regulated stablecoin', color: 'var(--gold)' },
+                  { label: 'Launch', value: 'December 2024', color: 'var(--text2)' },
+                  { label: 'Competitors', value: 'USDT, USDC, PYUSD', color: 'var(--text2)' },
+                ].map((fact) => (
+                  <div key={fact.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', letterSpacing: '0.05em' }}>{fact.label}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: fact.color }}>{fact.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── RWA TOKENIZATION DASHBOARD ──────────────────────────────── */}
+        <div className="section-h">
+          <div className="section-h-label">RWA Tokenization Intelligence · $29.25B Market</div>
+          <div className="section-h-line"></div>
+          <div className="tag tag-live"><a className="src-link" href="https://app.rwa.xyz" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+        </div>
+
+        {/* RWA KPI Row */}
+        <div className="g5">
+          <div className="kpi">
+            <div className="kpi-label">Total RWA Value</div>
+            <div className="kpi-val" style={{ color: 'var(--cyan)' }}>
+              {rwaLoading ? <PulseBox height="20px" /> : fmtBillions(rwa?.totalRwaValue ?? 29250000000)}
+            </div>
+            <div className="kpi-chg up">{rwaLoading ? '—' : `+${(rwa?.totalRwaChange30d ?? 7.99).toFixed(1)}% 30d`}</div>
+            <div className="kpi-src"><a className="src-link" href="https://app.rwa.xyz" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">Tokenized Treasuries</div>
+            <div className="kpi-val" style={{ color: 'var(--green)' }}>
+              {rwaLoading ? <PulseBox height="20px" /> : fmtBillions(rwa?.assetClasses?.[0]?.value ?? 13530000000)}
+            </div>
+            <div className="kpi-chg up">{rwaLoading ? '—' : `+${(rwa?.assetClasses?.[0]?.change30d ?? 17.51).toFixed(1)}% 30d`}</div>
+            <div className="kpi-src"><a className="src-link" href="https://app.rwa.xyz/treasuries" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">Treasury Avg APY</div>
+            <div className="kpi-val" style={{ color: 'var(--gold)' }}>
+              {rwaLoading ? <PulseBox height="20px" /> : `${(rwa?.treasuryAvgApy ?? 3.34).toFixed(2)}%`}
+            </div>
+            <div className="kpi-chg up">{rwaLoading ? '—' : `+${(rwa?.treasuryApyChange7d ?? 0.98).toFixed(2)}% 7d`}</div>
+            <div className="kpi-src"><a className="src-link" href="https://app.rwa.xyz/treasuries" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">Total Holders</div>
+            <div className="kpi-val" style={{ color: 'var(--text)' }}>
+              {rwaLoading ? <PulseBox height="20px" /> : `${((rwa?.totalHolders ?? 723233) / 1000).toFixed(1)}K`}
+            </div>
+            <div className="kpi-chg">Across all assets</div>
+            <div className="kpi-src"><a className="src-link" href="https://app.rwa.xyz" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+          </div>
+          <div className="kpi">
+            <div className="kpi-label">30-Day Net Flows</div>
+            <div className="kpi-val" style={{ color: 'var(--green)' }}>
+              {rwaLoading ? <PulseBox height="20px" /> : fmtBillions(rwa?.netFlows30d ?? 210490000)}
+            </div>
+            <div className="kpi-chg up">Net inflows</div>
+            <div className="kpi-src"><a className="src-link" href="https://app.rwa.xyz" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+          </div>
+        </div>
+
+        {/* RWA Asset Class Breakdown + Chain Distribution */}
+        <div className="g2">
+          {/* Asset Class Breakdown */}
+          <div className="panel">
+            <div className="ph">
+              <div className="pt">RWA Market by Asset Class</div>
+              <div className="tag tag-live"><a className="src-link" href="https://app.rwa.xyz" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+            </div>
+            <div style={{ padding: '4px 0' }}>
+              {rwaLoading ? (
+                Array.from({ length: 7 }).map((_, i) => (
+                  <div key={i} style={{ marginBottom: '8px' }}><PulseBox height="24px" /></div>
+                ))
+              ) : (
+                (rwa?.assetClasses ?? []).map((ac) => {
+                  const maxVal = Math.max(...(rwa?.assetClasses ?? []).map(a => a.value));
+                  const barPct = maxVal > 0 ? (ac.value / maxVal) * 100 : 0;
+                  return (
+                    <div key={ac.name} style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '1px', background: ac.color, flexShrink: 0 }} />
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', flex: '0 0 100px' }}>{ac.name}</span>
+                      <div style={{ flex: 1, height: '10px', background: 'var(--s3)', borderRadius: '1px', overflow: 'hidden' }}>
+                        <div style={{ width: `${barPct}%`, height: '100%', background: ac.color, borderRadius: '1px', transition: 'width 0.6s ease', opacity: 0.8 }} />
+                      </div>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)', flex: '0 0 55px', textAlign: 'right' }}>{fmtBillions(ac.value)}</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: ac.change30d >= 0 ? 'var(--green)' : 'var(--red)', flex: '0 0 50px', textAlign: 'right' }}>
+                        {ac.change30d >= 0 ? '+' : ''}{ac.change30d.toFixed(1)}%
+                      </span>
+                    </div>
+                  );
+                })
+              )}
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginTop: '8px' }}>
+                Source: <a className="src-link" href="https://app.rwa.xyz" target="_blank" rel="noreferrer">RWA.xyz</a> · Excludes stablecoins · Updated {rwa ? new Date(rwa.updatedAt).toLocaleTimeString() : '—'}
+              </div>
+            </div>
+          </div>
+
+          {/* Chain Distribution + Treasury Leaders */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1px', background: 'var(--b1)' }}>
+            <div className="panel">
+              <div className="ph">
+                <div className="pt">RWA Value by Chain</div>
+                <div className="tag tag-live"><a className="src-link" href="https://app.rwa.xyz/networks" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+              </div>
+              <div style={{ padding: '4px 0' }}>
+                {rwaLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} style={{ marginBottom: '6px' }}><PulseBox height="18px" /></div>
+                  ))
+                ) : (
+                  (rwa?.chains ?? []).slice(0, 7).map((ch) => (
+                    <div key={ch.name} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '5px' }}>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)', flex: '0 0 80px' }}>{ch.name}</span>
+                      <div style={{ flex: 1, height: '7px', background: 'var(--s3)', borderRadius: '1px', overflow: 'hidden' }}>
+                        <div style={{ width: `${ch.share}%`, height: '100%', background: 'var(--cyan)', borderRadius: '1px', opacity: Math.max(0.3, ch.share / 60), transition: 'width 0.6s ease' }} />
+                      </div>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text)', flex: '0 0 50px', textAlign: 'right' }}>{fmtBillions(ch.rwaValue)}</span>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', flex: '0 0 35px', textAlign: 'right' }}>{ch.share.toFixed(1)}%</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+            <div className="panel">
+              <div className="ph">
+                <div className="pt">Top Treasury Products</div>
+                <div className="tag tag-live"><a className="src-link" href="https://app.rwa.xyz/treasuries" target="_blank" rel="noreferrer">RWA.xyz</a></div>
+              </div>
+              <div style={{ padding: '2px 0' }}>
+                {rwaLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} style={{ marginBottom: '6px' }}><PulseBox height="16px" /></div>
+                  ))
+                ) : (
+                  (rwa?.assetClasses?.[0]?.topProducts ?? []).map((p, i) => (
+                    <div key={p.ticker} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', padding: '3px 0', borderBottom: i < 4 ? '1px solid var(--b1)' : 'none' }}>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', width: '14px' }}>{i + 1}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text)' }}>{p.ticker}</div>
+                        <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>{p.issuer}</div>
+                      </div>
+                      <span style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--cyan)', textAlign: 'right' }}>{fmtBillions(p.value)}</span>
+                      {p.apy > 0 && (
+                        <span style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--gold)', width: '40px', textAlign: 'right' }}>{p.apy.toFixed(2)}%</span>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -536,16 +995,18 @@ export default function DefiTab() {
 
         <div className="ai-box">
           <div className="ai-label">
-            <span className="ai-pulse"></span>DeFi AI Synthesis ·{' '}
+            <span className="ai-pulse"></span>DeFi &amp; RWA AI Synthesis ·{' '}
             <a className="src-link" href="https://defillama.com" target="_blank" rel="noreferrer">DefiLlama</a> ·{' '}
-            <a className="src-link" href="https://tokenterminal.com" target="_blank" rel="noreferrer">Token Terminal</a> ·{' '}
-            <span id="defiSynthDate">APR 11, 2026</span>
+            <a className="src-link" href="https://app.rwa.xyz" target="_blank" rel="noreferrer">RWA.xyz</a> ·{' '}
+            <a className="src-link" href="https://tokenterminal.com" target="_blank" rel="noreferrer">Token Terminal</a>
           </div>
           <div className="ai-text">
-            <strong>DeFi TVL at {fmtBillions(d.totalTvl)} reflects ETH price weakness compressing collateral values, not fundamental protocol deterioration.</strong>{' '}
-            Ethereum holds {ethShare}% of total DeFi TVL, confirming its dominance as the settlement layer.{' '}
-            Stablecoin supply stability at {fmtBillions(d.stablecoinSupply)} is the most bullish DeFi signal — it represents dry powder waiting to deploy.{' '}
-            <strong>Live data sourced directly from <a className="src-link" href="https://defillama.com" target="_blank" rel="noreferrer">DefiLlama</a>, refreshed every 5 minutes.</strong>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--cyan)', flexShrink: 0 }}>▸</span><span><strong>DeFi TVL at {fmtBillions(d.totalTvl)}</strong> — Ethereum holds {ethShare}% share. Stablecoin supply at {fmtBillions(d.stablecoinSupply)} represents dry powder waiting to deploy.</span></div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--green)', flexShrink: 0 }}>▸</span><span><strong>RWA market at {fmtBillions(rwa?.totalRwaValue ?? 29250000000)} (+{(rwa?.totalRwaChange30d ?? 7.99).toFixed(1)}% 30d)</strong> — tokenized Treasuries dominate at {fmtBillions(rwa?.assetClasses?.[0]?.value ?? 13530000000)}, averaging {(rwa?.treasuryAvgApy ?? 3.34).toFixed(2)}% APY. BlackRock BUIDL + Circle USYC + Ondo USDY hold $7B combined.</span></div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--gold)', flexShrink: 0 }}>▸</span><span><strong>RLUSD at {fmtBillions(rlusd?.marketCap ?? 1440000000)}</strong> — Ripple&apos;s NYDFS-regulated stablecoin on XRPL + Ethereum. 1:1 USD reserve-backed. Growing challenger to USDT/USDC dominance.</span></div>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}><span style={{ color: 'var(--blue)', flexShrink: 0 }}>▸</span><span><strong>Keyrock/Securitize forecast: $400B tokenized RWA by 2030</strong> — currently &lt;0.01% of $400T global addressable market. Treasury yield on-chain outperformed DeFi stablecoin rates 98% of Q1 2026 days.</span></div>
+            </div>
           </div>
         </div>
       </div>

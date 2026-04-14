@@ -15,7 +15,7 @@ function getStripe(): Stripe {
   if (!secretKey) {
     throw new Error('STRIPE_SECRET_KEY env var not set');
   }
-  return new Stripe(secretKey, { apiVersion: '2026-03-25.dahlia' });
+  return new Stripe(secretKey);
 }
 
 function getSupabaseAdmin() {

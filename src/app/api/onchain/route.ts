@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchWithRetry } from '@/lib/fetch-utils';
 
 // Free APIs: mempool.space (no key), blockchain.info (no key)
 export async function GET() {

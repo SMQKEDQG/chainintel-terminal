@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchWithRetry } from '@/lib/fetch-utils';
 
 // Aggregates 8 network/mining sources:
 // Mempool (mining pools, mempool stats), Etherscan (gas, supply),
@@ -13,7 +14,7 @@ async function cachedFetch(key: string, url: string, headers?: Record<string, st
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 8000);
-    const res = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'ChainIntel Terminal', ...headers } });
+    const res = await fetchWithRetry(url, { signal: ctrl.signal, headers: { 'User-Agent': 'ChainIntel Terminal', ...headers } });
     clearTimeout(t);
     if (!res.ok) return null;
     const data = await res.json();

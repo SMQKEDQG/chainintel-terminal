@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchWithRetry } from '@/lib/fetch-utils';
 
 // Aggregates 6 Binance sources: Ticker, Order Book, Futures OI, Funding Rate, Long/Short, Liquidations
 // Plus Kraken ticker for cross-exchange validation
@@ -12,7 +13,7 @@ async function cachedFetch(key: string, url: string, timeout = 6000): Promise<an
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeout);
-    const res = await fetch(url, { signal: ctrl.signal });
+    const res = await fetchWithRetry(url, { signal: ctrl.signal });
     clearTimeout(t);
     if (!res.ok) return null;
     const data = await res.json();

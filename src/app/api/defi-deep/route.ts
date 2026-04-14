@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchWithRetry } from '@/lib/fetch-utils';
 
 // Aggregates 6 DeFi deep-dive sources:
 // DefiLlama (yields, bridges, DEX volume), Aave V3, Uniswap, CoinGecko DeFi global
@@ -12,7 +13,7 @@ async function cachedFetch(key: string, url: string): Promise<any> {
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 10000);
-    const res = await fetch(url, { signal: ctrl.signal });
+    const res = await fetchWithRetry(url, { signal: ctrl.signal });
     clearTimeout(t);
     if (!res.ok) return null;
     const data = await res.json();

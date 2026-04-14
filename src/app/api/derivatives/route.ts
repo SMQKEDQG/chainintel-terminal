@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchWithRetry } from '@/lib/fetch-utils';
 
 // CoinGecko free API — derivatives data
 // No API key needed, 30 req/min rate limit
@@ -42,7 +43,7 @@ export async function GET() {
   }
 
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/derivatives?order=open_interest_desc', {
+    const res = await fetchWithRetry('https://api.coingecko.com/api/v3/derivatives?order=open_interest_desc', {
       headers: { Accept: 'application/json' },
       next: { revalidate: 120 },
     });

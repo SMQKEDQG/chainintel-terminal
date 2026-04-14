@@ -151,8 +151,8 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
       {/* Tab Navigation */}
       <nav
         data-tour="tab-nav"
-        className="flex items-center gap-0 overflow-x-auto border-b"
-        style={{ background: 'var(--s1)', borderColor: 'var(--b1)', zIndex: 10000, position: 'sticky', top: 42 }}
+        className="flex items-center gap-0 overflow-x-auto border-b scrollbar-hide"
+        style={{ background: 'var(--s1)', borderColor: 'var(--b1)', zIndex: 10000, position: 'sticky', top: 42, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
       >
         {TABS.map((tab) => (
           <button

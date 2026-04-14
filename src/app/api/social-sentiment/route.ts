@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { fetchWithRetry } from '@/lib/fetch-utils';
 
 // Aggregates 7 sentiment/social sources:
 // Reddit (3 subs), StockTwits, CryptoPanic, Google Trends proxy, LunarCrush
@@ -12,7 +13,7 @@ async function cachedFetch(key: string, url: string, timeout = 6000): Promise<an
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeout);
-    const res = await fetch(url, { signal: ctrl.signal, headers: { 'User-Agent': 'ChainIntel Terminal/1.0 (institutional research)' } });
+    const res = await fetchWithRetry(url, { signal: ctrl.signal, headers: { 'User-Agent': 'ChainIntel Terminal/1.0 (institutional research)' } });
     clearTimeout(t);
     if (!res.ok) return null;
     const data = await res.json();

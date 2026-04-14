@@ -168,9 +168,10 @@ function useCmcData(): CmcData {
         // Fallback to CoinGecko
         if (cancelled) return;
         try {
-          const geckoRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=7d');
+          const geckoRes = await fetch('/api/coingecko?path=/coins/markets&vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=7d');
           if (!geckoRes.ok) throw new Error('CoinGecko failed');
-          const geckoData = await geckoRes.json();
+          const geckoJson = await geckoRes.json();
+          const geckoData = geckoJson.data || geckoJson;
           if (cancelled) return;
           const geckoCoins = geckoToCoinData(geckoData);
           if (geckoCoins.length > 0) {
@@ -362,10 +363,11 @@ function useLiveCoinChart(coinId: string) {
     setLoading(true);
     const days = TF_DAYS[tf];
     fetchWithRetry(
-      `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
+      `/api/coingecko?path=/coins/${coinId}/market_chart&vs_currency=usd&days=${days}`,
     )
       .then(r => r.json())
-      .then((json: { prices: [number, number][]; total_volumes: [number, number][] }) => {
+      .then((wrapper: any) => {
+        const json: { prices: [number, number][]; total_volumes: [number, number][] } = wrapper.data || wrapper;
         if (cancelled) return;
         const TARGET = 13;
         const rawPrices = json.prices;

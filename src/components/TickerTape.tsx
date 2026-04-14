@@ -38,7 +38,7 @@ export default function TickerTape() {
     async function fetchPrices() {
       // Try CMC proxy first
       try {
-        const res = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=50&sort=market_cap&convert=USD');
+        const res = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=200&sort=market_cap&convert=USD');
         if (res.ok) {
           const json = await res.json();
           const data = json.data?.data || [];
@@ -53,10 +53,11 @@ export default function TickerTape() {
       try {
         const ids = TICKER_ASSETS.map(a => a.id).join(',');
         const res = await fetch(
-          `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`
+          `/api/coingecko?path=/simple/price&ids=${ids}&vs_currencies=usd&include_24hr_change=true`
         );
         if (!res.ok || cancelled) return;
-        const data = await res.json();
+        const json = await res.json();
+        const data = json.data || json;
         if (cancelled) return;
         setItems(
           TICKER_ASSETS.map(a => {

@@ -57,7 +57,7 @@ export default function SentimentTab() {
     try {
       const [sentRes, trendRes, socialRes] = await Promise.allSettled([
         fetch('/api/sentiment'),
-        fetch('https://api.coingecko.com/api/v3/search/trending'),
+        fetch('/api/coingecko?path=/search/trending'),
         fetch('/api/social-sentiment'),
       ]);
       if (sentRes.status === 'fulfilled' && sentRes.value.ok) {
@@ -93,7 +93,8 @@ export default function SentimentTab() {
       }
       // Fallback: CoinGecko trending data
       if (!usedLiveSocial && trendRes.status === 'fulfilled' && trendRes.value.ok) {
-        const trendData = await trendRes.value.json();
+        const trendWrapper = await trendRes.value.json();
+        const trendData = trendWrapper.data || trendWrapper;
         const trendingCoins = trendData?.coins || [];
         const targetAssets = ['BTC', 'ETH', 'XRP', 'SOL', 'HBAR', 'ADA'];
         const updated = targetAssets.map((sym, idx) => {

@@ -88,9 +88,10 @@ export default function MarketsTab() {
 
     // 2) Fallback to CoinGecko (no API key needed)
     try {
-      const cgRes = await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=7d');
+      const cgRes = await fetch('/api/coingecko?path=/coins/markets&vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=7d');
       if (cgRes.ok) {
-        const data: CoinData[] = await cgRes.json();
+        const json = await cgRes.json();
+        const data: CoinData[] = json.data || json;
         if (data && data.length > 0) {
           setCoins(data);
           setDataSource('live-cg');

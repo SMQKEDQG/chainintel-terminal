@@ -178,7 +178,7 @@ export default function IsoTab() {
                     {p ? fmtPrice(p.price) : '—'}
                   </td>
                   <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 600, color: p ? (p.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--muted)' }}>
-                    {p ? `${p.percent_change_24h >= 0 ? '+' : ''}${p.percent_change_24h.toFixed(2)}%` : '—'}
+                    {p ? `${(p.percent_change_24h ?? 0) >= 0 ? '+' : ''}${(p.percent_change_24h ?? 0).toFixed(2)}%` : '—'}
                   </td>
                   <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>
                     {p ? fmtMcap(p.market_cap) : '—'}

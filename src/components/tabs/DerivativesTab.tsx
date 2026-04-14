@@ -322,12 +322,14 @@ export default function DerivativesTab() {
           </div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', marginBottom: '8px', letterSpacing: '0.1em' }}>30-DAY ROLLING PEARSON CORRELATION WITH BTC PRICE{macroBtcPrice > 0 && <span style={{ color: 'var(--accent)', marginLeft: '8px' }}>BTC ${macroBtcPrice.toLocaleString('en-US', { maximumFractionDigits: 0 })} ({macroBtcChg >= 0 ? '+' : ''}{macroBtcChg.toFixed(1)}% 7d)</span>}</div>
           {macroData.map((m) => {
-            const fmtVal = m.symbol === 'TNX' ? `${m.value.toFixed(2)}%`
-              : m.unit === '$' ? `$${m.value.toLocaleString('en-US', { maximumFractionDigits: m.value < 100 ? 1 : 0 })}`
-              : m.value.toLocaleString('en-US', { maximumFractionDigits: m.value < 200 ? 1 : 0 });
+            const val = m.value ?? 0;
+            const fmtVal = m.symbol === 'TNX' ? `${val.toFixed(2)}%`
+              : m.unit === '$' ? `$${val.toLocaleString('en-US', { maximumFractionDigits: val < 100 ? 1 : 0 })}`
+              : val.toLocaleString('en-US', { maximumFractionDigits: val < 200 ? 1 : 0 });
+            const chg7d = m.change7d ?? 0;
             const chgStr = m.symbol === 'TNX'
               ? `${(m.changeBps ?? 0) >= 0 ? '+' : ''}${Math.round(m.changeBps ?? 0)}bps 7d`
-              : `${m.change7d >= 0 ? '+' : ''}${m.change7d.toFixed(1)}% 7d`;
+              : `${chg7d >= 0 ? '+' : ''}${chg7d.toFixed(1)}% 7d`;
             return (
               <div className="macro-row" key={m.name}>
                 <div className="macro-asset">{m.name}</div>
@@ -408,7 +410,7 @@ export default function DerivativesTab() {
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
               <span style={{ color: 'var(--gold)', flexShrink: 0 }}>▸</span>
-              <span><strong>BTC-SPX correlation {macroData.find(m => m.symbol === 'SPX')?.corrLabel || '+0.72 Strong ↑'}</strong> — {(macroData.find(m => m.symbol === 'SPX')?.correlation ?? 0.72) > 0.5 ? 'macro risk-on environment. Equities correlation suggests crypto tracking TradFi sentiment.' : 'BTC decoupling from equities. Independent crypto-native drivers dominating.'} DXY at {macroData.find(m => m.symbol === 'DXY')?.value.toFixed(1) || '104.8'} ({(macroData.find(m => m.symbol === 'DXY')?.change7d ?? 0) > 0 ? 'strengthening — headwind for risk assets' : 'weakening — tailwind for crypto'}). 10Y Treasury at {macroData.find(m => m.symbol === 'TNX')?.value.toFixed(2) || '4.52'}% — {(macroData.find(m => m.symbol === 'TNX')?.change7d ?? 0) < 0 ? 'yields declining, expect BTC to benefit from looser financial conditions.' : 'rising yields create competition for risk-on capital.'}</span>
+              <span><strong>BTC-SPX correlation {macroData.find(m => m.symbol === 'SPX')?.corrLabel || '+0.72 Strong ↑'}</strong> — {(macroData.find(m => m.symbol === 'SPX')?.correlation ?? 0.72) > 0.5 ? 'macro risk-on environment. Equities correlation suggests crypto tracking TradFi sentiment.' : 'BTC decoupling from equities. Independent crypto-native drivers dominating.'} DXY at {macroData.find(m => m.symbol === 'DXY')?.value?.toFixed(1) || '104.8'} ({(macroData.find(m => m.symbol === 'DXY')?.change7d ?? 0) > 0 ? 'strengthening — headwind for risk assets' : 'weakening — tailwind for crypto'}). 10Y Treasury at {macroData.find(m => m.symbol === 'TNX')?.value?.toFixed(2) || '4.52'}% — {(macroData.find(m => m.symbol === 'TNX')?.change7d ?? 0) < 0 ? 'yields declining, expect BTC to benefit from looser financial conditions.' : 'rising yields create competition for risk-on capital.'}</span>
             </div>
           </div>
         </div>

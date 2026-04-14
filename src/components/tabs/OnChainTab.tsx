@@ -91,16 +91,19 @@ export default function OnChainTab() {
     return () => clearInterval(iv);
   }, [fetchData]);
 
-  const btc = assets.find(a => a.symbol === 'BTC');
+  // Filter out assets with null/missing price data (e.g. MATIC→POL rebrand)
+  const validAssets = assets.filter(a => a.price != null && a.marketCap != null);
+
+  const btc = validAssets.find(a => a.symbol === 'BTC');
   const hr = mempool?.hashrate ?? btc?.hashrate ?? 0;
   const blk = mempool?.blockHeight ?? 0;
   const fees = mempool?.fees ?? { fast: 0, normal: 0, economy: 0 };
 
   // Dynamic AI synthesis — built from live data
-  const topScorer = assets[0];
-  const biggestMover30d = [...assets].sort((a, b) => Math.abs(b.change30d) - Math.abs(a.change30d))[0];
-  const netExchangeFlow = assets.reduce((sum, a) => sum + a.exchangeFlow30d, 0);
-  const avgMvrv = assets.length > 0 ? assets.reduce((s, a) => s + a.mvrv, 0) / assets.length : 0;
+  const topScorer = validAssets[0];
+  const biggestMover30d = [...validAssets].sort((a, b) => Math.abs(b.change30d ?? 0) - Math.abs(a.change30d ?? 0))[0];
+  const netExchangeFlow = validAssets.reduce((sum, a) => sum + (a.exchangeFlow30d ?? 0), 0);
+  const avgMvrv = validAssets.length > 0 ? validAssets.reduce((s, a) => s + (a.mvrv ?? 0), 0) / validAssets.length : 0;
   
   const flowDir = netExchangeFlow < 0 ? 'outflows dominate' : 'inflows increasing';
   const mvrvSignal = avgMvrv < 1 ? 'deep undervalued zone — historically strong entry' : avgMvrv < 2 ? 'fair value — accumulation zone' : avgMvrv < 3 ? 'heating up — watch for overextension' : 'overheated — caution warranted';
@@ -117,8 +120,8 @@ export default function OnChainTab() {
     { label: 'Block Height', value: blk > 0 ? blk.toLocaleString() : 'Loading...', sub: 'Latest confirmed Bitcoin mainnet block', color: 'var(--text)' },
     { label: 'BTC Fee · Fast', value: fees.fast > 0 ? `${fees.fast} sat/vB` : 'Loading...', sub: fees.normal > 0 ? `Normal: ${fees.normal} · Economy: ${fees.economy} sat/vB` : 'Loading fee estimates...', color: 'var(--accent)', delta: fees.fast > 50 ? '▲ High' : fees.fast > 20 ? '◆ Normal' : fees.fast > 0 ? '▼ Low' : '', deltaColor: fees.fast > 50 ? 'var(--red)' : fees.fast > 20 ? 'var(--gold)' : 'var(--green)' },
     { label: 'Avg MVRV · 12 Assets', value: avgMvrv > 0 ? avgMvrv.toFixed(2) : 'Loading...', sub: mvrvSignal, color: 'var(--gold)', delta: avgMvrv < 2 ? '▲ Accumulation' : '▼ Caution', deltaColor: avgMvrv < 2 ? 'var(--gold)' : 'var(--red)' },
-    { label: 'Net Exchange Flow', value: assets.length > 0 ? `${netExchangeFlow > 0 ? '+' : ''}${(netExchangeFlow / 1000).toFixed(1)}K` : 'Loading...', sub: `30d aggregate across ${assets.length} assets — ${flowDir}`, color: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)', delta: netExchangeFlow < 0 ? '▲ Bullish' : '▼ Bearish', deltaColor: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)' },
-    { label: 'Top On-Chain Score', value: topScorer ? `${topScorer.symbol} · ${topScorer.onchainScore}` : 'Loading...', sub: topScorer ? `Strongest on-chain profile of ${assets.length} tracked assets` : '', color: 'var(--accent)', delta: topScorer ? `#1 of ${assets.length}` : '', deltaColor: 'var(--accent)' },
+    { label: 'Net Exchange Flow', value: assets.length > 0 ? `${netExchangeFlow > 0 ? '+' : ''}${(netExchangeFlow / 1000).toFixed(1)}K` : 'Loading...', sub: `30d aggregate across ${validAssets.length} assets — ${flowDir}`, color: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)', delta: netExchangeFlow < 0 ? '▲ Bullish' : '▼ Bearish', deltaColor: netExchangeFlow < 0 ? 'var(--green)' : 'var(--red)' },
+    { label: 'Top On-Chain Score', value: topScorer ? `${topScorer.symbol} · ${topScorer.onchainScore}` : 'Loading...', sub: topScorer ? `Strongest on-chain profile of ${validAssets.length} tracked assets` : '', color: 'var(--accent)', delta: topScorer ? `#1 of ${validAssets.length}` : '', deltaColor: 'var(--accent)' },
     { label: btc ? `BTC MVRV` : 'BTC MVRV', value: btc ? btc.mvrv.toFixed(2) : 'Loading...', sub: btc ? `${btc.mvrv < 1 ? 'Undervalued zone' : btc.mvrv < 2.4 ? 'Fair value (1.0–2.4)' : 'Overheated zone'}` : '', color: 'var(--gold)' },
     { label: btc ? `BTC LTH Supply` : 'BTC LTH Supply', value: btc ? `${btc.lthSupplyPct.toFixed(1)}%` : 'Loading...', sub: btc ? `Est. % held 155+ days — ${btc.lthSupplyPct > 70 ? 'strong conviction' : 'moderate'}` : '', color: 'var(--green)' },
     { label: '30d Biggest Mover', value: biggestMover30d ? `${biggestMover30d.symbol} ${biggestMover30d.change30d >= 0 ? '+' : ''}${biggestMover30d.change30d.toFixed(1)}%` : 'Loading...', sub: biggestMover30d ? `Largest 30-day price move in tracked universe` : '', color: biggestMover30d && biggestMover30d.change30d >= 0 ? 'var(--green)' : 'var(--red)' },
@@ -130,7 +133,7 @@ export default function OnChainTab() {
       <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
         <span className="acs-body">
-          {assets.length > 0 ? (
+          {validAssets.length > 0 ? (
             <>
               BTC hashrate <strong>{hr > 0 ? `${hr.toFixed(0)} EH/s` : 'loading'}</strong> — {hr > 800 ? 'near ATH zone, miner confidence high' : 'tracking healthy levels'}.
               {blk > 0 && <> Block #{blk.toLocaleString()}.</>}
@@ -176,7 +179,7 @@ export default function OnChainTab() {
       ) : (
         <div className="panel panel-hover data-fresh">
           <div className="ph">
-            <div className="pt">On-Chain Intelligence Matrix · {assets.length} Assets</div>
+            <div className="pt">On-Chain Intelligence Matrix · {validAssets.length} Assets</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <DataFreshness lastUpdated={lastUpdated} isLive={isLive} />
               <span className="source-badge live">● LIVE · DERIVED</span>
@@ -194,24 +197,26 @@ export default function OnChainTab() {
               </tr>
             </thead>
             <tbody>
-              {assets.map(a => {
-                const flowStr = `${a.exchangeFlow30d > 0 ? '+' : ''}${(a.exchangeFlow30d / 1000).toFixed(1)}K`;
-                const flowColor = a.exchangeFlow30d < 0 ? 'var(--green)' : 'var(--red)';
-                const priceStr = a.price >= 1000 ? `$${a.price.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : a.price >= 1 ? `$${a.price.toFixed(2)}` : `$${a.price.toFixed(4)}`;
+              {validAssets.map(a => {
+                const flow = a.exchangeFlow30d ?? 0;
+                const flowStr = `${flow > 0 ? '+' : ''}${(flow / 1000).toFixed(1)}K`;
+                const flowColor = flow < 0 ? 'var(--green)' : 'var(--red)';
+                const p = a.price ?? 0;
+                const priceStr = p >= 1000 ? `$${p.toLocaleString(undefined, { maximumFractionDigits: 0 })}` : p >= 1 ? `$${p.toFixed(2)}` : `$${p.toFixed(4)}`;
                 
                 return (
                   <tr key={a.symbol} className="row-alive" style={{ borderBottom: '1px solid var(--b1)', transition: 'background 0.12s' }}>
                     <td style={{ padding: '5px 8px', fontWeight: 600, color: 'var(--text)' }}>
                       {a.symbol}
                       <span style={{ marginLeft: 6, fontSize: 8, color: a.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                        {a.change24h >= 0 ? '▲' : '▼'}{Math.abs(a.change24h).toFixed(1)}%
+                        {(a.change24h ?? 0) >= 0 ? '▲' : '▼'}{Math.abs(a.change24h ?? 0).toFixed(1)}%
                       </span>
                     </td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{priceStr}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--gold)' }}>{a.mvrv.toFixed(2)}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--gold)' }}>{(a.mvrv ?? 0).toFixed(2)}</td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: flowColor }}>{flowStr}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.lthSupplyPct.toFixed(1)}%</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{a.nvt.toFixed(1)}</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{(a.lthSupplyPct ?? 0).toFixed(1)}%</td>
+                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{(a.nvt ?? 0).toFixed(1)}</td>
                     <td style={{ textAlign: 'right', padding: '5px 8px', color: a.hashrate > 0 ? 'var(--accent)' : 'var(--muted)' }}>
                       {a.hashrate > 0 ? a.hashrate.toFixed(0) : '—'}
                     </td>
@@ -230,7 +235,7 @@ export default function OnChainTab() {
       )}
 
       {/* AI Synthesis — fully dynamic */}
-      {assets.length > 0 && (
+      {validAssets.length > 0 && (
         <div className="data-fresh" style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
             <div className="heartbeat" style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)' }} />
@@ -247,7 +252,7 @@ export default function OnChainTab() {
             <div style={{ display: 'flex', gap: 8 }}>
               <span style={{ color: 'var(--accent)', flexShrink: 0 }}>▸</span>
               <span>
-                <strong style={{ color: 'var(--text)' }}>Net exchange flow {netExchangeFlow > 0 ? '+' : ''}{(netExchangeFlow / 1000).toFixed(1)}K</strong> across {assets.length} assets (30d) — {netExchangeFlow < 0 ? 'coins moving to cold storage, structural accumulation signal' : 'increased exchange deposits, watch for selling pressure'}.
+                <strong style={{ color: 'var(--text)' }}>Net exchange flow {netExchangeFlow > 0 ? '+' : ''}{(netExchangeFlow / 1000).toFixed(1)}K</strong> across {validAssets.length} assets (30d) — {netExchangeFlow < 0 ? 'coins moving to cold storage, structural accumulation signal' : 'increased exchange deposits, watch for selling pressure'}.
                 {btc && <> BTC LTH supply {btc.lthSupplyPct.toFixed(1)}% — {btc.lthSupplyPct > 70 ? 'strong conviction holding.' : 'moderate conviction.'}</>}
               </span>
             </div>

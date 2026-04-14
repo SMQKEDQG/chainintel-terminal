@@ -1,248 +1,215 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { TABS, type TabId } from '@/lib/constants';
 
-interface CommandPaletteProps {
-  open: boolean;
-  onClose: () => void;
-  onTabChange: (tab: TabId) => void;
-}
+/* ── Command Palette — Ctrl+K quick navigation and search ── */
 
 interface CommandItem {
   id: string;
   label: string;
   description: string;
-  type: 'tab' | 'asset' | 'action';
-  action: () => void;
+  category: 'navigation' | 'action' | 'search';
   icon: string;
+  action: () => void;
+  keywords?: string[];
 }
 
-const QUICK_ASSETS = [
-  { symbol: 'BTC', name: 'Bitcoin', tab: 'markets' as TabId },
-  { symbol: 'ETH', name: 'Ethereum', tab: 'markets' as TabId },
-  { symbol: 'XRP', name: 'XRP', tab: 'iso' as TabId },
-  { symbol: 'SOL', name: 'Solana', tab: 'markets' as TabId },
-  { symbol: 'HBAR', name: 'Hedera', tab: 'iso' as TabId },
-  { symbol: 'QNT', name: 'Quant', tab: 'iso' as TabId },
-  { symbol: 'XLM', name: 'Stellar', tab: 'iso' as TabId },
-  { symbol: 'ADA', name: 'Cardano', tab: 'iso' as TabId },
-  { symbol: 'LINK', name: 'Chainlink', tab: 'markets' as TabId },
-  { symbol: 'AVAX', name: 'Avalanche', tab: 'markets' as TabId },
-  { symbol: 'DOT', name: 'Polkadot', tab: 'markets' as TabId },
-  { symbol: 'ALGO', name: 'Algorand', tab: 'iso' as TabId },
-];
+interface CommandPaletteProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onNavigate: (tabId: string) => void;
+}
 
-export default function CommandPalette({ open, onClose, onTabChange }: CommandPaletteProps) {
+export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandPaletteProps) {
   const [query, setQuery] = useState('');
-  const [selectedIdx, setSelectedIdx] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
 
-  // Build items list
-  const buildItems = useCallback((): CommandItem[] => {
-    const items: CommandItem[] = [];
+  const commands: CommandItem[] = [
+    // Navigation
+    { id: 'nav-overview', label: 'Overview', description: 'Market dashboard & intelligence brief', category: 'navigation', icon: '◉', action: () => onNavigate('overview'), keywords: ['home', 'dashboard', 'main'] },
+    { id: 'nav-markets', label: 'Markets', description: 'Top 100 assets by market cap', category: 'navigation', icon: '📊', action: () => onNavigate('markets'), keywords: ['prices', 'coins', 'tokens', 'crypto'] },
+    { id: 'nav-onchain', label: 'On-Chain Pro', description: 'On-chain metrics & network stats', category: 'navigation', icon: '⛓', action: () => onNavigate('onchain'), keywords: ['chain', 'network', 'hashrate'] },
+    { id: 'nav-defi', label: 'DeFi Pro', description: 'TVL, yields, bridges, DEX volume', category: 'navigation', icon: '🏦', action: () => onNavigate('defi'), keywords: ['tvl', 'yield', 'dex', 'bridge'] },
+    { id: 'nav-etfinst', label: 'ETF & Institutional', description: 'ETF flows, institutional data', category: 'navigation', icon: '🏛', action: () => onNavigate('etfinst'), keywords: ['etf', 'bitcoin', 'institutional', 'ibit', 'gbtc'] },
+    { id: 'nav-regulatory', label: 'Regulatory', description: 'Regulatory intelligence feed', category: 'navigation', icon: '⚖️', action: () => onNavigate('regulatory'), keywords: ['sec', 'cftc', 'regulation', 'law'] },
+    { id: 'nav-iso', label: 'ISO 20022', description: 'ISO-native ledger tracking', category: 'navigation', icon: '🏦', action: () => onNavigate('iso'), keywords: ['swift', 'iso', 'banking'] },
+    { id: 'nav-sentiment', label: 'Sentiment Pro', description: 'Fear & Greed, social sentiment', category: 'navigation', icon: '🧠', action: () => onNavigate('sentiment'), keywords: ['fear', 'greed', 'social', 'reddit'] },
+    { id: 'nav-derivatives', label: 'Derivatives Pro', description: 'Funding rates, open interest', category: 'navigation', icon: '📈', action: () => onNavigate('derivatives'), keywords: ['funding', 'oi', 'perps', 'futures'] },
+    { id: 'nav-whales', label: 'Whales Pro', description: 'Whale alerts & ChainScore ratings', category: 'navigation', icon: '🐋', action: () => onNavigate('whales'), keywords: ['whale', 'chainscore', 'large'] },
+    { id: 'nav-portfolio', label: 'Portfolio', description: 'Portfolio models & allocation', category: 'navigation', icon: '💼', action: () => onNavigate('portfolio'), keywords: ['portfolio', 'allocation', 'model'] },
+    { id: 'nav-pricing', label: 'Pricing', description: 'Pro & Enterprise plans', category: 'navigation', icon: '💳', action: () => onNavigate('pricing'), keywords: ['pricing', 'upgrade', 'pro', 'subscribe'] },
+    // Actions
+    { id: 'act-btc', label: 'BTC Price', description: 'Quick view Bitcoin price', category: 'action', icon: '₿', action: () => onNavigate('overview'), keywords: ['bitcoin', 'btc', 'price'] },
+    { id: 'act-eth', label: 'ETH Price', description: 'Quick view Ethereum price', category: 'action', icon: 'Ξ', action: () => onNavigate('overview'), keywords: ['ethereum', 'eth'] },
+    { id: 'act-fng', label: 'Fear & Greed Index', description: 'Current market sentiment', category: 'action', icon: '😨', action: () => onNavigate('sentiment'), keywords: ['fear', 'greed', 'sentiment'] },
+    { id: 'act-etfflows', label: 'Today\'s ETF Flows', description: 'Check latest ETF inflow/outflow', category: 'action', icon: '💵', action: () => onNavigate('etfinst'), keywords: ['etf', 'flow', 'today'] },
+  ];
 
-    // Tab navigation
-    for (const tab of TABS) {
-      items.push({
-        id: `tab-${tab.id}`,
-        label: tab.label,
-        description: tab.title,
-        type: 'tab',
-        action: () => { onTabChange(tab.id); onClose(); },
-        icon: '⬡',
-      });
-    }
-
-    // Quick asset search
-    for (const asset of QUICK_ASSETS) {
-      items.push({
-        id: `asset-${asset.symbol}`,
-        label: `${asset.symbol} — ${asset.name}`,
-        description: `View in ${TABS.find(t => t.id === asset.tab)?.label || 'Markets'}`,
-        type: 'asset',
-        action: () => { onTabChange(asset.tab); onClose(); },
-        icon: '◈',
-      });
-    }
-
-    // Quick actions
-    items.push({
-      id: 'action-portfolio',
-      label: 'Open Portfolio Tracker',
-      description: 'Track your holdings with live P&L',
-      type: 'action',
-      action: () => { onTabChange('portfolio'); onClose(); },
-      icon: '▸',
-    });
-    items.push({
-      id: 'action-pricing',
-      label: 'View Pricing Plans',
-      description: 'Compare Free, Pro, and Enterprise',
-      type: 'action',
-      action: () => { onTabChange('pricing'); onClose(); },
-      icon: '▸',
-    });
-
-    return items;
-  }, [onTabChange, onClose]);
-
-  const allItems = buildItems();
-
-  // Filter by query
-  const filtered = query.length === 0
-    ? allItems.filter(i => i.type === 'tab') // Show tabs by default
-    : allItems.filter(i => {
+  const filtered = query.trim()
+    ? commands.filter(c => {
         const q = query.toLowerCase();
-        return i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q);
-      });
+        return (
+          c.label.toLowerCase().includes(q) ||
+          c.description.toLowerCase().includes(q) ||
+          c.keywords?.some(k => k.includes(q))
+        );
+      })
+    : commands;
 
-  // Reset selection when query changes
-  useEffect(() => { setSelectedIdx(0); }, [query]);
-
-  // Focus input when opened
   useEffect(() => {
-    if (open) {
+    if (isOpen) {
       setQuery('');
-      setSelectedIdx(0);
+      setSelectedIndex(0);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [open]);
+  }, [isOpen]);
 
-  // Scroll selected into view
   useEffect(() => {
-    const el = listRef.current?.children[selectedIdx] as HTMLElement;
-    el?.scrollIntoView({ block: 'nearest' });
-  }, [selectedIdx]);
+    setSelectedIndex(0);
+  }, [query]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const execute = useCallback((item: CommandItem) => {
+    item.action();
+    onClose();
+  }, [onClose]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIdx(i => Math.min(i + 1, filtered.length - 1));
+      setSelectedIndex(i => Math.min(i + 1, filtered.length - 1));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIdx(i => Math.max(i - 1, 0));
-    } else if (e.key === 'Enter' && filtered[selectedIdx]) {
-      e.preventDefault();
-      filtered[selectedIdx].action();
+      setSelectedIndex(i => Math.max(i - 1, 0));
+    } else if (e.key === 'Enter' && filtered[selectedIndex]) {
+      execute(filtered[selectedIndex]);
     } else if (e.key === 'Escape') {
-      e.preventDefault();
       onClose();
     }
+  }, [filtered, selectedIndex, execute, onClose]);
+
+  if (!isOpen) return null;
+
+  const categories: Record<string, CommandItem[]> = {};
+  for (const item of filtered) {
+    if (!categories[item.category]) categories[item.category] = [];
+    categories[item.category].push(item);
+  }
+
+  const categoryLabels: Record<string, string> = {
+    navigation: 'NAVIGATE',
+    action: 'QUICK ACTIONS',
+    search: 'SEARCH',
   };
 
-  if (!open) return null;
+  let flatIndex = 0;
 
   return (
     <>
       {/* Backdrop */}
       <div
+        className="fixed inset-0"
+        style={{ background: 'rgba(0,0,0,0.6)', zIndex: 100000, backdropFilter: 'blur(4px)' }}
         onClick={onClose}
-        style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
-          backdropFilter: 'blur(4px)', zIndex: 99999,
-        }}
       />
+
       {/* Palette */}
       <div
+        className="fixed"
         style={{
-          position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)',
-          width: '100%', maxWidth: 560, background: 'var(--s1)',
-          border: '1px solid var(--b3)', boxShadow: '0 24px 48px rgba(0,0,0,0.5)',
-          zIndex: 100000, overflow: 'hidden',
+          top: '20%',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 520,
+          maxWidth: '90vw',
+          maxHeight: '60vh',
+          background: 'var(--s1)',
+          border: '1px solid var(--cyan)',
+          borderRadius: 6,
+          zIndex: 100001,
+          boxShadow: '0 20px 60px rgba(0,0,0,0.6), 0 0 30px rgba(0,212,170,0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
         }}
       >
         {/* Search input */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderBottom: '1px solid var(--b2)' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--cyan)' }}>⬡</span>
+        <div className="flex items-center gap-3 px-4 py-3 border-b" style={{ borderColor: 'var(--b2)' }}>
+          <span style={{ color: 'var(--cyan)', fontSize: 14, fontWeight: 700 }}>⌘</span>
           <input
             ref={inputRef}
             value={query}
             onChange={e => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search tabs, assets, or actions..."
-            style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text)',
-              letterSpacing: '0.02em',
-            }}
+            placeholder="Search commands, navigate tabs..."
+            className="flex-1 bg-transparent outline-none font-mono text-[11px]"
+            style={{ color: 'var(--text)', caretColor: 'var(--cyan)' }}
+            autoComplete="off"
+            spellCheck={false}
           />
-          <kbd style={{
-            fontFamily: 'var(--mono)', fontSize: 8, padding: '2px 6px',
-            background: 'var(--s3)', color: 'var(--muted)', border: '1px solid var(--b2)',
-            letterSpacing: '0.06em',
-          }}>ESC</kbd>
+          <span
+            className="font-mono text-[8px] px-1.5 py-0.5 rounded"
+            style={{ background: 'var(--s3)', color: 'var(--muted)', border: '1px solid var(--b3)' }}
+          >
+            ESC
+          </span>
         </div>
 
         {/* Results */}
-        <div ref={listRef} style={{ maxHeight: 320, overflowY: 'auto', padding: '4px 0' }}>
+        <div className="flex-1 overflow-y-auto py-1" style={{ maxHeight: 'calc(60vh - 60px)' }}>
           {filtered.length === 0 ? (
-            <div style={{
-              padding: '20px 16px', textAlign: 'center',
-              fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)',
-            }}>
-              No results for &ldquo;{query}&rdquo;
+            <div className="px-4 py-8 text-center font-mono text-[10px]" style={{ color: 'var(--muted)' }}>
+              No results for "{query}"
             </div>
           ) : (
-            filtered.map((item, idx) => (
-              <div
-                key={item.id}
-                onClick={() => item.action()}
-                onMouseEnter={() => setSelectedIdx(idx)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '8px 16px', cursor: 'pointer',
-                  background: idx === selectedIdx ? 'rgba(0,212,170,0.08)' : 'transparent',
-                  borderLeft: idx === selectedIdx ? '2px solid var(--cyan)' : '2px solid transparent',
-                  transition: 'background 100ms',
-                }}
-              >
-                <span style={{
-                  fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--cyan)',
-                  width: 16, textAlign: 'center', flexShrink: 0,
-                }}>
-                  {item.icon}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{
-                    fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 500,
-                    color: idx === selectedIdx ? 'var(--cyan)' : 'var(--text)',
-                    letterSpacing: '0.04em',
-                  }}>
-                    {item.label}
-                  </div>
-                  <div style={{
-                    fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)',
-                    letterSpacing: '0.02em', overflow: 'hidden', textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                  }}>
-                    {item.description}
-                  </div>
+            Object.entries(categories).map(([cat, items]) => (
+              <div key={cat}>
+                <div className="px-4 py-1.5 font-mono text-[7px] tracking-widest" style={{ color: 'var(--muted)' }}>
+                  {categoryLabels[cat] || cat.toUpperCase()}
                 </div>
-                <span style={{
-                  fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)',
-                  padding: '1px 5px', background: 'var(--s3)', border: '1px solid var(--b1)',
-                  letterSpacing: '0.1em', flexShrink: 0,
-                }}>
-                  {item.type === 'tab' ? 'TAB' : item.type === 'asset' ? 'ASSET' : 'ACTION'}
-                </span>
+                {items.map(item => {
+                  const idx = flatIndex++;
+                  const isSelected = idx === selectedIndex;
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={() => execute(item)}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      className="flex items-center gap-3 px-4 py-2 cursor-pointer transition-colors"
+                      style={{
+                        background: isSelected ? 'rgba(0,212,170,0.08)' : 'transparent',
+                        borderLeft: isSelected ? '2px solid var(--cyan)' : '2px solid transparent',
+                      }}
+                    >
+                      <span style={{ fontSize: 14, width: 24, textAlign: 'center' }}>{item.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-mono text-[10px] font-semibold" style={{ color: isSelected ? 'var(--cyan)' : 'var(--text)' }}>
+                          {item.label}
+                        </div>
+                        <div className="font-mono text-[8px]" style={{ color: 'var(--muted)' }}>
+                          {item.description}
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <span className="font-mono text-[8px]" style={{ color: 'var(--cyan)' }}>↵</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ))
           )}
         </div>
 
-        {/* Footer hints */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '8px 16px', borderTop: '1px solid var(--b2)',
-          fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)',
-          letterSpacing: '0.06em',
-        }}>
-          <span>↑↓ Navigate</span>
-          <span>↵ Select</span>
-          <span>ESC Close</span>
-          <span style={{ marginLeft: 'auto' }}>ChainIntel Command</span>
+        {/* Footer */}
+        <div
+          className="flex items-center gap-4 px-4 py-2 border-t font-mono text-[7px]"
+          style={{ borderColor: 'var(--b2)', color: 'var(--muted)' }}
+        >
+          <span>↑↓ navigate</span>
+          <span>↵ select</span>
+          <span>ESC close</span>
+          <span style={{ marginLeft: 'auto', color: 'var(--cyan)', opacity: 0.5 }}>CHAININTEL</span>
         </div>
       </div>
     </>

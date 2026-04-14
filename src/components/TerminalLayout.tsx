@@ -7,6 +7,7 @@ import TickerTape from './TickerTape';
 import AlertPanel from './AlertPanel';
 import StatusBar from './StatusBar';
 import GuidedTour from './GuidedTour';
+import CommandPalette from './CommandPalette';
 import { SourceStatusBadge } from './LevelUpModules';
 import Link from 'next/link';
 
@@ -23,6 +24,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
   const [clock, setClock] = useState('');
   const [alertPanelOpen, setAlertPanelOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
 
   useEffect(() => {
     const tick = () => {
@@ -37,7 +39,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
   const handleKeydown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
-      // TODO: command palette
+      setCmdPaletteOpen(prev => !prev);
     }
   }, []);
 
@@ -209,6 +211,13 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
         isOpen={tourOpen}
         onClose={() => setTourOpen(false)}
         onSwitchTab={(tabId) => onTabChange(tabId as TabId)}
+      />
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={cmdPaletteOpen}
+        onClose={() => setCmdPaletteOpen(false)}
+        onNavigate={(tabId) => { onTabChange(tabId as TabId); setCmdPaletteOpen(false); }}
       />
     </div>
   );

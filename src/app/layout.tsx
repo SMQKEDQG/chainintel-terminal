@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { JetBrains_Mono, Inter } from 'next/font/google';
 import { AuthProvider } from '@/lib/auth-context';
+import ErrorBoundary from '@/components/ErrorBoundary';
 import './globals.css';
 
 const jetbrainsMono = JetBrains_Mono({
@@ -49,9 +50,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={`${jetbrainsMono.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-[var(--bg)] text-[var(--text)] antialiased">
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ErrorBoundary>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );

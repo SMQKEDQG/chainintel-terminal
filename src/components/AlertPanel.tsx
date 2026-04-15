@@ -5,13 +5,20 @@ import { useState, useEffect } from 'react';
 /* ── AlertPanel — slide-out notification center for smart alerts ── */
 interface Alert {
   id: string;
-  type: 'whale' | 'etf' | 'funding' | 'regulatory' | 'price' | 'chainscore';
+  type: 'whale' | 'etf' | 'funding' | 'regulatory' | 'price' | 'chainscore' | 'liquidation' | 'sentiment';
   title: string;
   message: string;
   timestamp: string;
   severity: 'critical' | 'warning' | 'info';
   read: boolean;
   asset?: string;
+}
+
+interface AlertSettings {
+  minWhale: number;          // $1M–$50M
+  priceThreshold: number;    // 1%–20%
+  fundingThreshold: number;  // 0.01%–0.1%
+  enabledTypes: Record<string, boolean>;
 }
 
 interface AlertPanelProps {
@@ -26,6 +33,8 @@ const typeIcons: Record<string, string> = {
   regulatory: '⚖️',
   price: '📈',
   chainscore: '🏆',
+  liquidation: '💥',
+  sentiment: '🧠',
 };
 
 const severityColors: Record<string, string> = {
@@ -34,19 +43,120 @@ const severityColors: Record<string, string> = {
   info: 'var(--accent)',
 };
 
+const ALL_ALERT_TYPES = ['whale', 'etf', 'funding', 'regulatory', 'price', 'chainscore', 'liquidation', 'sentiment'];
+
+const DEFAULT_SETTINGS: AlertSettings = {
+  minWhale: 10_000_000,
+  priceThreshold: 5,
+  fundingThreshold: 0.05,
+  enabledTypes: Object.fromEntries(ALL_ALERT_TYPES.map(t => [t, true])),
+};
+
+/* ── Shared input styles ── */
+const sliderStyle = `
+  .al-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 3px;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  .al-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--s1);
+    box-shadow: 0 0 4px rgba(232,165,52,0.5);
+  }
+  .al-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+    border: 2px solid var(--s1);
+    box-shadow: 0 0 4px rgba(232,165,52,0.5);
+  }
+`;
+
+function getSliderBackground(value: number, min: number, max: number) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return `linear-gradient(to right, var(--accent) ${pct}%, var(--b2, #222) ${pct}%)`;
+}
+
+function formatWhale(val: number) {
+  return val >= 1_000_000 ? `$${(val / 1_000_000).toFixed(0)}M` : `$${val.toLocaleString()}`;
+}
+
+/* ── Toggle Switch ── */
+function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      style={{
+        width: 28,
+        height: 16,
+        borderRadius: 8,
+        background: checked ? 'var(--accent)' : 'var(--b2, #222)',
+        border: '1px solid ' + (checked ? 'var(--accent)' : 'var(--b1)'),
+        position: 'relative',
+        cursor: 'pointer',
+        transition: 'background 0.2s, border-color 0.2s',
+        flexShrink: 0,
+      }}
+    >
+      <span
+        style={{
+          position: 'absolute',
+          top: 2,
+          left: checked ? 14 : 2,
+          width: 10,
+          height: 10,
+          borderRadius: '50%',
+          background: checked ? 'var(--s1)' : 'var(--muted)',
+          transition: 'left 0.2s, background 0.2s',
+        }}
+      />
+    </button>
+  );
+}
+
 export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
 
+  /* ── Settings state ── */
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState<AlertSettings>(DEFAULT_SETTINGS);
+
+  /* Build query params from settings */
+  function buildQueryParams(s: AlertSettings) {
+    const params = new URLSearchParams({
+      minWhale: String(s.minWhale),
+      priceThreshold: String(s.priceThreshold),
+      fundingThreshold: String(s.fundingThreshold),
+    });
+    return params.toString();
+  }
+
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const fetchAlerts = async () => {
       try {
-        const res = await fetch('/api/smart-alerts');
+        const qs = buildQueryParams(settings);
+        const res = await fetch(`/api/smart-alerts?${qs}`);
         const data = await res.json();
-        
+
         const mapped: Alert[] = (data?.alerts || []).map((a: any, i: number) => ({
           id: a.id || `alert-${i}`,
           type: a.type || 'info',
@@ -57,7 +167,7 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
           read: a.read || false,
           asset: a.asset,
         }));
-        
+
         setAlerts(mapped);
       } catch (e) {
         console.error('Alert fetch error:', e);
@@ -101,10 +211,13 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
     fetchAlerts();
     const id = setInterval(fetchAlerts, 60000);
     return () => clearInterval(id);
-  }, [isOpen]);
+  }, [isOpen, settings]);
 
-  const filteredAlerts = filter === 'all' ? alerts : alerts.filter(a => a.type === filter);
-  const unreadCount = alerts.filter(a => !a.read).length;
+  const filteredAlerts = filter === 'all'
+    ? alerts.filter(a => settings.enabledTypes[a.type] !== false)
+    : alerts.filter(a => a.type === filter && settings.enabledTypes[a.type] !== false);
+
+  const unreadCount = alerts.filter(a => !a.read && settings.enabledTypes[a.type] !== false).length;
 
   const markRead = (id: string) => {
     setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
@@ -123,8 +236,17 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
     return `${Math.floor(hrs / 24)}d ago`;
   };
 
+  const setEnabledType = (type: string, val: boolean) => {
+    setSettings(s => ({
+      ...s,
+      enabledTypes: { ...s.enabledTypes, [type]: val },
+    }));
+  };
+
   return (
     <>
+      <style>{sliderStyle}</style>
+
       {/* Backdrop */}
       {isOpen && (
         <div
@@ -163,6 +285,19 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
             )}
           </div>
           <div className="flex items-center gap-2">
+            {/* CUSTOMIZE ALERTS CTA */}
+            <button
+              onClick={() => setSettingsOpen(v => !v)}
+              className="font-mono text-[7px] tracking-wider px-2 py-1 rounded transition-colors"
+              style={{
+                background: settingsOpen ? 'var(--accent)' : 'transparent',
+                color: settingsOpen ? 'var(--s1)' : 'var(--accent)',
+                border: '1px solid var(--accent)',
+                fontWeight: 700,
+              }}
+            >
+              ⚙ CUSTOMIZE ALERTS
+            </button>
             {unreadCount > 0 && (
               <button
                 onClick={markAllRead}
@@ -181,6 +316,148 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
             </button>
           </div>
         </div>
+
+        {/* ── ALERT SETTINGS collapsible section ── */}
+        {settingsOpen && (
+          <div
+            style={{
+              background: 'var(--s2)',
+              borderBottom: '1px solid var(--b1)',
+            }}
+          >
+            {/* Settings header */}
+            <div
+              className="flex items-center justify-between px-4 py-2 cursor-pointer select-none"
+              style={{ borderBottom: '1px solid var(--b1)' }}
+              onClick={() => setSettingsOpen(false)}
+            >
+              <span className="font-mono text-[9px] tracking-wider font-bold" style={{ color: 'var(--accent)' }}>
+                ALERT SETTINGS
+              </span>
+              <span className="font-mono text-[8px]" style={{ color: 'var(--muted)' }}>▲ COLLAPSE</span>
+            </div>
+
+            <div className="px-4 py-3 flex flex-col gap-5">
+
+              {/* ── Thresholds ── */}
+              <div>
+                <span className="font-mono text-[8px] tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+                  THRESHOLDS
+                </span>
+
+                {/* Whale minimum */}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-[8px] tracking-wider" style={{ color: 'var(--text)' }}>
+                      WHALE ALERT MINIMUM
+                    </span>
+                    <span className="font-mono text-[8px]" style={{ color: 'var(--accent)' }}>
+                      {formatWhale(settings.minWhale)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    className="al-slider"
+                    min={1_000_000}
+                    max={50_000_000}
+                    step={1_000_000}
+                    value={settings.minWhale}
+                    onChange={e => setSettings(s => ({ ...s, minWhale: Number(e.target.value) }))}
+                    style={{ background: getSliderBackground(settings.minWhale, 1_000_000, 50_000_000) }}
+                  />
+                  <div className="flex justify-between mt-0.5">
+                    <span className="font-mono text-[6px]" style={{ color: 'var(--muted)' }}>$1M</span>
+                    <span className="font-mono text-[6px]" style={{ color: 'var(--muted)' }}>$50M</span>
+                  </div>
+                </div>
+
+                {/* Price change threshold */}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-[8px] tracking-wider" style={{ color: 'var(--text)' }}>
+                      PRICE CHANGE THRESHOLD
+                    </span>
+                    <span className="font-mono text-[8px]" style={{ color: 'var(--accent)' }}>
+                      {settings.priceThreshold}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    className="al-slider"
+                    min={1}
+                    max={20}
+                    step={0.5}
+                    value={settings.priceThreshold}
+                    onChange={e => setSettings(s => ({ ...s, priceThreshold: Number(e.target.value) }))}
+                    style={{ background: getSliderBackground(settings.priceThreshold, 1, 20) }}
+                  />
+                  <div className="flex justify-between mt-0.5">
+                    <span className="font-mono text-[6px]" style={{ color: 'var(--muted)' }}>1%</span>
+                    <span className="font-mono text-[6px]" style={{ color: 'var(--muted)' }}>20%</span>
+                  </div>
+                </div>
+
+                {/* Funding rate threshold */}
+                <div className="mt-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-[8px] tracking-wider" style={{ color: 'var(--text)' }}>
+                      FUNDING RATE THRESHOLD
+                    </span>
+                    <span className="font-mono text-[8px]" style={{ color: 'var(--accent)' }}>
+                      {settings.fundingThreshold.toFixed(3)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    className="al-slider"
+                    min={0.01}
+                    max={0.1}
+                    step={0.001}
+                    value={settings.fundingThreshold}
+                    onChange={e => setSettings(s => ({ ...s, fundingThreshold: Number(e.target.value) }))}
+                    style={{ background: getSliderBackground(settings.fundingThreshold, 0.01, 0.1) }}
+                  />
+                  <div className="flex justify-between mt-0.5">
+                    <span className="font-mono text-[6px]" style={{ color: 'var(--muted)' }}>0.01%</span>
+                    <span className="font-mono text-[6px]" style={{ color: 'var(--muted)' }}>0.1%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Alert type toggles ── */}
+              <div>
+                <span className="font-mono text-[8px] tracking-widest uppercase" style={{ color: 'var(--muted)' }}>
+                  ALERT TYPES
+                </span>
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-2">
+                  {ALL_ALERT_TYPES.map(type => (
+                    <div key={type} className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span style={{ fontSize: 10 }}>{typeIcons[type]}</span>
+                        <span className="font-mono text-[8px] tracking-wider" style={{ color: 'var(--text)' }}>
+                          {type.toUpperCase()}
+                        </span>
+                      </div>
+                      <Toggle
+                        checked={settings.enabledTypes[type] !== false}
+                        onChange={v => setEnabledType(type, v)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reset button */}
+              <button
+                onClick={() => setSettings(DEFAULT_SETTINGS)}
+                className="font-mono text-[7px] tracking-widest transition-colors hover:text-[var(--accent)] self-end"
+                style={{ color: 'var(--muted)' }}
+              >
+                RESET TO DEFAULTS
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Filter tabs */}
         <div className="flex items-center gap-0 px-2 py-1.5 overflow-x-auto border-b" style={{ borderColor: 'var(--b1)' }}>

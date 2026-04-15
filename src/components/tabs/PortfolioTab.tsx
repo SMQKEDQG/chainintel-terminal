@@ -7,8 +7,8 @@ import { PortfolioModels } from '@/components/LevelUpModules';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// ── Fallback static prices (used when CoinGecko is unavailable) ──────────────
-const FALLBACK_PRICES: Record<string, number> = {
+// ── Initial prices — used only while CoinGecko loads ────────────────────────
+const INITIAL_PRICES: Record<string, number> = {
   BTC: 83240,
   ETH: 1582,
   SOL: 127.4,
@@ -56,42 +56,10 @@ const DEMO_PORTFOLIO = [
   { asset: 'XLM', qty: 20000, avgCost: 0.19 },
 ];
 
-const SESSION_KEY = 'chainintel_portfolio';
-
 interface Holding {
   asset: string;
   qty: number;
   avgCost: number;
-}
-
-// ── sessionStorage helpers ────────────────────────────────────────────────────
-function loadFromSession(): Holding[] {
-  if (typeof window === 'undefined') return [];
-  try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return [];
-    return parsed.filter(
-      (h: unknown) =>
-        h !== null &&
-        typeof h === 'object' &&
-        typeof (h as Holding).asset === 'string' &&
-        typeof (h as Holding).qty === 'number' &&
-        typeof (h as Holding).avgCost === 'number',
-    );
-  } catch {
-    return [];
-  }
-}
-
-function saveToSession(holdings: Holding[]): void {
-  if (typeof window === 'undefined') return;
-  try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify(holdings));
-  } catch {
-    // sessionStorage unavailable — silent fail
-  }
 }
 
 export default function PortfolioTab() {
@@ -103,26 +71,13 @@ export default function PortfolioTab() {
   const [briefText, setBriefText] = useState('');
   const [showBrief, setShowBrief] = useState(false);
 
-  // Live prices from CoinGecko (merged with fallback)
-  const [livePrices, setLivePrices] = useState<Record<string, number>>(FALLBACK_PRICES);
+  // Live prices from CoinGecko (seeded with INITIAL_PRICES until first fetch completes)
+  const [livePrices, setLivePrices] = useState<Record<string, number>>(INITIAL_PRICES);
   const [pricesLoading, setPricesLoading] = useState(false);
   const [pricesUpdatedAt, setPricesUpdatedAt] = useState<string | null>(null);
   const [pricesError, setPricesError] = useState(false);
 
   const addSectionRef = useRef<HTMLSelectElement>(null);
-
-  // ── Load holdings from sessionStorage on mount ────────────────────────────
-  useEffect(() => {
-    const saved = loadFromSession();
-    if (saved.length > 0) {
-      setHoldings(saved);
-    }
-  }, []);
-
-  // ── Persist holdings to sessionStorage on every change ───────────────────
-  useEffect(() => {
-    saveToSession(holdings);
-  }, [holdings]);
 
   // ── Fetch live prices via our CMC proxy (avoids CoinGecko rate limits) ────
   useEffect(() => {
@@ -189,7 +144,7 @@ export default function PortfolioTab() {
   const focusAddHolding = () => addSectionRef.current?.focus();
 
   // ── Price / value helpers (using live prices) ─────────────────────────────
-  const getPrice = (asset: string) => livePrices[asset] ?? FALLBACK_PRICES[asset] ?? 0;
+  const getPrice = (asset: string) => livePrices[asset] ?? INITIAL_PRICES[asset] ?? 0;
   const getValue = (h: Holding) => h.qty * getPrice(h.asset);
   const getCost = (h: Holding) => h.qty * h.avgCost;
   const getPnl = (h: Holding) => getValue(h) - getCost(h);
@@ -695,7 +650,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
               marginTop: '6px',
             }}
           >
-            ✓ Session persistent — holdings restored automatically within this browser session.
+            ✓ Holdings persist in-memory for this session. Reload the page to start fresh.
           </div>
         </div>
 

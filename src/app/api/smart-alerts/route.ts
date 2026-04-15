@@ -37,7 +37,14 @@ interface Alert {
   source: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  // Parse user-configurable thresholds from query params
+  const { searchParams } = new URL(request.url);
+  const minLiquidation = Number(searchParams.get('minLiquidation')) || 1_000_000;
+  const priceThreshold = Number(searchParams.get('priceThreshold')) || 5;
+  const fundingThreshold = Number(searchParams.get('fundingThreshold')) || 0.001;
+  const enabledTypes = searchParams.get('enabledTypes')?.split(',') || null; // null = all enabled
+
   const alerts: Alert[] = [];
 
   // Gather all data sources in parallel
@@ -65,7 +72,7 @@ export async function GET() {
   const liqData = val(liquidations);
   if (Array.isArray(liqData) && liqData.length > 0) {
     const totalLiqUsd = liqData.reduce((s: number, l: any) => s + parseFloat(l.price) * parseFloat(l.origQty), 0);
-    if (totalLiqUsd > 1_000_000) {
+    if (totalLiqUsd > minLiquidation) {
       const longLiqs = liqData.filter((l: any) => l.side === 'SELL');
       const shortLiqs = liqData.filter((l: any) => l.side === 'BUY');
       alerts.push({
@@ -82,7 +89,7 @@ export async function GET() {
   if (Array.isArray(fundData) && fundData.length >= 2) {
     const currentRate = parseFloat(fundData[0].fundingRate);
     const prevRate = parseFloat(fundData[1].fundingRate);
-    if (Math.abs(currentRate) > 0.001) {
+    if (Math.abs(currentRate) > fundingThreshold) {
       alerts.push({
         id: `fund-${now}`, type: 'funding', severity: Math.abs(currentRate) > 0.003 ? 'critical' : 'warning',
         title: `BTC Funding Rate ${currentRate > 0 ? 'Elevated' : 'Negative'}: ${(currentRate * 100).toFixed(4)}%`,
@@ -120,7 +127,7 @@ export async function GET() {
   if (Array.isArray(priceData)) {
     for (const coin of priceData) {
       const change = coin.price_change_percentage_24h || 0;
-      if (Math.abs(change) > 5) {
+      if (Math.abs(change) > priceThreshold) {
         alerts.push({
           id: `price-${coin.symbol}-${now}`, type: 'price', severity: Math.abs(change) > 10 ? 'critical' : 'warning',
           title: `${coin.symbol.toUpperCase()} ${change > 0 ? '▲' : '▼'} ${Math.abs(change).toFixed(1)}% in 24h`,
@@ -173,12 +180,17 @@ export async function GET() {
     }
   }
 
+  // Filter by enabled types if specified
+  const filteredAlerts = enabledTypes
+    ? alerts.filter(a => enabledTypes.includes(a.type))
+    : alerts;
+
   // Sort by severity then timestamp
   const severityOrder: Record<string, number> = { critical: 0, warning: 1, info: 2 };
-  alerts.sort((a, b) => (severityOrder[a.severity] || 2) - (severityOrder[b.severity] || 2));
+  filteredAlerts.sort((a, b) => (severityOrder[a.severity] || 2) - (severityOrder[b.severity] || 2));
 
   return NextResponse.json({
-    alerts,
+    alerts: filteredAlerts,
     count: alerts.length,
     critical: alerts.filter(a => a.severity === 'critical').length,
     warnings: alerts.filter(a => a.severity === 'warning').length,

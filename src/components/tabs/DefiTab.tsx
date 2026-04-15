@@ -119,9 +119,9 @@ interface DefiData {
   stablecoins: { label: string; value: number; color: string }[];
 }
 
-// ── Fallback static data ───────────────────────────────────────────────────────
+// ── Loading state data — shown briefly while live data loads ──────────────────
 
-const FALLBACK: DefiData = {
+const DEFI_LOADING_STATE: DefiData = {
   totalTvl: 85e9,
   ethTvl: 46.2e9,
   stablecoinSupply: 243.2e9,
@@ -396,8 +396,8 @@ export default function DefiTab() {
       ]);
 
       // ── Chains ──────────────────────────────────────────────────────────────
-      let totalTvl = FALLBACK.totalTvl;
-      let ethTvl = FALLBACK.ethTvl;
+      let totalTvl = DEFI_LOADING_STATE.totalTvl;
+      let ethTvl = DEFI_LOADING_STATE.ethTvl;
       if (chainsRes.status === 'fulfilled' && Array.isArray(chainsRes.value)) {
         const chains: ChainTvl[] = chainsRes.value;
         totalTvl = chains.reduce((s: number, c: ChainTvl) => s + (c.tvl || 0), 0);
@@ -406,7 +406,7 @@ export default function DefiTab() {
       }
 
       // ── Protocols ───────────────────────────────────────────────────────────
-      let protocols = FALLBACK.protocols;
+      let protocols = DEFI_LOADING_STATE.protocols;
       if (protocolsRes.status === 'fulfilled' && Array.isArray(protocolsRes.value)) {
         const raw: Protocol[] = protocolsRes.value;
         // Filter out CEX & bridges, sort by TVL, take top 8
@@ -435,8 +435,8 @@ export default function DefiTab() {
       }
 
       // ── Stablecoins ─────────────────────────────────────────────────────────
-      let stablecoinSupply = FALLBACK.stablecoinSupply;
-      let stablecoins = FALLBACK.stablecoins;
+      let stablecoinSupply = DEFI_LOADING_STATE.stablecoinSupply;
+      let stablecoins = DEFI_LOADING_STATE.stablecoins;
       if (stablesRes.status === 'fulfilled') {
         const stablesData = stablesRes.value?.peggedAssets || stablesRes.value;
         if (Array.isArray(stablesData)) {
@@ -470,7 +470,7 @@ export default function DefiTab() {
       }
 
       // ── TVL History ─────────────────────────────────────────────────────────
-      let tvlHistory: TvlPoint[] = FALLBACK.tvlHistory;
+      let tvlHistory: TvlPoint[] = DEFI_LOADING_STATE.tvlHistory;
       if (tvlHistRes.status === 'fulfilled' && Array.isArray(tvlHistRes.value)) {
         const all: TvlPoint[] = tvlHistRes.value;
         tvlHistory = all.slice(-90);
@@ -503,7 +503,7 @@ export default function DefiTab() {
       setError(false);
     } catch {
       setError(true);
-      setData(FALLBACK);
+      setData(DEFI_LOADING_STATE);
     } finally {
       setLoading(false);
     }
@@ -549,7 +549,7 @@ export default function DefiTab() {
     return () => { clearInterval(interval); clearInterval(rlusdInterval); clearInterval(rwaInterval); };
   }, [fetchAll, fetchRlusd, fetchRwa]);
 
-  const d = data ?? FALLBACK;
+  const d = data ?? DEFI_LOADING_STATE;
   const ethShare = d.totalTvl > 0 ? ((d.ethTvl / d.totalTvl) * 100).toFixed(1) : '—';
 
   // ── Static P/E data (no free API) ─────────────────────────────────────────
@@ -583,6 +583,13 @@ export default function DefiTab() {
       <style>{`@keyframes pulseShimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }`}</style>
 
       <div className="page" id="page-defi">
+        {/* Loading indicator shown while initial fetch is pending */}
+        {loading && !data && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0 6px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.12em' }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+            CONNECTING...
+          </div>
+        )}
         <div className="ai-context-strip" id="acs-defi">
           <span className="acs-icon">◈ CI·AI</span>
           <span className="acs-body" id="acs-body-defi">

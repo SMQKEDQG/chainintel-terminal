@@ -100,7 +100,7 @@ function geckoToCoinData(data: any[]): CmcCoin[] {
 }
 
 /* Static fallback data */
-const FALLBACK_COINS: CmcCoin[] = [
+const LOADING_COINS: CmcCoin[] = [
   { id: 1, name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', cmc_rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_24h: 0.82, percent_change_7d: -3.14, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png' },
   { id: 1027, name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', cmc_rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_24h: -1.24, percent_change_7d: -8.32, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png' },
   { id: 52, name: 'XRP', symbol: 'XRP', slug: 'xrp', cmc_rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_24h: 1.87, percent_change_7d: -4.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/52.png' },
@@ -118,7 +118,7 @@ const FALLBACK_COINS: CmcCoin[] = [
   { id: 1720, name: 'IOTA', symbol: 'IOTA', slug: 'iota', cmc_rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_24h: 1.14, percent_change_7d: 0.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1720.png' },
 ];
 
-const FALLBACK_GLOBAL: CmcGlobal = {
+const LOADING_GLOBAL: CmcGlobal = {
   total_market_cap: 2.65e12,
   total_volume_24h: 98.4e9,
   btc_dominance: 63.0,
@@ -128,8 +128,8 @@ const FALLBACK_GLOBAL: CmcGlobal = {
 };
 
 function useCmcData(): CmcData {
-  const [coins, setCoins] = useState<CmcCoin[]>(FALLBACK_COINS);
-  const [global, setGlobal] = useState<CmcGlobal | null>(FALLBACK_GLOBAL);
+  const [coins, setCoins] = useState<CmcCoin[]>(LOADING_COINS);
+  const [global, setGlobal] = useState<CmcGlobal | null>(LOADING_GLOBAL);
   const [source, setSource] = useState<CmcData['source']>('static');
   const [loading, setLoading] = useState(true);
 
@@ -160,12 +160,12 @@ function useCmcData(): CmcData {
             const gd = globalJson.data?.data;
             if (gd) {
               setGlobal({
-                total_market_cap: gd.quote?.USD?.total_market_cap ?? FALLBACK_GLOBAL.total_market_cap,
-                total_volume_24h: gd.quote?.USD?.total_volume_24h ?? FALLBACK_GLOBAL.total_volume_24h,
-                btc_dominance: gd.btc_dominance ?? FALLBACK_GLOBAL.btc_dominance,
-                eth_dominance: gd.eth_dominance ?? FALLBACK_GLOBAL.eth_dominance,
-                active_cryptocurrencies: gd.active_cryptocurrencies ?? FALLBACK_GLOBAL.active_cryptocurrencies,
-                total_market_cap_yesterday_percentage_change: gd.quote?.USD?.total_market_cap_yesterday_percentage_change ?? FALLBACK_GLOBAL.total_market_cap_yesterday_percentage_change,
+                total_market_cap: gd.quote?.USD?.total_market_cap ?? LOADING_GLOBAL.total_market_cap,
+                total_volume_24h: gd.quote?.USD?.total_volume_24h ?? LOADING_GLOBAL.total_volume_24h,
+                btc_dominance: gd.btc_dominance ?? LOADING_GLOBAL.btc_dominance,
+                eth_dominance: gd.eth_dominance ?? LOADING_GLOBAL.eth_dominance,
+                active_cryptocurrencies: gd.active_cryptocurrencies ?? LOADING_GLOBAL.active_cryptocurrencies,
+                total_market_cap_yesterday_percentage_change: gd.quote?.USD?.total_market_cap_yesterday_percentage_change ?? LOADING_GLOBAL.total_market_cap_yesterday_percentage_change,
               });
             }
           }
@@ -1499,9 +1499,9 @@ function LiveKPIs() {
   const { coins, global, source } = useContext(CmcContext);
   const btc = coins.find(c => c.symbol === 'BTC');
 
-  const totalMcap = global?.total_market_cap ?? FALLBACK_GLOBAL.total_market_cap;
-  const mcapChg = global?.total_market_cap_yesterday_percentage_change ?? FALLBACK_GLOBAL.total_market_cap_yesterday_percentage_change;
-  const btcDom = global?.btc_dominance ?? FALLBACK_GLOBAL.btc_dominance;
+  const totalMcap = global?.total_market_cap ?? LOADING_GLOBAL.total_market_cap;
+  const mcapChg = global?.total_market_cap_yesterday_percentage_change ?? LOADING_GLOBAL.total_market_cap_yesterday_percentage_change;
+  const btcDom = global?.btc_dominance ?? LOADING_GLOBAL.btc_dominance;
 
   const srcHtml = `<span style="color:${sourceColor(source)};font-size:7px">●</span> ${sourceLabel(source)} · <a class="src-link" href="https://coinmarketcap.com" target="_blank">CoinMarketCap</a>`;
 
@@ -1533,6 +1533,13 @@ export default function OverviewTab() {
   const cmcData = useCmcData();
   const { isOpen, context, openInsight, closeInsight } = useInsightDrawer();
 
+  // Show skeleton overlay for first 2 seconds while data loads
+  const [showSkeleton, setShowSkeleton] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setShowSkeleton(false), 2000);
+    return () => clearTimeout(t);
+  }, []);
+
   // Expose insight context globally for child components
   useEffect(() => {
     (window as any).__ciInsightCtx = { openInsight };
@@ -1542,7 +1549,23 @@ export default function OverviewTab() {
   return (
     <CmcContext.Provider value={cmcData}>
     <InsightContext.Provider value={{ openInsight }}>
-    <div>
+    <div style={{ position: 'relative' }}>
+      {/* Loading skeleton overlay — shown for 2s while live data arrives */}
+      {showSkeleton && cmcData.source === 'static' && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          padding: '4px 0 6px',
+          fontFamily: 'var(--mono)', fontSize: '7px',
+          color: 'var(--muted)', letterSpacing: '0.12em',
+        }}>
+          <span style={{
+            width: 6, height: 6, borderRadius: '50%',
+            background: 'var(--accent)', display: 'inline-block',
+            animation: 'pulse 2s infinite',
+          }} />
+          CONNECTING...
+        </div>
+      )}
       <AiStrip />
       <QuickGuide />
       <DailyBriefCard />

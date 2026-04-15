@@ -128,6 +128,7 @@ export default function SentimentTab() {
   }, [fetchData]);
 
   const isLive = data.source === 'live';
+  const isFallback = data.source === 'fallback';
   const sourceLabel = isLive ? '● LIVE · FEAR & GREED INDEX' : '● CACHED';
   const sourceColor = isLive ? 'var(--green)' : 'var(--gold)';
   const fngColor = getFngColor(data.fearGreed.value);
@@ -156,6 +157,13 @@ export default function SentimentTab() {
 
   return (
     <div className="tab-content-enter">
+      {/* Loading indicator shown while initial data is pending (source === 'fallback') */}
+      {isFallback && loading && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0 6px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.12em' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+          CONNECTING...
+        </div>
+      )}
       <div className="ai-context-strip">
         <span className="acs-icon">◈ CI·AI</span>
         <span className="acs-body">

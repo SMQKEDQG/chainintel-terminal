@@ -23,8 +23,8 @@ interface DerivData {
   updatedAt: string;
 }
 
-// Static fallback
-const STATIC_DATA: DerivData = {
+// Shown briefly while live data loads
+const LOADING_STATE: DerivData = {
   assets: [
     { asset: 'BTC', avgFundingRate: -0.004, totalOI: 28400000000, totalVolume: 46000000000, exchanges: [{ name: 'Binance', fundingRate: -0.004, oi: 9200000000 }, { name: 'OKX', fundingRate: -0.003, oi: 5800000000 }, { name: 'Bybit', fundingRate: -0.005, oi: 4400000000 }, { name: 'dYdX', fundingRate: -0.002, oi: 1200000000 }], price: 73296, change24h: 2.83 },
     { asset: 'ETH', avgFundingRate: -0.006, totalOI: 9100000000, totalVolume: 14000000000, exchanges: [{ name: 'Binance', fundingRate: -0.006, oi: 3100000000 }, { name: 'OKX', fundingRate: -0.005, oi: 2200000000 }, { name: 'Bybit', fundingRate: -0.007, oi: 1800000000 }, { name: 'dYdX', fundingRate: -0.004, oi: 600000000 }], price: 2259, change24h: 2.27 },
@@ -78,7 +78,7 @@ const MACRO_FALLBACK: MacroAsset[] = [
 ];
 
 export default function DerivativesTab() {
-  const [data, setData] = useState<DerivData>(STATIC_DATA);
+  const [data, setData] = useState<DerivData>(LOADING_STATE);
   const [isLive, setIsLive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState('');
@@ -213,7 +213,14 @@ export default function DerivativesTab() {
         <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>
           {isLive ? (
             <><span style={{ color: 'var(--green)', marginRight: '4px' }}>●</span> LIVE · CoinGecko</>
-          ) : 'DEMO DATA'}
+          ) : loading ? (
+            <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span>
+          ) : (
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--muted)', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+              <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>
+            </span>
+          )}
           {lastUpdate && <span style={{ marginLeft: '8px', color: 'var(--muted)' }}>Updated {lastUpdate}</span>}
         </div>
       </div>
@@ -249,7 +256,7 @@ export default function DerivativesTab() {
         <div className="panel panel-hover">
           <div className="ph">
             <div className="pt">Perpetual Funding Rates · Cross-Exchange</div>
-            <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : 'DEMO'}</div>
+            <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : loading ? <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span> : <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>}</div>
           </div>
           <table className="fr-table dt">
             <thead>
@@ -293,7 +300,7 @@ export default function DerivativesTab() {
           <div className="panel panel-hover">
             <div className="ph">
               <div className="pt">Open Interest by Asset</div>
-              <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : 'DEMO'}</div>
+              <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : loading ? <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span> : <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>}</div>
             </div>
             <div className="chart-wrap" style={{ height: '160px' }}>
               <Bar data={oiChartData} options={oiOptions as any} />

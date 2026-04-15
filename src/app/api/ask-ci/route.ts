@@ -4,21 +4,22 @@ import { NextRequest, NextResponse } from 'next/server';
 // Fetches real-time data from our internal APIs and constructs data-driven
 // responses. Falls back to cached intelligence when APIs are unavailable.
 
-const BASE_URL = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : process.env.NEXT_PUBLIC_VERCEL_URL
-    ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-    : 'http://localhost:3000';
+// Use the production domain directly for internal API calls
+// VERCEL_URL gives deployment-specific URLs that can cause issues with self-referencing
+const BASE_URL = 'https://chainintelterminal.com';
 
 async function fetchInternal(path: string): Promise<any> {
   try {
     const res = await fetch(`${BASE_URL}${path}`, { 
       headers: { 'User-Agent': 'CI-AI-Engine/1.0' },
-      next: { revalidate: 60 },
+      cache: 'no-store',
     });
     if (!res.ok) return null;
     return await res.json();
-  } catch { return null; }
+  } catch (e) { 
+    console.error(`[ask-ci] fetchInternal ${path} failed:`, e);
+    return null; 
+  }
 }
 
 interface MarketSnapshot {

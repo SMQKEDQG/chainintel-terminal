@@ -75,13 +75,41 @@ function CheckoutBanner() {
   const searchParams = useSearchParams();
   const checkout = searchParams.get('checkout');
   const [visible, setVisible] = useState(false);
+  const [bannerTier, setBannerTier] = useState<string>('Pro');
 
   useEffect(() => {
     if (checkout === 'success') {
       setVisible(true);
       // Clean URL without reload
       window.history.replaceState({}, '', '/');
-      const timer = setTimeout(() => setVisible(false), 8000);
+
+      // Check if user tier was updated (may take a moment for webhook)
+      let attempts = 0;
+      const checkTier = async () => {
+        try {
+          const { supabase } = await import('@/lib/supabase');
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const { data } = await supabase
+              .from('users')
+              .select('subscription_tier')
+              .eq('id', session.user.id)
+              .single();
+            if (data?.subscription_tier && data.subscription_tier !== 'free') {
+              setBannerTier(data.subscription_tier === 'enterprise' ? 'Enterprise' : 'Pro');
+              return; // Success
+            }
+          }
+        } catch { /* ignore */ }
+        // Retry up to 5 times over ~15 seconds
+        attempts++;
+        if (attempts < 5) {
+          setTimeout(checkTier, 3000);
+        }
+      };
+      checkTier();
+
+      const timer = setTimeout(() => setVisible(false), 12000);
       return () => clearTimeout(timer);
     }
   }, [checkout]);
@@ -103,7 +131,7 @@ function CheckoutBanner() {
           SUBSCRIPTION ACTIVATED
         </span>
         <span style={{ fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--text2)' }}>
-          Welcome to ChainIntel Pro. All modules are now unlocked.
+          Welcome to ChainIntel {bannerTier}. All {bannerTier === 'Enterprise' ? 'modules and API access' : 'Pro modules'} are now unlocked.
         </span>
       </div>
       <button

@@ -38,35 +38,53 @@ async function resolveUserId(
   stripe: Stripe,
   supabase: ReturnType<typeof getSupabaseAdmin>,
   customerId: string
-): Promise<string | null> {
+): Promise<{ userId: string | null; email: string | null }> {
   try {
     const customer = await stripe.customers.retrieve(customerId);
-    if (customer.deleted) return null;
+    if (customer.deleted) return { userId: null, email: null };
     const email = (customer as Stripe.Customer).email;
-    if (!email) return null;
+    if (!email) return { userId: null, email: null };
 
-    // Try looking up by email in the auth.users view via service role
+    // Try looking up by email in the users table
     const { data, error } = await supabase
       .from('users')
       .select('id')
       .eq('email', email)
       .single();
 
-    if (error || !data) return null;
-    return data.id as string;
+    if (error || !data) return { userId: null, email };
+    return { userId: data.id as string, email };
   } catch {
-    return null;
+    return { userId: null, email: null };
   }
 }
 
 async function setUserTier(
   supabase: ReturnType<typeof getSupabaseAdmin>,
   userId: string,
-  tier: 'free' | 'pro' | 'enterprise'
+  tier: 'free' | 'pro' | 'enterprise',
+  stripeCustomerId?: string,
+  stripeSubscriptionId?: string
 ): Promise<void> {
+  const update: Record<string, unknown> = {
+    subscription_tier: tier,
+    subscription_status: tier === 'free' ? 'inactive' : 'active',
+    updated_at: new Date().toISOString(),
+  };
+
+  if (stripeCustomerId) {
+    update.stripe_customer_id = stripeCustomerId;
+  }
+  if (stripeSubscriptionId) {
+    update.stripe_subscription_id = stripeSubscriptionId;
+  }
+  if (tier !== 'free') {
+    update.subscription_started_at = new Date().toISOString();
+  }
+
   await supabase
     .from('users')
-    .update({ subscription_tier: tier })
+    .update(update)
     .eq('id', userId);
 }
 
@@ -116,17 +134,37 @@ export async function POST(req: NextRequest) {
 
         // Determine tier from line items / subscription
         let tier: 'pro' | 'enterprise' | null = null;
+        let subscriptionId: string | null = null;
 
         if (session.subscription) {
-          const sub = await stripe.subscriptions.retrieve(session.subscription as string);
+          subscriptionId = session.subscription as string;
+          const sub = await stripe.subscriptions.retrieve(subscriptionId);
           const priceId = sub.items.data[0]?.price?.id;
           if (priceId) tier = tierFromPriceId(priceId);
         }
 
         if (!tier) break;
 
-        const userId = await resolveUserId(stripe, supabase, customerId);
-        if (userId) await setUserTier(supabase, userId, tier);
+        const { userId } = await resolveUserId(stripe, supabase, customerId);
+        if (userId) {
+          await setUserTier(supabase, userId, tier, customerId, subscriptionId || undefined);
+          console.log(`[stripe-webhook] checkout.session.completed: user=${userId} tier=${tier}`);
+        } else {
+          // User hasn't signed up yet — store in subscriptions table for later matching
+          const customer = await stripe.customers.retrieve(customerId);
+          const email = !customer.deleted ? (customer as Stripe.Customer).email : null;
+          if (email) {
+            await supabase.from('subscriptions').upsert({
+              email,
+              stripe_customer_id: customerId,
+              stripe_subscription_id: subscriptionId,
+              plan: tier,
+              status: 'active',
+              updated_at: new Date().toISOString(),
+            }, { onConflict: 'email' });
+            console.log(`[stripe-webhook] Stored pending subscription for ${email} (no user account yet)`);
+          }
+        }
         break;
       }
 
@@ -138,8 +176,11 @@ export async function POST(req: NextRequest) {
         const tier = priceId ? tierFromPriceId(priceId) : null;
         if (!tier) break;
 
-        const userId = await resolveUserId(stripe, supabase, customerId);
-        if (userId) await setUserTier(supabase, userId, tier);
+        const { userId } = await resolveUserId(stripe, supabase, customerId);
+        if (userId) {
+          await setUserTier(supabase, userId, tier, customerId, sub.id);
+          console.log(`[stripe-webhook] subscription.updated: user=${userId} tier=${tier}`);
+        }
         break;
       }
 
@@ -148,8 +189,70 @@ export async function POST(req: NextRequest) {
         const sub = event.data.object as Stripe.Subscription;
         const customerId = sub.customer as string;
 
-        const userId = await resolveUserId(stripe, supabase, customerId);
-        if (userId) await setUserTier(supabase, userId, 'free');
+        const { userId, email } = await resolveUserId(stripe, supabase, customerId);
+        if (userId) {
+          await supabase
+            .from('users')
+            .update({
+              subscription_tier: 'free',
+              subscription_status: 'cancelled',
+              subscription_ends_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+          console.log(`[stripe-webhook] subscription.deleted: user=${userId} → free`);
+        }
+        // Also update subscriptions table
+        if (email) {
+          await supabase.from('subscriptions').upsert({
+            email,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: sub.id,
+            plan: 'free',
+            status: 'cancelled',
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'email' });
+        }
+        break;
+      }
+
+      // ── invoice.payment_succeeded ──────────────────────────────────────
+      case 'invoice.payment_succeeded': {
+        // Renewal confirmation — keep tier active
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = invoice.customer as string | null;
+        if (!customerId) break;
+
+        const { userId } = await resolveUserId(stripe, supabase, customerId);
+        if (userId) {
+          await supabase
+            .from('users')
+            .update({
+              subscription_status: 'active',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+        }
+        break;
+      }
+
+      // ── invoice.payment_failed ─────────────────────────────────────────
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = invoice.customer as string | null;
+        if (!customerId) break;
+
+        const { userId } = await resolveUserId(stripe, supabase, customerId);
+        if (userId) {
+          await supabase
+            .from('users')
+            .update({
+              subscription_status: 'past_due',
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', userId);
+          console.log(`[stripe-webhook] invoice.payment_failed: user=${userId} → past_due`);
+        }
         break;
       }
 

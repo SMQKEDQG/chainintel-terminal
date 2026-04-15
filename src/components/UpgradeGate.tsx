@@ -1,7 +1,8 @@
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { type SubscriptionTier } from '@/lib/use-subscription';
+import { useAuth } from '@/lib/auth-context';
 
 interface UpgradeGateProps {
   requiredTier: 'pro' | 'enterprise';
@@ -74,7 +75,39 @@ export default function UpgradeGate({
   children,
   tabName,
 }: UpgradeGateProps) {
+  const { user } = useAuth();
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const hasAccess = TIER_RANK[currentTier] >= TIER_RANK[requiredTier];
+
+  const handleUpgrade = async () => {
+    const priceId = requiredTier === 'pro'
+      ? 'price_1TL36uLb8GrBRxdXWMHCqJrP'
+      : 'price_1TL36uLb8GrBRxdXz92Wem2T';
+
+    setCheckoutLoading(true);
+    try {
+      const res = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId,
+          email: user?.email || undefined,
+          returnUrl: window.location.origin,
+        }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch {
+      // Fallback to payment link
+      window.location.href = requiredTier === 'pro'
+        ? 'https://buy.stripe.com/fZufZi0xL2hg0lUaBsbwk03'
+        : 'https://buy.stripe.com/dRmbJ2bcpg864Ca6lcbwk02';
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
 
   if (hasAccess) {
     return <>{children}</>;
@@ -152,12 +185,22 @@ export default function UpgradeGate({
 
           {/* CTA */}
           <div style={styles.ctaRow}>
-            <a
-              href={requiredTier === 'pro' ? 'https://buy.stripe.com/fZufZi0xL2hg0lUaBsbwk03' : 'https://buy.stripe.com/dRmbJ2bcpg864Ca6lcbwk02'}
-              style={{ ...styles.cta, background: meta.color }}
-            >
-              UPGRADE TO {meta.label} →
-            </a>
+            {!user ? (
+              <a
+                href="/signup"
+                style={{ ...styles.cta, background: meta.color }}
+              >
+                CREATE ACCOUNT TO UPGRADE →
+              </a>
+            ) : (
+              <button
+                onClick={handleUpgrade}
+                disabled={checkoutLoading}
+                style={{ ...styles.cta, background: meta.color, border: 'none', cursor: checkoutLoading ? 'wait' : 'pointer', opacity: checkoutLoading ? 0.7 : 1 }}
+              >
+                {checkoutLoading ? 'REDIRECTING...' : `UPGRADE TO ${meta.label} →`}
+              </button>
+            )}
             <span style={styles.ctaSub}>Cancel anytime · No contracts</span>
             <a
               href="#"

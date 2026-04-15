@@ -60,6 +60,7 @@ const TOUR_STEPS: TourStep[] = [
 export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourProps) {
   const [step, setStep] = useState(0);
   const [highlight, setHighlight] = useState<DOMRect | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
   const overlayRef = useRef<HTMLDivElement>(null);
 
   const currentStep = TOUR_STEPS[step];
@@ -83,6 +84,7 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
   useEffect(() => {
     if (!isOpen) {
       setStep(0);
+      setIsClosing(false);
       return;
     }
     
@@ -119,6 +121,26 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
+  const handleClose = useCallback(() => {
+    // Prevent double-close
+    if (isClosing) return;
+    setIsClosing(true);
+
+    // Always return to Overview tab when tour ends
+    if (onSwitchTab) {
+      onSwitchTab('mktovr');
+    }
+
+    // Reset step and close with a tiny delay to ensure tab switch processes
+    setStep(0);
+    setHighlight(null);
+
+    // Use requestAnimationFrame to ensure state is clean before closing
+    requestAnimationFrame(() => {
+      onClose();
+    });
+  }, [isClosing, onSwitchTab, onClose]);
+
   const next = () => {
     if (step < TOUR_STEPS.length - 1) setStep(step + 1);
     else handleClose();
@@ -128,12 +150,8 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
     if (step > 0) setStep(step - 1);
   };
 
-  const handleClose = () => {
-    setStep(0);
-    onClose();
-  };
-
-  if (!isOpen) return null;
+  // Don't render if not open or currently closing
+  if (!isOpen || isClosing) return null;
 
   const tooltipStyle: React.CSSProperties = {
     position: 'fixed',
@@ -241,7 +259,7 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
             className="font-mono text-[11px] tracking-wider px-4 py-2 transition-opacity hover:opacity-80"
             style={{ background: 'var(--accent)', color: '#000', fontWeight: 700 }}
           >
-            {step === TOUR_STEPS.length - 1 ? 'FINISH' : 'NEXT →'}
+            {step === TOUR_STEPS.length - 1 ? 'FINISH ✓' : 'NEXT →'}
           </button>
         </div>
       </div>

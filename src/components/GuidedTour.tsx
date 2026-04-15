@@ -67,17 +67,24 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
   const updateHighlight = useCallback(() => {
     if (!isOpen || !currentStep) return;
     
-    const el = document.querySelector(`[data-tour="${currentStep.target}"]`);
-    if (el) {
-      const rect = el.getBoundingClientRect();
-      setHighlight(rect);
-    } else {
+    try {
+      const el = document.querySelector(`[data-tour="${currentStep.target}"]`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        setHighlight(rect);
+      } else {
+        setHighlight(null);
+      }
+    } catch {
       setHighlight(null);
     }
   }, [isOpen, currentStep]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setStep(0);
+      return;
+    }
     
     // Switch tab if needed
     if (currentStep?.tabSwitch && onSwitchTab) {
@@ -85,24 +92,36 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
     }
     
     // Small delay to let tab switch render
-    const t = setTimeout(updateHighlight, 200);
+    const t = setTimeout(updateHighlight, 250);
     return () => clearTimeout(t);
   }, [isOpen, step, currentStep, onSwitchTab, updateHighlight]);
 
   useEffect(() => {
     if (!isOpen) return;
     
-    window.addEventListener('resize', updateHighlight);
-    window.addEventListener('scroll', updateHighlight);
+    const handler = () => updateHighlight();
+    window.addEventListener('resize', handler);
+    window.addEventListener('scroll', handler, true); // capture phase for nested scrolls
     return () => {
-      window.removeEventListener('resize', updateHighlight);
-      window.removeEventListener('scroll', updateHighlight);
+      window.removeEventListener('resize', handler);
+      window.removeEventListener('scroll', handler, true);
     };
   }, [isOpen, updateHighlight]);
 
+  // Close on Escape
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleClose();
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
   const next = () => {
     if (step < TOUR_STEPS.length - 1) setStep(step + 1);
-    else { setStep(0); onClose(); }
+    else handleClose();
   };
 
   const prev = () => {
@@ -121,20 +140,20 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
     zIndex: 100002,
     background: 'var(--s1)',
     border: '1px solid var(--accent)',
-    borderRadius: 6,
-    padding: '16px 20px',
-    width: 320,
+    borderRadius: 8,
+    padding: '20px 24px',
+    width: 360,
     boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 12px rgba(232,165,52,0.15)',
   };
 
   if (highlight) {
-    const pad = 12;
+    const pad = 14;
     if (currentStep.position === 'bottom') {
       tooltipStyle.top = highlight.bottom + pad;
-      tooltipStyle.left = Math.max(16, Math.min(highlight.left, window.innerWidth - 340));
+      tooltipStyle.left = Math.max(16, Math.min(highlight.left, window.innerWidth - 380));
     } else if (currentStep.position === 'top') {
       tooltipStyle.bottom = window.innerHeight - highlight.top + pad;
-      tooltipStyle.left = Math.max(16, Math.min(highlight.left, window.innerWidth - 340));
+      tooltipStyle.left = Math.max(16, Math.min(highlight.left, window.innerWidth - 380));
     } else if (currentStep.position === 'right') {
       tooltipStyle.top = highlight.top;
       tooltipStyle.left = highlight.right + pad;
@@ -168,7 +187,7 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
             width: highlight.width + 8,
             height: highlight.height + 8,
             border: '2px solid var(--accent)',
-            borderRadius: 4,
+            borderRadius: 6,
             zIndex: 100001,
             boxShadow: '0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(232,165,52,0.2)',
             pointerEvents: 'none',
@@ -177,33 +196,33 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
       )}
 
       {/* Tooltip */}
-      <div style={tooltipStyle}>
+      <div style={tooltipStyle} onClick={(e) => e.stopPropagation()}>
         {/* Progress */}
         <div className="flex items-center justify-between mb-3">
-          <span className="font-mono text-[7px] tracking-wider" style={{ color: 'var(--muted)' }}>
+          <span className="font-mono text-[11px] tracking-wider" style={{ color: 'var(--muted)' }}>
             STEP {step + 1} OF {TOUR_STEPS.length}
           </span>
           <button
             onClick={handleClose}
-            className="font-mono text-[12px] hover:text-[var(--red)] transition-colors"
-            style={{ color: 'var(--muted)' }}
+            className="font-mono text-[16px] hover:text-[var(--red)] transition-colors leading-none"
+            style={{ color: 'var(--muted)', padding: '0 2px' }}
           >
             ×
           </button>
         </div>
 
         {/* Progress bar */}
-        <div className="w-full h-0.5 rounded mb-3" style={{ background: 'var(--b2)' }}>
+        <div className="w-full h-1 rounded mb-4" style={{ background: 'var(--b2)' }}>
           <div
             className="h-full rounded transition-all duration-300"
             style={{ background: 'var(--accent)', width: `${((step + 1) / TOUR_STEPS.length) * 100}%` }}
           />
         </div>
 
-        <h3 className="font-mono text-[11px] font-bold mb-2" style={{ color: 'var(--accent)' }}>
+        <h3 className="font-mono text-[14px] font-bold mb-2" style={{ color: 'var(--accent)' }}>
           {currentStep.title}
         </h3>
-        <p className="font-mono text-[9px] leading-relaxed mb-4" style={{ color: 'var(--text2)' }}>
+        <p className="font-mono text-[12px] leading-relaxed mb-5" style={{ color: 'var(--text2)' }}>
           {currentStep.description}
         </p>
 
@@ -212,14 +231,14 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
           <button
             onClick={prev}
             disabled={step === 0}
-            className="font-mono text-[8px] tracking-wider px-3 py-1.5 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-30"
+            className="font-mono text-[11px] tracking-wider px-4 py-2 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-30"
             style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
           >
             ← PREV
           </button>
           <button
             onClick={next}
-            className="font-mono text-[8px] tracking-wider px-3 py-1.5 transition-opacity hover:opacity-80"
+            className="font-mono text-[11px] tracking-wider px-4 py-2 transition-opacity hover:opacity-80"
             style={{ background: 'var(--accent)', color: '#000', fontWeight: 700 }}
           >
             {step === TOUR_STEPS.length - 1 ? 'FINISH' : 'NEXT →'}

@@ -15,7 +15,20 @@ interface CoinData {
   market_cap_rank: number;
 }
 
-/* ── No fallback data ── we show skeleton loading until live data arrives ── */
+interface TrendingCoin {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+  market_cap: number;
+  market_cap_rank: number;
+  buzz_score: number;
+  buzz_sources: string[];
+  mentions_24h: number;
+  trending_rank: number;
+}
 
 /* ── Transform CMC API response to our CoinData format ── */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -55,8 +68,56 @@ function getSignal(chg24: number): { label: string; color: string } {
   return { label: 'WATCH', color: 'var(--muted)' };
 }
 
+/* ── Buzz bar for trending tab ── */
+function BuzzBar({ score }: { score: number }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{
+        width: 60, height: 6, background: 'var(--b2)', borderRadius: 3, overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${score}%`, height: '100%', borderRadius: 3,
+          background: score > 70 ? 'var(--green)' : score > 40 ? 'var(--accent)' : 'var(--blue)',
+          transition: 'width 0.6s ease',
+        }} />
+      </div>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: score > 70 ? 'var(--green)' : score > 40 ? 'var(--accent)' : 'var(--blue)' }}>
+        {score}
+      </span>
+    </div>
+  );
+}
+
+function SourcePills({ sources }: { sources: string[] }) {
+  const colorMap: Record<string, string> = {
+    'CMC Trending': 'var(--accent)',
+    'CMC Most Visited': 'var(--gold)',
+    'CoinGecko Trending': 'var(--green)',
+    'Social/News Buzz': 'var(--blue)',
+  };
+  return (
+    <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+      {sources.map((s) => (
+        <span key={s} style={{
+          fontFamily: 'var(--mono)', fontSize: 9, padding: '1px 5px',
+          border: `1px solid ${colorMap[s] || 'var(--b3)'}`,
+          color: colorMap[s] || 'var(--muted)',
+          letterSpacing: '0.04em', whiteSpace: 'nowrap',
+        }}>
+          {s === 'CMC Trending' ? '🔥 CMC' :
+           s === 'CMC Most Visited' ? '👁 VISITED' :
+           s === 'CoinGecko Trending' ? '📈 GECKO' :
+           s === 'Social/News Buzz' ? '𝕏 BUZZ' : s}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function MarketsTab() {
   const [coins, setCoins] = useState<CoinData[]>([]);
+  const [trending, setTrending] = useState<TrendingCoin[]>([]);
+  const [trendingLoading, setTrendingLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [dataSource, setDataSource] = useState<'live-cmc' | 'live-cg' | 'cached' | 'fallback'>('fallback');
   const [error, setError] = useState<string | null>(null);
@@ -66,7 +127,7 @@ export default function MarketsTab() {
   const [sortDir, setSortDir] = useState<1 | -1>(1);
 
   const fetchCoins = useCallback(async () => {
-    // Strategy: try CMC proxy → CoinGecko fallback → keep static fallback
+    // Strategy: try CMC proxy → CoinGecko fallback
     
     // 1) Try CoinMarketCap via our proxy
     try {
@@ -110,7 +171,22 @@ export default function MarketsTab() {
     setLoading(false);
   }, []);
 
-  // Also fetch binance-data aggregator for exchange-level depth
+  const fetchTrending = useCallback(async () => {
+    try {
+      const res = await fetch('/api/trending');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.trending?.length > 0) {
+          setTrending(json.trending);
+        }
+      }
+    } catch {
+      // Trending fetch failed silently
+    }
+    setTrendingLoading(false);
+  }, []);
+
+  // Fetch binance-data aggregator for exchange-level depth
   useEffect(() => {
     fetch('/api/binance-data').then(r => r.json()).then(d => {
       if (d?.binance?.tickers) {
@@ -124,13 +200,16 @@ export default function MarketsTab() {
 
   useEffect(() => {
     fetchCoins();
+    fetchTrending();
     const id = setInterval(fetchCoins, 60000);
-    return () => clearInterval(id);
-  }, [fetchCoins]);
+    const id2 = setInterval(fetchTrending, 120000);
+    return () => { clearInterval(id); clearInterval(id2); };
+  }, [fetchCoins, fetchTrending]);
 
   const handleRetry = () => {
     setLoading(true);
     fetchCoins();
+    fetchTrending();
   };
 
   const totalMcap = coins.reduce((a, c) => a + (c.market_cap || 0), 0);
@@ -151,14 +230,16 @@ export default function MarketsTab() {
     else { setSortKey(key); setSortDir(1); }
   };
 
-  if (sortKey === 'price') filtered.sort((a, b) => (b.current_price - a.current_price) * sortDir);
-  if (sortKey === 'change24h') filtered.sort((a, b) => (b.price_change_percentage_24h - a.price_change_percentage_24h) * sortDir);
-  if (sortKey === 'marketCap') filtered.sort((a, b) => (b.market_cap - a.market_cap) * sortDir);
-  if (sortKey === 'volume') filtered.sort((a, b) => (b.total_volume - a.total_volume) * sortDir);
+  if (subTab !== 'trend') {
+    if (sortKey === 'price') filtered.sort((a, b) => (b.current_price - a.current_price) * sortDir);
+    if (sortKey === 'change24h') filtered.sort((a, b) => (b.price_change_percentage_24h - a.price_change_percentage_24h) * sortDir);
+    if (sortKey === 'marketCap') filtered.sort((a, b) => (b.market_cap - a.market_cap) * sortDir);
+    if (sortKey === 'volume') filtered.sort((a, b) => (b.total_volume - a.total_volume) * sortDir);
+  }
 
   const subTabs = [
     { id: 'all' as const, label: 'ALL ASSETS' },
-    { id: 'trend' as const, label: 'TRENDING' },
+    { id: 'trend' as const, label: '🔥 TRENDING' },
     { id: 'gain' as const, label: 'TOP GAINERS' },
     { id: 'lose' as const, label: 'TOP LOSERS' },
   ];
@@ -190,12 +271,14 @@ export default function MarketsTab() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.14em', color: 'var(--text2)' }}>
-          TOP 100 MARKETS <span style={{ color: 'var(--muted)' }}>· By Market Cap · Live Feed</span>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 13, letterSpacing: '0.14em', color: 'var(--text2)' }}>
+          {subTab === 'trend' ? 'TRENDING ASSETS' : 'TOP 100 MARKETS'} <span style={{ color: 'var(--muted)' }}>
+            {subTab === 'trend' ? '· Social Buzz + CMC + CoinGecko' : '· By Market Cap · Live Feed'}
+          </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{
-            fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px',
+            fontFamily: 'var(--mono)', fontSize: 11, padding: '2px 6px',
             background: dataSource.startsWith('live') ? 'rgba(16,185,129,0.15)' : 'rgba(240,192,64,0.15)',
             border: `1px solid ${sourceColor}`,
             color: sourceColor,
@@ -216,7 +299,7 @@ export default function MarketsTab() {
             ⚠ {error} · Showing {coins.length} assets
           </span>
           <button onClick={handleRetry} style={{
-            fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', background: 'none',
+            fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', background: 'none',
             border: '1px solid var(--accent)', padding: '3px 8px', cursor: 'pointer', letterSpacing: '0.08em',
           }}>
             RETRY
@@ -257,74 +340,166 @@ export default function MarketsTab() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or ticker..."
-          style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 11, padding: '6px 10px', outline: 'none', flex: 1, maxWidth: 280 }} />
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginLeft: 'auto' }}>
-          ⟳ AUTO-REFRESH 60s · <a className="src-link" href="https://coinmarketcap.com/api/" target="_blank" rel="noopener noreferrer">API DOCS</a>
-        </div>
-      </div>
-
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
-          <thead>
-            <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, letterSpacing: '0.1em', cursor: 'pointer' }} onClick={() => handleSort('rank')}>#</th>
-              <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, letterSpacing: '0.1em' }}>ASSET</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('price')}>PRICE ▾</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('change24h')}>24H %</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11 }}>7D %</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('marketCap')}>MCAP</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11, cursor: 'pointer' }} onClick={() => handleSort('volume')}>VOL 24H</th>
-              <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 11 }}>SIGNAL</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading && coins.length === 0 ? (
-              <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Loading top 100 assets...</td></tr>
-            ) : (
-              filtered.map((c) => {
-                const sig = getSignal(c.price_change_percentage_24h);
-                return (
-                  <tr key={c.id} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
-                      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
-                      onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                    <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 11 }}>{c.market_cap_rank}</td>
-                    <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <img src={c.image} alt={c.symbol} width={16} height={16} style={{ borderRadius: '50%' }}
-                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                      <span style={{ color: 'var(--text)', fontWeight: 500 }}>{c.name}</span>
-                      <span style={{ fontSize: 12, color: 'var(--muted)' }}>{c.symbol.toUpperCase()}</span>
-                    </td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{formatPrice(c.current_price)}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: c.price_change_percentage_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                      {c.price_change_percentage_24h >= 0 ? '+' : ''}{c.price_change_percentage_24h?.toFixed(2)}%
-                    </td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: (c.price_change_percentage_7d_in_currency || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
-                      {(c.price_change_percentage_7d_in_currency || 0) >= 0 ? '+' : ''}{(c.price_change_percentage_7d_in_currency || 0).toFixed(2)}%
-                    </td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.market_cap)}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.total_volume)}</td>
-                    <td style={{ textAlign: 'right', padding: '5px 8px' }}>
-                      <span style={{ fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>{sig.label}</span>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
-          <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>⬡ CI·AI</span>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
-            Market breadth analysis: {gainers} of {coins.length} assets positive in 24h. BTC dominance {coins.length > 0 ? ((coins[0]?.market_cap / totalMcap) * 100).toFixed(1) : '—'}% — capital rotating to safety.
-            {dataSource === 'fallback' && <span style={{ color: 'var(--gold)' }}> Data may be delayed — live feed will resume when API is available.</span>}
+      {subTab !== 'trend' && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center' }}>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or ticker..."
+            style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 11, padding: '6px 10px', outline: 'none', flex: 1, maxWidth: 280 }} />
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginLeft: 'auto' }}>
+            ⟳ AUTO-REFRESH 60s · <a className="src-link" href="https://coinmarketcap.com/api/" target="_blank" rel="noopener noreferrer">API DOCS</a>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* ── TRENDING VIEW ── */}
+      {subTab === 'trend' ? (
+        <div>
+          {/* Trending info strip */}
+          <div style={{
+            background: 'rgba(232,165,52,0.04)', border: '1px solid var(--b2)',
+            padding: '8px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10,
+          }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>🔥</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.5 }}>
+              Aggregated from <strong style={{ color: 'var(--text)' }}>CoinMarketCap Trending</strong>, <strong style={{ color: 'var(--text)' }}>CoinGecko Trending</strong>, and <strong style={{ color: 'var(--text)' }}>CryptoPanic News Buzz</strong>. Ranked by composite social signal score. Updates every 2 minutes.
+            </span>
+          </div>
+
+          {trendingLoading && trending.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontFamily: 'var(--mono)', fontSize: 12 }}>
+              Loading trending assets from 4 sources...
+            </div>
+          ) : trending.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--muted)', fontFamily: 'var(--mono)', fontSize: 12 }}>
+              Trending data unavailable — APIs may be rate limited. <button onClick={handleRetry} style={{ color: 'var(--accent)', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>Retry</button>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--b2)' }}>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, letterSpacing: '0.1em' }}>#</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, letterSpacing: '0.1em' }}>ASSET</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, letterSpacing: '0.1em' }}>BUZZ SCORE</th>
+                    <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, letterSpacing: '0.1em' }}>SOURCES</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>PRICE</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>24H %</th>
+                    <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>MCAP</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trending.map((t) => (
+                    <tr key={t.symbol + t.trending_rank} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
+                        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
+                        onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                      <td style={{ padding: '6px 8px', color: 'var(--accent)', fontWeight: 700, fontSize: 12 }}>
+                        {t.trending_rank}
+                      </td>
+                      <td style={{ padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <img src={t.image} alt={t.symbol} width={18} height={18} style={{ borderRadius: '50%' }}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                        <span style={{ color: 'var(--text)', fontWeight: 500 }}>{t.name}</span>
+                        <span style={{ fontSize: 10, color: 'var(--muted)' }}>{t.symbol.toUpperCase()}</span>
+                      </td>
+                      <td style={{ padding: '6px 8px' }}>
+                        <BuzzBar score={t.buzz_score} />
+                      </td>
+                      <td style={{ padding: '6px 8px' }}>
+                        <SourcePills sources={t.buzz_sources} />
+                      </td>
+                      <td style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--text)' }}>
+                        {t.current_price > 0 ? formatPrice(t.current_price) : '—'}
+                      </td>
+                      <td style={{ textAlign: 'right', padding: '6px 8px', color: t.price_change_percentage_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                        {t.price_change_percentage_24h !== 0
+                          ? `${t.price_change_percentage_24h >= 0 ? '+' : ''}${t.price_change_percentage_24h.toFixed(2)}%`
+                          : '—'}
+                      </td>
+                      <td style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--text2)' }}>
+                        {t.market_cap > 0 ? formatMcap(t.market_cap) : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Trending footer */}
+          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>⬡ CI·AI</span>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
+                Trending signals aggregated from CMC search trends, CoinGecko community activity, and real-time crypto news mentions.
+                Buzz score reflects cross-platform social momentum — higher scores indicate assets generating discussion across multiple channels simultaneously.
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        /* ── STANDARD TABLE VIEW (all / gainers / losers) ── */
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
+              <thead>
+                <tr style={{ borderBottom: '1px solid var(--b2)' }}>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, letterSpacing: '0.1em', cursor: 'pointer' }} onClick={() => handleSort('rank')}>#</th>
+                  <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, letterSpacing: '0.1em' }}>ASSET</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('price')}>PRICE ▾</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('change24h')}>24H %</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>7D %</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('marketCap')}>MCAP</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('volume')}>VOL 24H</th>
+                  <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>SIGNAL</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading && coins.length === 0 ? (
+                  <tr><td colSpan={8} style={{ textAlign: 'center', padding: 40, color: 'var(--muted)' }}>Loading top 100 assets...</td></tr>
+                ) : (
+                  filtered.map((c) => {
+                    const sig = getSignal(c.price_change_percentage_24h);
+                    return (
+                      <tr key={c.id} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
+                          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
+                          onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                        <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 11 }}>{c.market_cap_rank}</td>
+                        <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <img src={c.image} alt={c.symbol} width={16} height={16} style={{ borderRadius: '50%' }}
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
+                          <span style={{ color: 'var(--text)', fontWeight: 500 }}>{c.name}</span>
+                          <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.symbol.toUpperCase()}</span>
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{formatPrice(c.current_price)}</td>
+                        <td style={{ textAlign: 'right', padding: '5px 8px', color: c.price_change_percentage_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                          {c.price_change_percentage_24h >= 0 ? '+' : ''}{c.price_change_percentage_24h?.toFixed(2)}%
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '5px 8px', color: (c.price_change_percentage_7d_in_currency || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
+                          {(c.price_change_percentage_7d_in_currency || 0) >= 0 ? '+' : ''}{(c.price_change_percentage_7d_in_currency || 0).toFixed(2)}%
+                        </td>
+                        <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.market_cap)}</td>
+                        <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.total_volume)}</td>
+                        <td style={{ textAlign: 'right', padding: '5px 8px' }}>
+                          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>{sig.label}</span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '10px 14px', marginTop: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+              <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>⬡ CI·AI</span>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
+                Market breadth analysis: {gainers} of {coins.length} assets positive in 24h. BTC dominance {coins.length > 0 ? ((coins[0]?.market_cap / totalMcap) * 100).toFixed(1) : '—'}% — capital rotating to safety.
+                {dataSource === 'fallback' && <span style={{ color: 'var(--gold)' }}> Data may be delayed — live feed will resume when API is available.</span>}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

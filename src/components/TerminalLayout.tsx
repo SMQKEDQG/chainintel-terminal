@@ -92,7 +92,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             </div>
             <div className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--muted)' }}>
               DIGITAL ASSET INTELLIGENCE · {VERSION}
-              <span style={{ marginLeft: 6, color: 'var(--accent)', opacity: 0.4, fontSize: 6 }}>▶ TOUR</span>
+              <span style={{ marginLeft: 6, color: 'var(--accent)', opacity: 0.5, fontSize: 9 }}>▶ TOUR</span>
             </div>
           </div>
         </div>
@@ -102,12 +102,12 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
           {!loading && (
             user ? (
               <div className="flex items-center gap-3">
-                <span className="font-mono text-[8px] tracking-wider" style={{ color: 'var(--text2)' }}>
+                <span className="font-mono text-[11px] tracking-wider" style={{ color: 'var(--text2)' }}>
                   {user.email?.split('@')[0]}
                 </span>
                 <button
                   onClick={() => signOut()}
-                  className="font-mono text-[7px] tracking-wider px-2 py-1 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  className="font-mono text-[10px] tracking-wider px-2 py-1 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
                 >
                   SIGN OUT
@@ -117,14 +117,14 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
               <div className="flex items-center gap-2">
                 <Link
                   href="/login"
-                  className="font-mono text-[8px] tracking-wider px-2.5 py-1 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  className="font-mono text-[11px] tracking-wider px-2.5 py-1 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
                   style={{ color: 'var(--muted)', borderColor: 'var(--b3)', textDecoration: 'none' }}
                 >
                   SIGN IN
                 </Link>
                 <Link
                   href="/signup"
-                  className="font-mono text-[8px] tracking-wider px-2.5 py-1 transition-opacity hover:opacity-80"
+                  className="font-mono text-[11px] tracking-wider px-2.5 py-1 transition-opacity hover:opacity-80"
                   style={{ background: 'var(--accent)', color: '#000', fontWeight: 700, textDecoration: 'none' }}
                 >
                   SIGN UP
@@ -140,11 +140,11 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             title="Alert Engine"
           >
             <span style={{ fontSize: 10 }}>🔔</span>
-            <span className="font-mono text-[7px] tracking-wider" style={{ color: alertPanelOpen ? 'var(--accent)' : 'var(--muted)' }}>ALERTS</span>
+            <span className="font-mono text-[10px] tracking-wider" style={{ color: alertPanelOpen ? 'var(--accent)' : 'var(--muted)' }}>ALERTS</span>
           </button>
           <div data-tour="live-indicator" className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full heartbeat" style={{ background: 'var(--green)' }} />
-            <span className="font-mono text-[8px] tracking-wider live-breathe" style={{ color: 'var(--green)' }}>LIVE</span>
+            <span className="font-mono text-[10px] tracking-wider live-breathe" style={{ color: 'var(--green)' }}>LIVE</span>
           </div>
           <span className="font-mono text-[9px]" style={{ color: 'var(--muted)' }}>{clock}</span>
         </div>
@@ -182,7 +182,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
 
       {/* Footer links */}
       <footer
-        className="flex items-center justify-between px-4 py-1 border-t font-mono text-[7px]"
+        className="flex items-center justify-between px-4 py-1.5 border-t font-mono text-[10px]"
         style={{ background: 'var(--s1)', borderColor: 'var(--b1)', color: 'var(--muted)', letterSpacing: '0.06em' }}
       >
         <div className="flex items-center gap-4">

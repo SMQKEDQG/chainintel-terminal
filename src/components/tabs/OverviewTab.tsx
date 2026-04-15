@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import TokenUnlocks from '@/components/TokenUnlocks';
 import { DailyBriefCard, CorrelationEngine, SmartAlerts } from '@/components/LevelUpModules';
+import InsightDrawer, { useInsightDrawer } from '@/components/InsightDrawer';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -57,6 +58,12 @@ const CmcContext = createContext<CmcData>({
   source: 'static',
   loading: true,
 });
+
+/* ── Insight context (allows any child to trigger the drawer) ── */
+interface InsightCtx {
+  openInsight: (ctx: { type: 'asset' | 'etf' | 'chainscore' | 'whale' | 'kpi' | 'general'; title: string; subtitle?: string; data?: Record<string, any> }) => void;
+}
+const InsightContext = createContext<InsightCtx>({ openInsight: () => {} });
 
 /* Transform CMC listings response into our CmcCoin format */
 function cmcListingsToCoinData(data: any[]): CmcCoin[] {
@@ -673,7 +680,7 @@ function AskCI() {
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [source, setSource] = useState<string>('');
-  const chips = ['BTC outlook', 'ETF flows today', 'What does fear and greed 13 mean?', 'SOL target', 'Whale activity', 'Stablecoins'];
+  const chips = ['Market overview', 'Bitcoin analysis', 'ETF flows', 'Fear & Greed', 'DeFi TVL', 'ISO 20022 assets', 'XRP outlook', 'Whale signals'];
 
   const handleAsk = useCallback(async (q?: string) => {
     const question = (q || query).trim();
@@ -1127,9 +1134,13 @@ function ETFFlows() {
         </div>
       </div>
       {displayFlows.map(f => (
-        <div key={f.ticker} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'default' }}
+        <div key={f.ticker} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '6px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'pointer' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          onClick={() => {
+            const ctx = (window as any).__ciInsightCtx;
+            if (ctx) ctx.openInsight({ type: 'etf', title: f.fund_name, subtitle: `${f.issuer} · ${f.ticker}`, data: { flow: `${f.flow >= 0 ? '+' : '−'}$${Math.abs(f.flow).toFixed(1)}M`, ticker: f.ticker, issuer: f.issuer } });
+          }}
         >
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text)' }}>{f.fund_name}</div>
@@ -1195,9 +1206,13 @@ function ChainScore() {
         </div>
       </div>
       {displayScores.map((s, i) => (
-        <div key={s.sym} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'default' }}
+        <div key={s.sym} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'pointer' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          onClick={() => {
+            const ctx = (window as any).__ciInsightCtx;
+            if (ctx) ctx.openInsight({ type: 'chainscore', title: s.name, subtitle: `ChainScore™ · ${s.sym}`, data: { score: `${s.score}/100`, band: s.band, rank: `#${i + 1}` } });
+          }}
         >
           <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', width: 20 }}>{String(i + 1).padStart(2, '0')}</span>
           <div style={{ flex: '0 0 90px' }}>
@@ -1257,7 +1272,11 @@ function MarketTable() {
             return (
               <tr key={a.symbol} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '')}>
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                  onClick={() => {
+                    const ctx = (window as any).__ciInsightCtx;
+                    if (ctx) ctx.openInsight({ type: 'asset', title: a.name, subtitle: a.symbol, data: { price: fmtPrice(a.price), '24h': `${a.percent_change_24h >= 0 ? '+' : ''}${a.percent_change_24h.toFixed(2)}%`, '7d': `${a.percent_change_7d >= 0 ? '+' : ''}${a.percent_change_7d.toFixed(2)}%`, mcap: fmtUsd(a.market_cap, 1), volume: fmtUsd(a.volume_24h, 1), signal: sig.label } });
+                  }}>
                 <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 9 }}>{a.cmc_rank}</td>
                 <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
@@ -1341,7 +1360,14 @@ function WhaleFeed() {
         </div>
       </div>
       {whales.map((w, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 12px', borderBottom: '1px solid var(--b1)' }}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 12px', borderBottom: '1px solid var(--b1)', cursor: 'pointer', transition: 'background 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          onClick={() => {
+            const ctx = (window as any).__ciInsightCtx;
+            if (ctx) ctx.openInsight({ type: 'whale', title: w.asset, subtitle: `${w.dir} · ${w.amt}`, data: { direction: w.dir, amount: w.amt, route: w.route, time: w.age } });
+          }}
+        >
           <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: w.color, padding: '2px 6px', border: `1px solid ${w.color}`, letterSpacing: '0.06em', width: 36, textAlign: 'center' }}>{w.dir}</span>
           <div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{w.amt}</div>
@@ -1436,9 +1462,17 @@ function LiveKPIs() {
 /* ── MAIN OVERVIEW TAB ── */
 export default function OverviewTab() {
   const cmcData = useCmcData();
+  const { isOpen, context, openInsight, closeInsight } = useInsightDrawer();
+
+  // Expose insight context globally for child components
+  useEffect(() => {
+    (window as any).__ciInsightCtx = { openInsight };
+    return () => { delete (window as any).__ciInsightCtx; };
+  }, [openInsight]);
 
   return (
     <CmcContext.Provider value={cmcData}>
+    <InsightContext.Provider value={{ openInsight }}>
     <div>
       <AiStrip />
       <QuickGuide />
@@ -1487,6 +1521,8 @@ export default function OverviewTab() {
       <TokenUnlocks />
       <BloombergCallout />
     </div>
+    <InsightDrawer isOpen={isOpen} onClose={closeInsight} context={context} />
+    </InsightContext.Provider>
     </CmcContext.Provider>
   );
 }

@@ -71,7 +71,18 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
     try {
       const el = document.querySelector(`[data-tour="${currentStep.target}"]`);
       if (el) {
+        // Scroll element into view if it's off-screen
         const rect = el.getBoundingClientRect();
+        const isInView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+        if (!isInView) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Re-read rect after scroll settles
+          setTimeout(() => {
+            const newRect = el.getBoundingClientRect();
+            setHighlight(newRect);
+          }, 350);
+          return;
+        }
         setHighlight(rect);
       } else {
         setHighlight(null);
@@ -93,8 +104,8 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
       onSwitchTab(currentStep.tabSwitch);
     }
     
-    // Small delay to let tab switch render
-    const t = setTimeout(updateHighlight, 250);
+    // Small delay to let tab switch render, then update highlight
+    const t = setTimeout(updateHighlight, 300);
     return () => clearTimeout(t);
   }, [isOpen, step, currentStep, onSwitchTab, updateHighlight]);
 

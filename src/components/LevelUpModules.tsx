@@ -359,65 +359,290 @@ export function MicrostructurePanel() {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   LEVEL UP 5: AI Daily Brief Card (for Overview tab)
+   LEVEL UP 5: AI Daily Intelligence Brief — Comprehensive Market Digest
+   Aggregates 7+ live sources into a Bloomberg-style intelligence card
    ═══════════════════════════════════════════════════════════════════════════════ */
+
+function BriefSectionHeader({ label, color, live }: { label: string; color: string; live?: boolean }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, marginTop: 4 }}>
+      <div style={{ width: 3, height: 14, background: color, borderRadius: 1 }} />
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color, letterSpacing: '0.1em', fontWeight: 700 }}>{label}</span>
+      {live && (
+        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--green)', opacity: 0.8 }}>
+          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--green)', animation: 'pulse 2s infinite' }} />
+          LIVE
+        </span>
+      )}
+    </div>
+  );
+}
+
+function MetricPill({ label, value, change, color }: { label: string; value: string; change?: number; color?: string }) {
+  const changeColor = change !== undefined ? (change >= 0 ? 'var(--green)' : 'var(--red)') : 'var(--text2)';
+  return (
+    <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 10px', flex: '1 1 0', minWidth: 0 }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: color || 'var(--muted)', letterSpacing: '0.06em', marginBottom: 2 }}>{label}</div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text)', fontWeight: 600, lineHeight: 1.2 }}>{value}</div>
+      {change !== undefined && (
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: changeColor, fontWeight: 500, marginTop: 1 }}>
+          {change >= 0 ? '▲' : '▼'} {change >= 0 ? '+' : ''}{change.toFixed(2)}%
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SignalBadge({ signal, confidence }: { signal: string; confidence: number }) {
+  const colors: Record<string, { bg: string; text: string; border: string }> = {
+    BULLISH: { bg: 'rgba(52,211,153,0.1)', text: 'var(--green)', border: 'rgba(52,211,153,0.3)' },
+    'CAUTIOUSLY BULLISH': { bg: 'rgba(52,211,153,0.06)', text: 'var(--green)', border: 'rgba(52,211,153,0.2)' },
+    NEUTRAL: { bg: 'rgba(232,165,52,0.08)', text: 'var(--accent)', border: 'rgba(232,165,52,0.25)' },
+    'CAUTIOUSLY BEARISH': { bg: 'rgba(248,113,113,0.06)', text: 'var(--red)', border: 'rgba(248,113,113,0.2)' },
+    BEARISH: { bg: 'rgba(248,113,113,0.1)', text: 'var(--red)', border: 'rgba(248,113,113,0.3)' },
+  };
+  const c = colors[signal] || colors.NEUTRAL;
+  return (
+    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: c.bg, border: `1px solid ${c.border}`, padding: '5px 12px' }}>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 700, color: c.text, letterSpacing: '0.08em' }}>{signal}</span>
+      <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>{confidence}% confidence</span>
+    </div>
+  );
+}
 
 export function DailyBriefCard() {
   const [data, setData] = useState<any>(null);
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/daily-brief').then(r => r.json()).then(d => { setData(d); setLoading(false); }).catch(() => setLoading(false));
+    fetch('/api/daily-brief')
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
   }, []);
 
-  if (loading || !data?.brief) return null;
+  if (loading) {
+    return (
+      <div style={{ background: 'var(--s1)', border: '1px solid rgba(232,165,52,0.15)', padding: 16, minHeight: 120 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 1.5s infinite' }} />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)' }}>COMPILING INTELLIGENCE BRIEF...</span>
+        </div>
+        {[1,2,3].map(i => (
+          <div key={i} style={{ height: 12, background: 'var(--s2)', marginTop: 10, width: `${90 - i * 15}%`, opacity: 0.4 }} />
+        ))}
+      </div>
+    );
+  }
 
-  const brief = data.brief;
-  const sections = brief.sections || {};
-  const signal = brief.signal || sections['CI SIGNAL'] || '';
+  if (!data?.brief) return null;
+
+  const b = data.brief;
+  const km = b.keyMetrics || {};
+  const snap = b.marketSnapshot || {};
+  const defi = b.defi || {};
+  const net = b.networkHealth || {};
+  const trending = b.trending || [];
+
+  const fmt = (n: number, d = 0) => {
+    if (!n) return '—';
+    if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
+    if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
+    if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+    return `$${n.toLocaleString('en-US', { maximumFractionDigits: d })}`;
+  };
+
 
   return (
-    <div style={{ background: 'var(--s1)', border: '1px solid rgba(232,165,52,0.2)', marginBottom: 8, overflow: 'hidden' }}>
-      <div onClick={() => setExpanded(!expanded)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', cursor: 'pointer', userSelect: 'none' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--accent)', fontWeight: 600 }}>⬡ DAILY INTELLIGENCE BRIEF</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>{brief.date}</span>
+    <div style={{ background: 'var(--s1)', border: '1px solid rgba(232,165,52,0.2)', overflow: 'hidden' }}>
+      {/* ── Header ── */}
+      <div
+        onClick={() => setExpanded(!expanded)}
+        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', cursor: 'pointer', userSelect: 'none', background: 'rgba(232,165,52,0.03)' }}
+      >
+        <div style={{ width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)', boxShadow: '0 0 8px rgba(232,165,52,0.4)', animation: 'pulse 2s infinite' }} />
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', fontWeight: 700, letterSpacing: '0.08em' }}>DAILY INTELLIGENCE BRIEF</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>{b.date} {b.time ? `• ${b.time} ET` : ''}</span>
         <div style={{ flex: 1 }} />
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--text2)', letterSpacing: '0.06em' }}>{expanded ? '▲ COLLAPSE' : '▼ EXPAND'}</span>
+        <SignalBadge signal={b.signal || 'NEUTRAL'} confidence={b.signalConfidence || 50} />
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', marginLeft: 4 }}>{expanded ? '▲' : '▼'}</span>
       </div>
 
-      {/* Always show signal summary */}
-      {signal && !expanded && (
-        <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)', lineHeight: 1.6 }}>{typeof signal === 'string' ? signal.substring(0, 200) : ''}{typeof signal === 'string' && signal.length > 200 ? '...' : ''}</div>
+      {/* ── Collapsed summary ── */}
+      {!expanded && (
+        <div style={{ padding: '6px 14px 10px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
+          {b.text?.substring(0, 280)}{(b.text?.length || 0) > 280 ? '...' : ''}
+        </div>
       )}
 
-      {/* Expanded full brief */}
+      {/* ── Expanded Full Brief ── */}
       {expanded && (
-        <div style={{ padding: '0 12px 12px' }}>
-          {sections['MARKET SNAPSHOT'] && (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--accent)', letterSpacing: '0.12em', marginBottom: 4 }}>MARKET SNAPSHOT</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{sections['MARKET SNAPSHOT']}</div>
+        <div style={{ padding: '4px 14px 14px' }}>
+
+          {/* ▸ MARKET SNAPSHOT */}
+          <BriefSectionHeader label="MARKET SNAPSHOT" color="var(--accent)" live />
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+            {(snap.assets || []).map((a: any) => (
+              <MetricPill key={a.symbol} label={a.symbol} value={fmt(a.price, a.price < 10 ? 2 : 0)} change={a.change24h} />
+            ))}
+          </div>
+          {/* Global row */}
+          <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+            <MetricPill label="TOTAL MCAP" value={fmt(snap.totalMcap)} change={snap.mcapChange24h} />
+            <MetricPill label="24H VOLUME" value={fmt(snap.totalVol24h)} color="var(--blue)" />
+            <MetricPill label="BTC DOM" value={`${(snap.btcDominance || 0).toFixed(1)}%`} color="var(--accent)" />
+            <MetricPill label="ETH DOM" value={`${(snap.ethDominance || 0).toFixed(1)}%`} color="var(--blue)" />
+          </div>
+
+          {/* ▸ SENTIMENT */}
+          <BriefSectionHeader label="MARKET SENTIMENT" color="var(--purple)" />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, padding: '8px 12px', background: 'var(--s2)', border: '1px solid var(--b2)' }}>
+            <div style={{ position: 'relative', width: 52, height: 52 }}>
+              <svg viewBox="0 0 52 52" style={{ width: 52, height: 52 }}>
+                <circle cx="26" cy="26" r="22" fill="none" stroke="var(--b3)" strokeWidth="4" />
+                <circle
+                  cx="26" cy="26" r="22" fill="none"
+                  stroke={km.fearGreed <= 25 ? 'var(--red)' : km.fearGreed <= 45 ? '#F59E0B' : km.fearGreed <= 55 ? 'var(--accent)' : km.fearGreed <= 75 ? 'var(--green)' : '#10B981'}
+                  strokeWidth="4" strokeLinecap="round"
+                  strokeDasharray={`${(km.fearGreed / 100) * 138} 138`}
+                  transform="rotate(-90 26 26)"
+                />
+              </svg>
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 700, color: 'var(--text)' }}>{km.fearGreed || '—'}</div>
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text)', fontWeight: 600, marginBottom: 2 }}>Fear & Greed: {km.fearGreedLabel || 'N/A'}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', lineHeight: 1.5 }}>
+                {km.fearGreed <= 20 ? 'Extreme fear often signals buying opportunities. Market is deeply pessimistic.' :
+                 km.fearGreed <= 40 ? 'Fear is present. Smart money tends to accumulate in fear zones.' :
+                 km.fearGreed <= 60 ? 'Market sentiment is balanced. No strong directional conviction.' :
+                 km.fearGreed <= 80 ? 'Greed is building. Exercise caution on new long positions.' :
+                 'Extreme greed. Historically precedes corrections. Reduce risk exposure.'}
+              </div>
+            </div>
+          </div>
+
+          {/* ▸ DEFI & STABLECOINS */}
+          <BriefSectionHeader label="DEFI & STABLECOINS" color="var(--blue)" live />
+          <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+            <MetricPill label="TOTAL TVL" value={fmt(defi.totalTvl)} color="var(--blue)" />
+            <MetricPill label="ETH TVL" value={fmt(defi.ethTvl)} color="var(--blue)" />
+            <MetricPill label="ETH SHARE" value={`${(defi.ethDominance || 0).toFixed(1)}%`} color="var(--blue)" />
+            <MetricPill label="STABLECOIN" value={fmt(defi.stablecoinSupply)} color="var(--green)" />
+          </div>
+          {(defi.topChains || []).length > 0 && (
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
+              {defi.topChains.map((c: any) => (
+                <div key={c.name} style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', background: 'var(--s2)', padding: '3px 8px', border: '1px solid var(--b1)' }}>
+                  {c.name}: {fmt(c.tvl)}
+                </div>
+              ))}
             </div>
           )}
-          {sections['OVERNIGHT WHALE ACTIVITY'] && (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 4 }}>WHALE ACTIVITY</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{sections['OVERNIGHT WHALE ACTIVITY']}</div>
+
+          {/* ▸ NETWORK HEALTH */}
+          <BriefSectionHeader label="NETWORK HEALTH" color="var(--green)" live />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, marginBottom: 12 }}>
+            {/* BTC Mempool */}
+            <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '8px 10px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', fontWeight: 600, marginBottom: 4 }}>BTC MEMPOOL</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>Pending TXs</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{net.btcMempool?.pendingTxs?.toLocaleString() || '—'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>Size</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{net.btcMempool?.vsizeMB ? `${net.btcMempool.vsizeMB} MB` : '—'}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>Congestion</span>
+                <span style={{
+                  fontFamily: 'var(--mono)', fontSize: 10, fontWeight: 600,
+                  color: net.btcMempool?.congestion === 'HIGH' ? 'var(--red)' : net.btcMempool?.congestion === 'MODERATE' ? 'var(--accent)' : 'var(--green)',
+                }}>{net.btcMempool?.congestion || '—'}</span>
+              </div>
             </div>
-          )}
-          {sections['ETF FLOWS'] && (
-            <div style={{ marginBottom: 8 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--green)', letterSpacing: '0.12em', marginBottom: 4 }}>ETF FLOWS</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{sections['ETF FLOWS']}</div>
+            {/* ETH Gas */}
+            <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '8px 10px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--blue)', fontWeight: 600, marginBottom: 4 }}>ETH GAS ORACLE</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>Slow</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{net.ethGas?.low || '—'} gwei</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>Standard</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{net.ethGas?.standard || '—'} gwei</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)' }}>Fast</span>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 500 }}>{net.ethGas?.fast || '—'} gwei</span>
+              </div>
             </div>
+          </div>
+
+          {/* ▸ TRENDING */}
+          {trending.length > 0 && (
+            <>
+              <BriefSectionHeader label="TRENDING" color="#F59E0B" />
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 12 }}>
+                {trending.map((t: any, i: number) => (
+                  <div key={i} style={{
+                    fontFamily: 'var(--mono)', fontSize: 10, padding: '4px 10px',
+                    background: 'var(--s2)', border: '1px solid var(--b2)',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{t.symbol}</span>
+                    {t.change24h !== null && (
+                      <span style={{ color: t.change24h >= 0 ? 'var(--green)' : 'var(--red)', fontWeight: 500 }}>
+                        {t.change24h >= 0 ? '+' : ''}{t.change24h.toFixed(1)}%
+                      </span>
+                    )}
+                    {t.rank > 0 && <span style={{ color: 'var(--muted)', fontSize: 9 }}>#{t.rank}</span>}
+                  </div>
+                ))}
+              </div>
+            </>
           )}
-          {signal && (
-            <div style={{ background: 'rgba(232,165,52,0.05)', border: '1px solid rgba(232,165,52,0.15)', padding: '8px 10px', marginTop: 8 }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--accent)', letterSpacing: '0.12em', marginBottom: 4 }}>CI SIGNAL</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text)', lineHeight: 1.6, fontWeight: 500 }}>{typeof signal === 'string' ? signal : ''}</div>
+
+          {/* ▸ CI COMPOSITE SIGNAL */}
+          <BriefSectionHeader label="CI COMPOSITE SIGNAL" color="var(--accent)" />
+          <div style={{ background: 'rgba(232,165,52,0.04)', border: '1px solid rgba(232,165,52,0.15)', padding: '10px 12px', marginBottom: 6 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <SignalBadge signal={b.signal || 'NEUTRAL'} confidence={b.signalConfidence || 50} />
             </div>
-          )}
+            {(b.bullishFactors || []).length > 0 && (
+              <div style={{ marginBottom: 6 }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)', fontWeight: 600 }}>BULLISH FACTORS:</span>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 3 }}>
+                  {b.bullishFactors.map((f: string, i: number) => (
+                    <span key={i} style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)', background: 'rgba(52,211,153,0.08)', padding: '2px 8px', border: '1px solid rgba(52,211,153,0.2)' }}>{f}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+            {(b.bearishFactors || []).length > 0 && (
+              <div>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--red)', fontWeight: 600 }}>BEARISH FACTORS:</span>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 3 }}>
+                  {b.bearishFactors.map((f: string, i: number) => (
+                    <span key={i} style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--red)', background: 'rgba(248,113,113,0.08)', padding: '2px 8px', border: '1px solid rgba(248,113,113,0.2)' }}>{f}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* ▸ NARRATIVE SUMMARY */}
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7, marginTop: 8, padding: '8px 10px', background: 'var(--s2)', borderLeft: '2px solid var(--accent)' }}>
+            {b.text}
+          </div>
+
+          {/* Footer */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Source: {data.source || 'aggregated'} • {snap.activeCryptos ? `${snap.activeCryptos.toLocaleString()} assets tracked` : ''}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Refreshes every 3 min</span>
+          </div>
         </div>
       )}
     </div>

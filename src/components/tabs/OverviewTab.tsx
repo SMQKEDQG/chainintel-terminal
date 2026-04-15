@@ -524,20 +524,72 @@ function EthChart() {
   );
 }
 
-/* ── AI Context Strip (live data) ── */
+/* ── AI Context Strip — Auto-rotating newsroom ticker ── */
 function AiStrip() {
   const { coins, global } = useContext(CmcContext);
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
   const btc = coins.find(c => c.symbol === 'BTC');
+  const eth = coins.find(c => c.symbol === 'ETH');
+  const sol = coins.find(c => c.symbol === 'SOL');
+  const xrp = coins.find(c => c.symbol === 'XRP');
   const btcPrice = btc ? fmtPrice(btc.price) : '$73K';
   const btcChg = btc ? btc.percent_change_24h : 0;
   const btcDom = global?.btc_dominance?.toFixed(1) ?? '63.0';
+  const ethPrice = eth ? fmtPrice(eth.price) : '$2,210';
+  const ethChg = eth ? eth.percent_change_24h : 0;
 
-  const body = `BTC <strong>${btcPrice}</strong> (${btcChg >= 0 ? '+' : ''}${btcChg.toFixed(2)}%) — BTC Dominance <strong>${btcDom}%</strong>. ${btcChg < -3 ? 'Significant sell pressure. Watch for support levels.' : btcChg < 0 ? 'Slight pullback — monitor ETF flows for institutional direction.' : 'Price holding steady. Institutional accumulation pattern continues.'}`;
+  // Top gainers and losers from live data
+  const top20 = coins.slice(0, 20);
+  const topGainer = [...top20].sort((a, b) => b.percent_change_24h - a.percent_change_24h)[0];
+  const topLoser = [...top20].sort((a, b) => a.percent_change_24h - b.percent_change_24h)[0];
+  const totalMcap = global?.total_market_cap ? fmtUsd(global.total_market_cap, 2) : '$2.65T';
+
+  const updates = [
+    `BTC <strong>${btcPrice}</strong> (${btcChg >= 0 ? '+' : ''}${btcChg.toFixed(2)}%) — BTC Dominance <strong>${btcDom}%</strong>. ${btcChg < -3 ? 'Significant sell pressure detected.' : btcChg < 0 ? 'Monitor ETF flows for institutional direction.' : 'Institutional accumulation pattern continues.'}`,
+    `ETH <strong>${ethPrice}</strong> (${ethChg >= 0 ? '+' : ''}${ethChg.toFixed(2)}%) — ${ethChg > 2 ? 'Strong momentum. DeFi TVL rising.' : ethChg > -2 ? 'Consolidating. Watch gas fee trends.' : 'Under pressure. Track staking outflows.'}`,
+    `Top Market Cap: <strong>${totalMcap}</strong> — ${topGainer ? `Leading: <strong>${topGainer.symbol}</strong> +${topGainer.percent_change_24h.toFixed(1)}%` : 'Markets consolidating.'} ${topLoser ? ` · Lagging: <strong>${topLoser.symbol}</strong> ${topLoser.percent_change_24h.toFixed(1)}%` : ''}`,
+    `Cross-chain intelligence: <strong>${coins.filter(c => c.percent_change_24h > 0).length}</strong> of top ${coins.length} assets positive. ${sol ? `SOL ${fmtPrice(sol.price)} (${sol.percent_change_24h >= 0 ? '+' : ''}${sol.percent_change_24h.toFixed(1)}%)` : ''} ${xrp ? `· XRP ${fmtPrice(xrp.price)} (${xrp.percent_change_24h >= 0 ? '+' : ''}${xrp.percent_change_24h.toFixed(1)}%)` : ''}`,
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setActiveIdx(prev => (prev + 1) % updates.length);
+        setIsTransitioning(false);
+      }, 400);
+    }, 7000);
+    return () => clearInterval(timer);
+  }, [updates.length]);
 
   return (
-    <div className="ai-context-strip">
-      <span className="acs-icon">◈ CI·AI</span>
-      <span className="acs-body" dangerouslySetInnerHTML={{ __html: body }} />
+    <div className="ai-context-strip" style={{ overflow: 'hidden', position: 'relative' }}>
+      <span className="acs-icon" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 8px var(--green)', animation: 'pulse 2s infinite' }} />
+        ◈ CI·AI
+      </span>
+      <span
+        className="acs-body"
+        style={{
+          transition: 'opacity 0.4s ease, transform 0.4s ease',
+          opacity: isTransitioning ? 0 : 1,
+          transform: isTransitioning ? 'translateY(-8px)' : 'translateY(0)',
+        }}
+        dangerouslySetInnerHTML={{ __html: updates[activeIdx] }}
+      />
+      <div style={{ marginLeft: 'auto', display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0 }}>
+        {updates.map((_, i) => (
+          <div key={i} style={{
+            width: i === activeIdx ? 12 : 4,
+            height: 4,
+            borderRadius: 2,
+            background: i === activeIdx ? 'var(--accent)' : 'var(--b3)',
+            transition: 'all 0.3s ease',
+          }} />
+        ))}
+      </div>
     </div>
   );
 }
@@ -555,7 +607,7 @@ function QuickGuide() {
   ];
   return (
     <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', marginBottom: 8 }}>
-      <div onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.1em', color: 'var(--muted)' }}>
+      <div onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--text2)', fontWeight: 500 }}>
         <span style={{ transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
         HOW TO READ THIS DASHBOARD — BEGINNER GUIDE
       </div>
@@ -563,8 +615,8 @@ function QuickGuide() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '0 14px 12px' }}>
           {items.map(it => (
             <div key={it.label} style={{ background: 'var(--s2)', border: '1px solid var(--b1)', padding: '8px 10px' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.1em', color: 'var(--accent)', marginBottom: 4 }}>{it.label}</div>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)', lineHeight: 1.5 }}>{it.text}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--accent)', marginBottom: 6, fontWeight: 600 }}>{it.label}</div>
+              <div style={{ fontFamily: 'var(--sans)', fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{it.text}</div>
             </div>
           ))}
         </div>
@@ -611,22 +663,22 @@ function MorningBrief() {
   const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ background: 'var(--s1)', border: '1px solid rgba(232,165,52,0.15)', padding: '12px 14px', position: 'relative', marginBottom: 8 }}>
+    <div style={{ background: 'linear-gradient(135deg, rgba(17,17,17,1) 0%, rgba(22,22,22,0.95) 100%)', border: '1px solid rgba(232,165,52,0.2)', padding: '16px 18px', position: 'relative', marginBottom: 8, borderRadius: 6, boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,165,52,0.06)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 600 }}>⬡ CI·AI</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.12em', color: 'var(--text2)' }}>INTELLIGENCE BRIEF</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 700 }}>⬡ CI·AI</span>
+        <span style={{ fontFamily: 'var(--sans)', fontSize: 14, letterSpacing: '0.12em', color: 'var(--text)', fontWeight: 700 }}>INTELLIGENCE BRIEF</span>
         <div style={{ flex: 1 }} />
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)' }}>{dateStr}</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>{dateStr}</span>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: sourceColor(source), boxShadow: `0 0 6px ${sourceColor(source)}`, animation: 'pulse 2s infinite' }} />
         <span style={{ fontFamily: 'var(--mono)', fontSize: 16, padding: '2px 6px', border: `1px solid ${sentimentColor}40`, color: sentimentColor, letterSpacing: '0.08em' }}>{sentiment}</span>
       </div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 700, color: 'var(--accent)', marginBottom: 8, letterSpacing: '-0.01em' }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 700, color: 'var(--accent)', marginBottom: 10, letterSpacing: '-0.01em' }}>
         BTC {btcPrice} ({btcChg24h >= 0 ? '+' : ''}{btcChg24h.toFixed(2)}%) · BTC Dom {btcDom}% · Market: {gainers} up / {losers} down
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
         <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', padding: '8px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--green)', letterSpacing: '0.12em', marginBottom: 4 }}>▲ BULLISH</div>
-          <div style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--text)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--green)', letterSpacing: '0.12em', marginBottom: 6, fontWeight: 600 }}>▲ BULLISH</div>
+          <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text)' }}>
             {(() => {
               const topGainers = top20.filter(c => c.percent_change_24h > 0).sort((a, b) => b.percent_change_24h - a.percent_change_24h).slice(0, 3);
               if (topGainers.length === 0) return 'No significant gainers in top 20 today.';
@@ -635,15 +687,15 @@ function MorningBrief() {
           </div>
         </div>
         <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)', padding: '8px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--red)', letterSpacing: '0.12em', marginBottom: 4 }}>▼ WATCH</div>
-          <div style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--text)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--red)', letterSpacing: '0.12em', marginBottom: 6, fontWeight: 600 }}>▼ WATCH</div>
+          <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text)' }}>
             {eth ? `ETH ${ethChg7d >= 0 ? '+' : ''}${ethChg7d.toFixed(2)}% over 7 days (${fmtPrice(eth.price)}).` : 'ETH data loading.'}
             {' '}BTC dominance at {btcDom}% — {parseFloat(btcDom) > 60 ? 'capital rotating to safety, altcoin weakness likely' : 'healthy distribution across assets'}.
           </div>
         </div>
         <div style={{ background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.12)', padding: '8px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 4 }}>◈ KEY CATALYST</div>
-          <div style={{ fontSize: 13, lineHeight: 1.4, color: 'var(--text)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 6, fontWeight: 600 }}>◈ KEY CATALYST</div>
+          <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text)' }}>
             {fngVal <= 25 ? (
               <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — historically, scores below 25 precede 60-day mean reversions of +28%. Institutional accumulation window.{' '}
               CLARITY Act advancing — first SEC/CFTC joint framework targeting Q2 2026.</>
@@ -822,8 +874,8 @@ function SectorHeat() {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
       {cells.map(c => (
         <div key={c.label} style={{ background: 'var(--s1)', padding: '7px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>{c.label}</div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: c.bar !== undefined ? 14 : 10, fontWeight: 700, color: c.color }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', marginBottom: 4, fontWeight: 500 }}>{c.label}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: c.bar !== undefined ? 16 : 13, fontWeight: 700, color: c.color }}>
             {c.val}{c.bar !== undefined && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{c.sub}</span>}
           </div>
           {c.bar !== undefined ? (
@@ -833,7 +885,7 @@ function SectorHeat() {
               </div>
             </div>
           ) : (
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)' }}>{c.sub}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)' }}>{c.sub}</div>
           )}
         </div>
       ))}
@@ -906,7 +958,7 @@ function Heatmap() {
   }
 
   return (
-    <div className="panel panel-hover" style={{ position: 'relative' }}>
+    <div className="panel panel-hover live-shimmer-border" style={{ position: 'relative' }}>
       <div className="ph">
         <div className="pt">Market Heatmap — 24h</div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -1251,17 +1303,17 @@ function MarketTable() {
           {sourceLabel(source)} · <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CoinMarketCap</a>
         </div>
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 11 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 13 }}>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--b2)' }}>
-            <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 16, letterSpacing: '0.1em' }}>#</th>
-            <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 16, letterSpacing: '0.1em' }}>ASSET</th>
-            <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>PRICE</th>
-            <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>24H</th>
-            <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>7D</th>
-            <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>MCAP</th>
-            <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>VOL 24H</th>
-            <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 8 }}>SIGNAL</th>
+            <th style={{ textAlign: 'left', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>#</th>
+            <th style={{ textAlign: 'left', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>ASSET</th>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>PRICE</th>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>24H</th>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>7D</th>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>MCAP</th>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>VOL 24H</th>
+            <th style={{ textAlign: 'right', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>SIGNAL</th>
           </tr>
         </thead>
         <tbody>
@@ -1277,7 +1329,7 @@ function MarketTable() {
                     const ctx = (window as any).__ciInsightCtx;
                     if (ctx) ctx.openInsight({ type: 'asset', title: a.name, subtitle: a.symbol, data: { price: fmtPrice(a.price), '24h': `${a.percent_change_24h >= 0 ? '+' : ''}${a.percent_change_24h.toFixed(2)}%`, '7d': `${a.percent_change_7d >= 0 ? '+' : ''}${a.percent_change_7d.toFixed(2)}%`, mcap: fmtUsd(a.market_cap, 1), volume: fmtUsd(a.volume_24h, 1), signal: sig.label } });
                   }}>
-                <td style={{ padding: '5px 8px', color: 'var(--muted)', fontSize: 9 }}>{a.cmc_rank}</td>
+                <td style={{ padding: '6px 10px', color: 'var(--muted)', fontSize: 11 }}>{a.cmc_rank}</td>
                 <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
                   <span style={{ color: 'var(--text)', fontWeight: 500 }}>{a.name}</span>
@@ -1352,7 +1404,7 @@ function WhaleFeed() {
 
   return (
     <>
-      <div className="ph" style={{ marginTop: 8 }}>
+      <div className="ph live-shimmer-border" style={{ marginTop: 8 }}>
         <div className="pt">Live Whale Alerts</div>
         <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
           {isLive && <span style={{ color: 'var(--green)', fontSize: 13, marginRight: 4 }}>●</span>}

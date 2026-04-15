@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { TICKER_ASSETS } from '@/lib/constants';
 
 interface TickerItem {
   sym: string;
   price: string;
   chg: number;
+  prevPrice?: string;
 }
 
 /* Map symbol → CMC data from the listings response */
@@ -30,26 +31,39 @@ export default function TickerTape() {
   const [items, setItems] = useState<TickerItem[]>(
     TICKER_ASSETS.map(a => ({ sym: a.sym, price: '—', chg: 0 }))
   );
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [flashMap, setFlashMap] = useState<Record<string, 'up' | 'dn' | null>>({});
+  const prevPrices = useRef<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchPrices() {
-      // Try CMC proxy first
       try {
         const res = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=200&sort=market_cap&convert=USD');
         if (res.ok) {
           const json = await res.json();
           const data = json.data?.data || [];
           if (data.length > 0 && !cancelled) {
-            setItems(cmcToTickerItems(data));
+            const newItems = cmcToTickerItems(data);
+            // Detect price changes for flash effect
+            const newFlash: Record<string, 'up' | 'dn' | null> = {};
+            for (const item of newItems) {
+              const prev = prevPrices.current[item.sym];
+              if (prev && prev !== item.price) {
+                newFlash[item.sym] = item.price > prev ? 'up' : 'dn';
+              }
+              prevPrices.current[item.sym] = item.price;
+            }
+            if (Object.keys(newFlash).length > 0) {
+              setFlashMap(newFlash);
+              setTimeout(() => setFlashMap({}), 1200);
+            }
+            setItems(newItems);
             return;
           }
         }
       } catch { /* fall through to CoinGecko */ }
 
-      // Fallback: CoinGecko
       try {
         const ids = TICKER_ASSETS.map(a => a.id).join(',');
         const res = await fetch(
@@ -73,32 +87,40 @@ export default function TickerTape() {
     }
 
     fetchPrices();
-    const id = setInterval(fetchPrices, 60000);
+    const id = setInterval(fetchPrices, 30000); // faster refresh: every 30s
     return () => { cancelled = true; clearInterval(id); };
   }, []);
 
-  const renderItem = (item: TickerItem, i: number) => (
-    <div key={i} className="flex items-center gap-2 px-4 whitespace-nowrap">
-      <span className="font-mono text-[9px] font-medium" style={{ color: 'var(--text)' }}>{item.sym}</span>
-      <span className="font-mono text-[9px]" style={{ color: 'var(--text2)' }}>{item.price}</span>
-      <span
-        className="font-mono text-[8px]"
-        style={{ color: item.chg >= 0 ? 'var(--green)' : 'var(--red)' }}
-      >
-        {item.chg >= 0 ? '+' : ''}{item.chg.toFixed(2)}%
-      </span>
-    </div>
-  );
+  // Build the repeated ticker content for seamless scroll
+  const renderItem = (item: TickerItem, i: number) => {
+    const flash = flashMap[item.sym];
+    return (
+      <div key={i} className="tick">
+        <span className="tsym">{item.sym}</span>
+        <span
+          className="tprice"
+          style={{
+            transition: 'color 0.3s, text-shadow 0.3s',
+            color: flash === 'up' ? 'var(--green)' : flash === 'dn' ? 'var(--red)' : undefined,
+            textShadow: flash ? `0 0 8px ${flash === 'up' ? 'rgba(52,211,153,0.6)' : 'rgba(248,113,113,0.6)'}` : 'none',
+          }}
+        >
+          {item.price}
+        </span>
+        <span className={item.chg >= 0 ? 'up' : 'dn'} style={{ fontSize: '10px' }}>
+          {item.chg >= 0 ? '▲' : '▼'} {Math.abs(item.chg).toFixed(2)}%
+        </span>
+      </div>
+    );
+  };
 
   return (
-    <div
-      className="overflow-hidden border-b"
-      style={{ background: 'var(--s1)', borderColor: 'var(--b1)', height: 28 }}
-    >
-      <div ref={containerRef} className="flex items-center h-full ticker-track">
-        {/* Duplicate for seamless scroll */}
+    <div className="ticker">
+      <div className="ticker-inner">
+        {/* Triple the items for seamless infinite scroll */}
         {items.map((item, i) => renderItem(item, i))}
         {items.map((item, i) => renderItem(item, i + items.length))}
+        {items.map((item, i) => renderItem(item, i + items.length * 2))}
       </div>
     </div>
   );

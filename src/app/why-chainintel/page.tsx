@@ -867,7 +867,10 @@ export default function WhyChainIntelPage() {
         <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.06em' }}>
           © 2026 ChainIntel Inc. · All intelligence, no noise.
         </div>
-        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
+          <a href="mailto:support@chainintelterminal.com" style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+            SUPPORT@CHAININTELTERMINAL.COM
+          </a>
           {[['Terminal', '/'], ['Deck', '/deck'], ['Promo', '/promo']].map(([label, href]) => (
             <a key={label} href={href} style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               {label}

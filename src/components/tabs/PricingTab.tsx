@@ -249,6 +249,9 @@ export default function PricingTab() {
           >
             {checkoutLoading === 'ent' ? 'REDIRECTING...' : 'SUBSCRIBE — $499/MO'}
           </button>
+          <a href="mailto:support@chainintelterminal.com" style={{ display: 'block', marginTop: '12px', fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--text2)', textDecoration: 'none', letterSpacing: '0.06em' }}>
+            Questions? support@chainintelterminal.com
+          </a>
         </div>
       </div>
 

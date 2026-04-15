@@ -190,6 +190,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
           <SourceStatusBadge />
         </div>
         <div className="flex items-center gap-3 flex-wrap">
+          <a href="mailto:support@chainintelterminal.com" className="hover:text-[var(--accent)] transition-colors">SUPPORT@CHAININTELTERMINAL.COM</a>
           <a href="/deck" className="hover:text-[var(--accent)] transition-colors">PITCH DECK</a>
           <a href="/why-chainintel" className="hover:text-[var(--accent)] transition-colors">WHY CHAININTEL</a>
           <a href="/promo" className="hover:text-[var(--accent)] transition-colors">PROMO</a>

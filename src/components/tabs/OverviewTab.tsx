@@ -438,22 +438,6 @@ function ChartSkeleton() {
   );
 }
 
-function ChartError() {
-  return (
-    <div style={{
-      height: '145px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'var(--mono)',
-      fontSize: 13,
-      color: 'var(--red)',
-    }}>
-      Data unavailable
-    </div>
-  );
-}
-
 /* ── Live BTC Chart ── */
 function BtcChart() {
   const { tf, setTf, data, loading, isLive, updatedAt } = useLiveCoinChart('bitcoin');
@@ -524,111 +508,249 @@ function EthChart() {
   );
 }
 
-/* ── AI Context Strip — Auto-rotating newsroom ticker ── */
-function AiStrip() {
-  const { coins, global } = useContext(CmcContext);
-  const [activeIdx, setActiveIdx] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+/* ══════════════════════════════════════════════════════════════
+   ▼ NEW: HERO COMMAND BAR — Ask CI front & center
+   ══════════════════════════════════════════════════════════════ */
+function HeroCommandBar() {
+  const { coins, global, source } = useContext(CmcContext);
+  const [query, setQuery] = useState('');
+  const [response, setResponse] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [responseSource, setResponseSource] = useState('');
+  const chips = ['Market overview', 'Bitcoin analysis', 'ETF flows today', 'Fear & Greed', 'DeFi TVL', 'ISO 20022 assets', 'Whale signals', 'Altcoin season?'];
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const btc = coins.find(c => c.symbol === 'BTC');
   const eth = coins.find(c => c.symbol === 'ETH');
-  const sol = coins.find(c => c.symbol === 'SOL');
-  const xrp = coins.find(c => c.symbol === 'XRP');
-  const btcPrice = btc ? fmtPrice(btc.price) : '$73K';
-  const btcChg = btc ? btc.percent_change_24h : 0;
-  const btcDom = global?.btc_dominance?.toFixed(1) ?? '63.0';
-  const ethPrice = eth ? fmtPrice(eth.price) : '$2,210';
-  const ethChg = eth ? eth.percent_change_24h : 0;
+  const totalMcap = global?.total_market_cap ?? LOADING_GLOBAL.total_market_cap;
 
-  // Top gainers and losers from live data
-  const top20 = coins.slice(0, 20);
-  const topGainer = [...top20].sort((a, b) => b.percent_change_24h - a.percent_change_24h)[0];
-  const topLoser = [...top20].sort((a, b) => a.percent_change_24h - b.percent_change_24h)[0];
-  const totalMcap = global?.total_market_cap ? fmtUsd(global.total_market_cap, 2) : '$2.65T';
-
-  const updates = [
-    `BTC <strong>${btcPrice}</strong> (${btcChg >= 0 ? '+' : ''}${btcChg.toFixed(2)}%) — BTC Dominance <strong>${btcDom}%</strong>. ${btcChg < -3 ? 'Significant sell pressure detected.' : btcChg < 0 ? 'Monitor ETF flows for institutional direction.' : 'Institutional accumulation pattern continues.'}`,
-    `ETH <strong>${ethPrice}</strong> (${ethChg >= 0 ? '+' : ''}${ethChg.toFixed(2)}%) — ${ethChg > 2 ? 'Strong momentum. DeFi TVL rising.' : ethChg > -2 ? 'Consolidating. Watch gas fee trends.' : 'Under pressure. Track staking outflows.'}`,
-    `Top Market Cap: <strong>${totalMcap}</strong> — ${topGainer ? `Leading: <strong>${topGainer.symbol}</strong> +${topGainer.percent_change_24h.toFixed(1)}%` : 'Markets consolidating.'} ${topLoser ? ` · Lagging: <strong>${topLoser.symbol}</strong> ${topLoser.percent_change_24h.toFixed(1)}%` : ''}`,
-    `Cross-chain intelligence: <strong>${coins.filter(c => c.percent_change_24h > 0).length}</strong> of top ${coins.length} assets positive. ${sol ? `SOL ${fmtPrice(sol.price)} (${sol.percent_change_24h >= 0 ? '+' : ''}${sol.percent_change_24h.toFixed(1)}%)` : ''} ${xrp ? `· XRP ${fmtPrice(xrp.price)} (${xrp.percent_change_24h >= 0 ? '+' : ''}${xrp.percent_change_24h.toFixed(1)}%)` : ''}`,
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setActiveIdx(prev => (prev + 1) % updates.length);
-        setIsTransitioning(false);
-      }, 400);
-    }, 7000);
-    return () => clearInterval(timer);
-  }, [updates.length]);
+  const handleAsk = useCallback(async (q?: string) => {
+    const question = (q || query).trim();
+    if (!question) return;
+    setLoading(true);
+    setResponse('');
+    setResponseSource('');
+    try {
+      const res = await fetch('/api/ask-ci', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: question }),
+      });
+      const data = await res.json();
+      setResponse(data.answer || 'No response generated.');
+      setResponseSource(data.source || 'cached');
+    } catch {
+      setResponse('CI·AI is temporarily unavailable. Please try again.');
+      setResponseSource('error');
+    } finally {
+      setLoading(false);
+    }
+  }, [query]);
 
   return (
-    <div className="ai-context-strip" style={{ overflow: 'hidden', position: 'relative' }}>
-      <span className="acs-icon" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', boxShadow: '0 0 8px var(--green)', animation: 'pulse 2s infinite' }} />
-        ◈ CI·AI
-      </span>
-      <span
-        className="acs-body"
-        style={{
-          transition: 'opacity 0.4s ease, transform 0.4s ease',
-          opacity: isTransitioning ? 0 : 1,
-          transform: isTransitioning ? 'translateY(-8px)' : 'translateY(0)',
-        }}
-        dangerouslySetInnerHTML={{ __html: updates[activeIdx] }}
-      />
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: 3, alignItems: 'center', flexShrink: 0 }}>
-        {updates.map((_, i) => (
-          <div key={i} style={{
-            width: i === activeIdx ? 12 : 4,
-            height: 4,
-            borderRadius: 2,
-            background: i === activeIdx ? 'var(--accent)' : 'var(--b3)',
-            transition: 'all 0.3s ease',
-          }} />
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/* ── Quick Guide ── */
-function QuickGuide() {
-  const [open, setOpen] = useState(true);
-  const items = [
-    { label: 'Fear & Greed (0–100)', text: '13 = Extreme Fear. Historically, fear extremes are where institutional accumulation happens quietly.' },
-    { label: 'Exchange Outflows', text: 'Coins leaving exchanges = going to cold storage = holders not selling. Bullish long-term signal.' },
-    { label: 'MVRV Ratio', text: 'Market Value / Realized Value. Below 2.4 = no top risk. Above 3.7 = historically overbought.' },
-    { label: 'ETF Net Flows', text: 'Daily institutional money moving in/out of Bitcoin ETFs. 4+ day inflow streaks = accumulation signal.' },
-    { label: 'ISO 20022', text: 'Global bank messaging standard replacing SWIFT. Assets on ISO-native ledgers get direct bank integration advantage.' },
-    { label: 'Signal: BUY/HOLD/WATCH', text: 'ChainIntel composite: on-chain health + regulatory status + ETF momentum. Not financial advice.' },
-  ];
-  return (
-    <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', marginBottom: 8 }}>
-      <div onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--text2)', fontWeight: 500 }}>
-        <span style={{ transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)' }}>▾</span>
-        HOW TO READ THIS DASHBOARD — BEGINNER GUIDE
-      </div>
-      {open && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '0 14px 12px' }}>
-          {items.map(it => (
-            <div key={it.label} style={{ background: 'var(--s2)', border: '1px solid var(--b1)', padding: '8px 10px' }}>
-              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--accent)', marginBottom: 6, fontWeight: 600 }}>{it.label}</div>
-              <div style={{ fontFamily: 'var(--sans)', fontSize: 13, color: 'var(--text2)', lineHeight: 1.6 }}>{it.text}</div>
+    <div style={{
+      background: 'linear-gradient(180deg, rgba(232,165,52,0.04) 0%, rgba(10,10,10,0) 100%)',
+      borderBottom: '1px solid var(--b2)',
+      padding: '16px 0 12px',
+    }}>
+      {/* Live ticker strip */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px 12px',
+        borderBottom: '1px solid var(--b1)', marginBottom: 12,
+        overflow: 'hidden',
+      }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', fontWeight: 700, flexShrink: 0 }}>◈ LIVE</span>
+        <div style={{ display: 'flex', gap: 20, overflow: 'hidden', flex: 1 }}>
+          {coins.slice(0, 8).map(c => (
+            <div key={c.symbol} style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+              {c.image && <img src={c.image} alt="" width={14} height={14} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{c.symbol}</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)' }}>{fmtPrice(c.price)}</span>
+              <span style={{
+                fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600,
+                color: c.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)',
+              }}>
+                {c.percent_change_24h >= 0 ? '+' : ''}{c.percent_change_24h.toFixed(1)}%
+              </span>
             </div>
           ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: sourceColor(source), boxShadow: `0 0 6px ${sourceColor(source)}`, animation: 'pulse 2s infinite', display: 'inline-block' }} />
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)' }}>{sourceLabel(source)}</span>
+        </div>
+      </div>
+
+      {/* Command bar */}
+      <div style={{ padding: '0 16px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          background: 'var(--s1)', border: '1px solid var(--b2)',
+          borderRadius: 8,
+          boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,165,52,0.05)',
+          overflow: 'hidden',
+        }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--accent)', padding: '0 14px', letterSpacing: '0.06em', whiteSpace: 'nowrap', fontWeight: 700 }}>◈ ASK CI</span>
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAsk()}
+            placeholder="Ask anything about crypto markets, on-chain data, ETFs, regulations..."
+            style={{
+              flex: 1, background: 'transparent', border: 'none',
+              color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 15,
+              padding: '14px 0', outline: 'none',
+            }}
+          />
+          <button onClick={() => handleAsk()} disabled={loading} style={{
+            background: loading ? 'var(--s2)' : 'linear-gradient(135deg, rgba(232,165,52,0.15), rgba(232,165,52,0.08))',
+            border: '1px solid rgba(232,165,52,0.25)',
+            color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 12,
+            letterSpacing: '0.1em', padding: '10px 20px', cursor: loading ? 'wait' : 'pointer',
+            margin: 6, fontWeight: 700, borderRadius: 6,
+            transition: 'all 0.2s ease',
+          }}>{loading ? 'ANALYZING...' : 'ANALYZE →'}</button>
+        </div>
+
+        {/* Quick chips */}
+        <div style={{ display: 'flex', gap: 6, padding: '8px 0 0', flexWrap: 'wrap' }}>
+          {chips.map(c => (
+            <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{
+              background: 'var(--s2)', border: '1px solid var(--b2)',
+              color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 12,
+              padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.04em',
+              borderRadius: 4, transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--s2)'; e.currentTarget.style.color = 'var(--text2)'; e.currentTarget.style.borderColor = 'var(--b2)'; }}
+            >{c}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Response area */}
+      {loading && (
+        <div style={{ padding: '12px 16px', fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>◈</span> CI·AI analyzing your query across 15 live data sources...
+        </div>
+      )}
+      {response && !loading && (
+        <div style={{ margin: '8px 16px 0', background: 'var(--s1)', border: '1px solid var(--b2)', borderRadius: 6, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', letterSpacing: '0.1em', fontWeight: 700 }}>◈ CI·AI RESPONSE</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: responseSource === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
+              {responseSource === 'live' ? '● LIVE AI' : responseSource === 'cached' ? '● CACHED' : '● OFFLINE'}
+            </span>
+          </div>
+          <div style={{ fontFamily: 'var(--sans)', fontSize: 15, color: 'var(--text2)', lineHeight: 1.75 }}
+            dangerouslySetInnerHTML={{ __html: response.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>') }}
+          />
         </div>
       )}
     </div>
   );
 }
 
-/* ── AI Morning Brief (live data) ── */
-function MorningBrief() {
+
+/* ══════════════════════════════════════════════════════════════
+   ▼ NEW: MARKET PULSE — 4 KPIs in a hero row
+   ══════════════════════════════════════════════════════════════ */
+function MarketPulse() {
   const { coins, global, source } = useContext(CmcContext);
   const [fng, setFng] = useState<{ value: number; label: string } | null>(null);
+  const [tvl, setTvl] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch('/api/sentiment').then(r => r.json()).then(d => {
+      if (d?.fearGreed) setFng({ value: d.fearGreed.value, label: d.fearGreed.label });
+    }).catch(() => {});
+    fetch('/api/defi-overview').then(r => r.json()).then(d => {
+      if (d?.totalTvl) setTvl(d.totalTvl);
+    }).catch(() => {});
+  }, []);
+
+  const btc = coins.find(c => c.symbol === 'BTC');
+  const totalMcap = global?.total_market_cap ?? LOADING_GLOBAL.total_market_cap;
+  const mcapChg = global?.total_market_cap_yesterday_percentage_change ?? LOADING_GLOBAL.total_market_cap_yesterday_percentage_change;
+  const btcDom = global?.btc_dominance ?? LOADING_GLOBAL.btc_dominance;
+  const fngVal = fng?.value ?? 13;
+  const fngLabel = fng?.label ?? 'Extreme Fear';
+  const fngColor = fngVal <= 25 ? 'var(--red)' : fngVal <= 50 ? 'var(--gold)' : fngVal <= 75 ? 'var(--green)' : 'var(--accent)';
+  const tvlStr = tvl ? fmtUsd(tvl, 1) : '$85.0B';
+
+  const kpis = [
+    {
+      label: 'TOTAL MARKET CAP',
+      value: fmtUsd(totalMcap, 2),
+      change: `${mcapChg >= 0 ? '+' : ''}${mcapChg.toFixed(2)}%`,
+      changeDir: mcapChg >= 0 ? 'up' : 'dn',
+      color: 'var(--accent)',
+      src: 'CoinMarketCap',
+    },
+    {
+      label: 'BTC DOMINANCE',
+      value: `${btcDom.toFixed(1)}%`,
+      change: btc ? `BTC ${fmtPrice(btc.price)}` : 'Loading',
+      changeDir: (btc?.percent_change_24h ?? 0) >= 0 ? 'up' : 'dn',
+      color: '#E8A534',
+      src: 'CoinMarketCap',
+    },
+    {
+      label: 'FEAR & GREED',
+      value: String(fngVal),
+      change: fngLabel,
+      changeDir: fngVal > 50 ? 'up' : 'dn',
+      color: fngColor,
+      src: 'Alternative.me',
+    },
+    {
+      label: 'DEFI TVL',
+      value: tvlStr,
+      change: tvl ? 'Live' : 'Cached',
+      changeDir: 'neutral' as const,
+      color: 'var(--blue)',
+      src: 'DefiLlama',
+    },
+  ];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+      {kpis.map(k => (
+        <div key={k.label} style={{
+          background: 'var(--s1)', padding: '14px 16px',
+          cursor: 'pointer', transition: 'background 0.15s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--s2)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--s1)'}
+        >
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', letterSpacing: '0.12em', marginBottom: 6, fontWeight: 500 }}>{k.label}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 22, fontWeight: 700, color: k.color, lineHeight: 1.1 }}>{k.value}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+            <span style={{
+              fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600,
+              color: k.changeDir === 'up' ? 'var(--green)' : k.changeDir === 'dn' ? 'var(--red)' : 'var(--muted)',
+            }}>
+              {k.change}
+            </span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginLeft: 'auto' }}>
+              <span style={{ color: sourceColor(source), fontSize: 7 }}>●</span> {k.src}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   ▼ NEW: AI INTELLIGENCE BRIEF — condensed from MorningBrief
+   ══════════════════════════════════════════════════════════════ */
+function IntelligenceBrief() {
+  const { coins, global, source } = useContext(CmcContext);
+  const [fng, setFng] = useState<{ value: number; label: string } | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     fetch('https://api.alternative.me/fng/?limit=1')
@@ -650,187 +772,108 @@ function MorningBrief() {
   const fngVal = fng?.value ?? 13;
   const fngLabel = fng?.label ?? 'Extreme Fear';
 
-  // Dynamic sentiment based on live data
   const sentiment = btcChg7d > 5 ? 'BULLISH' : btcChg7d > 0 ? 'CAUTIOUSLY BULLISH' : btcChg7d > -5 ? 'NEUTRAL' : 'CAUTIOUSLY BEARISH';
   const sentimentColor = btcChg7d > 0 ? 'var(--green)' : btcChg7d > -5 ? 'var(--gold)' : 'var(--red)';
 
-  // Count gainers/losers from top 20
   const top20 = coins.slice(0, 20);
   const gainers = top20.filter(c => c.percent_change_24h > 0).length;
   const losers = top20.length - gainers;
+  const topGainers = top20.filter(c => c.percent_change_24h > 0).sort((a, b) => b.percent_change_24h - a.percent_change_24h).slice(0, 3);
 
   const now = new Date();
   const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
   return (
-    <div style={{ background: 'linear-gradient(135deg, rgba(17,17,17,1) 0%, rgba(22,22,22,0.95) 100%)', border: '1px solid rgba(232,165,52,0.2)', padding: '16px 18px', position: 'relative', marginBottom: 8, borderRadius: 6, boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,165,52,0.06)' }}>
+    <div style={{
+      background: 'linear-gradient(135deg, rgba(17,17,17,1) 0%, rgba(22,22,22,0.95) 100%)',
+      border: '1px solid rgba(232,165,52,0.15)',
+      padding: '14px 16px',
+      position: 'relative', borderRadius: 6,
+      boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,165,52,0.06)',
+    }}>
+      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 700 }}>⬡ CI·AI</span>
-        <span style={{ fontFamily: 'var(--sans)', fontSize: 14, letterSpacing: '0.12em', color: 'var(--text)', fontWeight: 700 }}>INTELLIGENCE BRIEF</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 700 }}>⬡ CI·AI</span>
+        <span style={{ fontFamily: 'var(--sans)', fontSize: 14, letterSpacing: '0.08em', color: 'var(--text)', fontWeight: 700 }}>INTELLIGENCE BRIEF</span>
         <div style={{ flex: 1 }} />
         <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>{dateStr}</span>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: sourceColor(source), boxShadow: `0 0 6px ${sourceColor(source)}`, animation: 'pulse 2s infinite' }} />
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, padding: '2px 6px', border: `1px solid ${sentimentColor}40`, color: sentimentColor, letterSpacing: '0.08em' }}>{sentiment}</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 14, padding: '2px 8px', border: `1px solid ${sentimentColor}40`, color: sentimentColor, letterSpacing: '0.08em', borderRadius: 3 }}>{sentiment}</span>
       </div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 700, color: 'var(--accent)', marginBottom: 10, letterSpacing: '-0.01em' }}>
+
+      {/* Headline */}
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 700, color: 'var(--accent)', marginBottom: 10 }}>
         BTC {btcPrice} ({btcChg24h >= 0 ? '+' : ''}{btcChg24h.toFixed(2)}%) · BTC Dom {btcDom}% · Market: {gainers} up / {losers} down
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
-        <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', padding: '8px 10px' }}>
+
+      {/* Three columns */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', padding: '10px 12px', borderRadius: 4 }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--green)', letterSpacing: '0.12em', marginBottom: 6, fontWeight: 600 }}>▲ BULLISH</div>
-          <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text)' }}>
-            {(() => {
-              const topGainers = top20.filter(c => c.percent_change_24h > 0).sort((a, b) => b.percent_change_24h - a.percent_change_24h).slice(0, 3);
-              if (topGainers.length === 0) return 'No significant gainers in top 20 today.';
-              return `Top movers: ${topGainers.map(c => `${c.symbol} +${c.percent_change_24h.toFixed(1)}%`).join(', ')}. ${gainers} of ${top20.length} assets positive in 24h.`;
-            })()}
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>
+            {topGainers.length === 0 ? 'No significant gainers in top 20 today.' :
+              `Top movers: ${topGainers.map(c => `${c.symbol} +${c.percent_change_24h.toFixed(1)}%`).join(', ')}. ${gainers} of ${top20.length} assets positive.`}
           </div>
         </div>
-        <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)', padding: '8px 10px' }}>
+        <div style={{ background: 'rgba(239,68,68,0.05)', border: '1px solid rgba(239,68,68,0.12)', padding: '10px 12px', borderRadius: 4 }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--red)', letterSpacing: '0.12em', marginBottom: 6, fontWeight: 600 }}>▼ WATCH</div>
-          <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text)' }}>
-            {eth ? `ETH ${ethChg7d >= 0 ? '+' : ''}${ethChg7d.toFixed(2)}% over 7 days (${fmtPrice(eth.price)}).` : 'ETH data loading.'}
-            {' '}BTC dominance at {btcDom}% — {parseFloat(btcDom) > 60 ? 'capital rotating to safety, altcoin weakness likely' : 'healthy distribution across assets'}.
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>
+            {eth ? `ETH ${ethChg7d >= 0 ? '+' : ''}${ethChg7d.toFixed(2)}% over 7d (${fmtPrice(eth.price)}).` : 'ETH data loading.'}
+            {' '}BTC dom at {btcDom}% — {parseFloat(btcDom) > 60 ? 'capital rotating to safety' : 'healthy distribution'}.
           </div>
         </div>
-        <div style={{ background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.12)', padding: '8px 10px' }}>
+        <div style={{ background: 'rgba(240,192,64,0.05)', border: '1px solid rgba(240,192,64,0.12)', padding: '10px 12px', borderRadius: 4 }}>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--gold)', letterSpacing: '0.12em', marginBottom: 6, fontWeight: 600 }}>◈ KEY CATALYST</div>
-          <div style={{ fontSize: 14, lineHeight: 1.5, color: 'var(--text)' }}>
-            {fngVal <= 25 ? (
-              <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — historically, scores below 25 precede 60-day mean reversions of +28%. Institutional accumulation window.{' '}
-              CLARITY Act advancing — first SEC/CFTC joint framework targeting Q2 2026.</>
-            ) : fngVal >= 75 ? (
-              <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — elevated greed. Caution warranted. CLARITY Act still advancing through Senate Banking Committee.</>
-            ) : (
-              <>Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — neutral zone. CLARITY Act advancing — Senate Banking Committee vote scheduled. First SEC/CFTC joint framework for digital assets targeting Q2 2026.</>
-            )}
+          <div style={{ fontSize: 14, lineHeight: 1.6, color: 'var(--text)' }}>
+            Fear & Greed at <strong>{fngVal} ({fngLabel})</strong> — {fngVal <= 25 ? 'historically, scores below 25 precede 60-day reversions.' : fngVal >= 75 ? 'elevated greed. Caution warranted.' : 'neutral zone, watch for breakout.'}
           </div>
         </div>
       </div>
-      <div style={{ borderTop: '1px solid var(--b2)', paddingTop: 8, marginTop: 4 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.12em', marginBottom: 6 }}>RECENT REPORTS — FREE SOURCES</div>
-        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {[
-            { label: 'Glassnode: BTC on-chain →', href: 'https://insights.glassnode.com' },
-            { label: 'CoinGecko: Weekly report →', href: 'https://www.coingecko.com/research' },
-            { label: 'DeFiLlama: TVL flows →', href: 'https://defillama.com' },
-            { label: 'Messari: Protocol analysis →', href: 'https://messari.io/research' },
-            { label: 'CryptoQuant: Whale flows →', href: 'https://cryptoquant.com' },
-          ].map(s => (
-            <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', background: 'var(--s2)', border: '1px solid var(--b2)', padding: '3px 8px', fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)' }}>{s.label}</a>
-          ))}
+
+      {/* Expandable research links */}
+      <div style={{ marginTop: 10 }}>
+        <div onClick={() => setExpanded(!expanded)} style={{
+          display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+          fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.08em',
+          borderTop: '1px solid var(--b2)', paddingTop: 8,
+        }}>
+          <span style={{ transition: 'transform 0.2s', transform: expanded ? 'rotate(0deg)' : 'rotate(-90deg)', fontSize: 10 }}>▾</span>
+          RESEARCH SOURCES ({expanded ? 'click to hide' : 'click to expand'})
         </div>
-      </div>
-      <div style={{ position: 'absolute', bottom: 8, right: 8, fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: 2 }}>Pro unlocks real-time AI analysis</div>
-    </div>
-  );
-}
-
-/* ── Ask CI ── */
-function AskCI() {
-  const [query, setQuery] = useState('');
-  const [response, setResponse] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [source, setSource] = useState<string>('');
-  const chips = ['Market overview', 'Bitcoin analysis', 'ETF flows', 'Fear & Greed', 'DeFi TVL', 'ISO 20022 assets', 'XRP outlook', 'Whale signals'];
-
-  const handleAsk = useCallback(async (q?: string) => {
-    const question = (q || query).trim();
-    if (!question) return;
-    setLoading(true);
-    setResponse('');
-    setSource('');
-    try {
-      const res = await fetch('/api/ask-ci', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: question }),
-      });
-      const data = await res.json();
-      setResponse(data.answer || 'No response generated.');
-      setSource(data.source || 'cached');
-    } catch {
-      setResponse('CI·AI is temporarily unavailable. Please try again.');
-      setSource('error');
-    } finally {
-      setLoading(false);
-    }
-  }, [query]);
-
-  return (
-    <div style={{ background: 'var(--b1)', display: 'flex', flexDirection: 'column', gap: 1 }}>
-      <div style={{ display: 'flex', alignItems: 'center', background: 'var(--s1)', border: '1px solid var(--b2)' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--accent)', padding: '0 10px', letterSpacing: '0.06em', whiteSpace: 'nowrap' }}>ASK CI&gt;</span>
-        <input
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handleAsk()}
-          placeholder="Ask anything: 'BTC price target?' · 'Explain MVRV' · 'Best ISO 20022 asset?'"
-          style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 13, padding: '8px 0', outline: 'none' }}
-        />
-        <button onClick={() => handleAsk()} disabled={loading} style={{ background: loading ? 'var(--s2)' : 'rgba(232,165,52,0.08)', border: '1px solid rgba(232,165,52,0.2)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', padding: '6px 14px', cursor: loading ? 'wait' : 'pointer', margin: 4, fontWeight: 700 }}>{loading ? 'ANALYZING...' : 'ANALYZE'}</button>
-      </div>
-      <div style={{ display: 'flex', gap: 4, padding: '4px 8px', background: 'var(--s1)', flexWrap: 'wrap' }}>
-        {chips.map(c => (
-          <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 11, padding: '4px 10px', cursor: 'pointer', letterSpacing: '0.04em' }}>{c}</button>
-        ))}
-      </div>
-      {loading && (
-        <div style={{ background: 'var(--s1)', padding: '12px 14px', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>◈</span> CI·AI analyzing your query...
-        </div>
-      )}
-      {response && !loading && (
-        <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '12px 14px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', fontWeight: 700 }}>◈ CI·AI RESPONSE</span>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: source === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
-              {source === 'live' ? '● LIVE AI' : source === 'cached' ? '● CACHED INTELLIGENCE' : '● OFFLINE'}
-            </span>
+        {expanded && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 6 }}>
+            {[
+              { label: 'Glassnode →', href: 'https://insights.glassnode.com' },
+              { label: 'CoinGecko →', href: 'https://www.coingecko.com/research' },
+              { label: 'DefiLlama →', href: 'https://defillama.com' },
+              { label: 'Messari →', href: 'https://messari.io/research' },
+              { label: 'CryptoQuant →', href: 'https://cryptoquant.com' },
+            ].map(s => (
+              <a key={s.href} href={s.href} target="_blank" rel="noopener noreferrer" style={{
+                textDecoration: 'none', background: 'var(--s2)', border: '1px solid var(--b2)',
+                padding: '4px 10px', fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)',
+                borderRadius: 3, transition: 'all 0.15s',
+              }}>{s.label}</a>
+            ))}
           </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)', lineHeight: 1.75 }}
-            dangerouslySetInnerHTML={{ __html: response.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>') }}
-          />
-        </div>
-      )}
+        )}
+      </div>
+      <div style={{ position: 'absolute', bottom: 8, right: 10, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', background: 'rgba(0,0,0,0.4)', padding: '2px 6px', borderRadius: 2 }}>Pro unlocks real-time AI analysis</div>
     </div>
   );
 }
 
-/* ── KPI Card ── */
-function KPI({ label, value, change, changeDir, source, color }: { label: string; value: string; change: string; changeDir: 'up' | 'dn' | 'neutral'; source: string; color?: string }) {
-  const prevVal = useRef(value);
-  const [flash, setFlash] = useState(false);
 
-  useEffect(() => {
-    if (value !== prevVal.current) {
-      setFlash(true);
-      prevVal.current = value;
-      const t = setTimeout(() => setFlash(false), 800);
-      return () => clearTimeout(t);
-    }
-  }, [value]);
-
-  return (
-    <div className="kpi metric-card">
-      <div className="kpi-label">{label}</div>
-      <div className="kpi-val" style={{
-        color: color || 'var(--accent)',
-        transition: 'text-shadow 0.3s ease',
-        textShadow: flash ? `0 0 12px ${color || 'rgba(232,165,52,0.6)'}` : 'none',
-      }}>{value}</div>
-      <div className={`kpi-chg ${changeDir}`}>{change}</div>
-      <div className="kpi-src" dangerouslySetInnerHTML={{ __html: source }} />
-    </div>
-  );
-}
-
-/* ── Sector Heat Row (LIVE) ── */
-function SectorHeat() {
+/* ══════════════════════════════════════════════════════════════
+   ▼ NEW: SECTOR HEAT + NETWORK SIGNALS combined row
+   ══════════════════════════════════════════════════════════════ */
+function SignalsBar() {
   const { coins, global } = useContext(CmcContext);
   const [sectors, setSectors] = useState<{ topLabel: string; topChg: number; worstLabel: string; worstChg: number } | null>(null);
   const [defi, setDefi] = useState<{ stablecoinSupply: number } | null>(null);
   const [perpFunding, setPerpFunding] = useState<number | null>(null);
+  const [gasGwei, setGasGwei] = useState<number | null>(null);
+  const [mempoolTxs, setMempoolTxs] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/market-sectors').then(r => r.json()).then(d => {
@@ -841,14 +884,21 @@ function SectorHeat() {
     fetch('/api/defi-overview').then(r => r.json()).then(d => {
       if (d.stablecoinSupply) setDefi({ stablecoinSupply: d.stablecoinSupply });
     }).catch(() => {});
-    // Perp funding from derivatives API
     fetch('/api/derivatives').then(r => r.json()).then(d => {
       const btcAsset = d?.assets?.find?.((a: { asset: string }) => a.asset === 'BTC');
       if (btcAsset?.avgFundingRate !== undefined) setPerpFunding(btcAsset.avgFundingRate);
     }).catch(() => {});
+    // ETH Gas from Etherscan
+    fetch('/api/gas-tracker').then(r => r.json()).then(d => {
+      if (d?.standardGwei) setGasGwei(d.standardGwei);
+    }).catch(() => {});
+    // BTC mempool
+    fetch('/api/mempool').then(r => r.json()).then(d => {
+      if (d?.txCount) setMempoolTxs(d.txCount);
+    }).catch(() => {});
   }, []);
 
-  // Altcoin season: % of top 50 alts outperforming BTC over 90d
+  // Altcoin season
   const btc = coins.find(c => c.symbol === 'BTC');
   const btcChg = btc?.percent_change_7d ?? 0;
   const alts = coins.filter(c => c.symbol !== 'BTC' && c.symbol !== 'USDT' && c.symbol !== 'USDC').slice(0, 50);
@@ -857,41 +907,234 @@ function SectorHeat() {
 
   const stableSupply = defi?.stablecoinSupply ? (defi.stablecoinSupply / 1e9).toFixed(1) : '243.2';
   const topSectorVal = sectors ? `${sectors.topLabel} ${sectors.topChg >= 0 ? '+' : ''}${sectors.topChg.toFixed(1)}%` : 'RWA +4.2%';
-  const topSectorSub = sectors?.topLabel || 'Real World Assets';
   const worstSectorVal = sectors ? `${sectors.worstLabel} ${sectors.worstChg >= 0 ? '+' : ''}${sectors.worstChg.toFixed(1)}%` : 'DeFi −3.1%';
-  const worstSectorSub = sectors?.worstLabel || 'Decentralized Finance';
   const fundingStr = perpFunding !== null ? `${perpFunding >= 0 ? '+' : ''}${perpFunding.toFixed(4)}%` : '−0.004%';
-  const fundingSub = perpFunding !== null ? (perpFunding < 0 ? 'Shorts paying · squeeze risk' : 'Longs paying · healthy') : 'Shorts paying · squeeze risk';
+  const fundingSub = perpFunding !== null ? (perpFunding < 0 ? 'Shorts paying' : 'Longs paying') : 'Shorts paying';
+  const gasStr = gasGwei !== null ? `${gasGwei} Gwei` : '12 Gwei';
+  const mempoolStr = mempoolTxs !== null ? `${(mempoolTxs / 1000).toFixed(1)}K txs` : '45.2K txs';
 
   const cells = [
     { label: 'ALTCOIN SEASON', val: String(altcoinIndex), sub: '/100', color: altcoinIndex > 75 ? 'var(--green)' : altcoinIndex > 25 ? 'var(--gold)' : 'var(--red)', bar: altcoinIndex },
-    { label: 'TOP SECTOR · 24H', val: topSectorVal, sub: topSectorSub, color: 'var(--green)' },
-    { label: 'WORST SECTOR · 24H', val: worstSectorVal, sub: worstSectorSub, color: 'var(--red)' },
-    { label: 'STABLECOIN SUPPLY', val: `$${stableSupply}B`, sub: `${defi ? '● LIVE · DefiLlama' : '● CACHED · DefiLlama'}`, color: 'var(--accent)' },
-    { label: 'PERP FUNDING (BTC)', val: fundingStr, sub: fundingSub, color: 'var(--gold)' },
+    { label: 'TOP SECTOR', val: topSectorVal, sub: '', color: 'var(--green)' },
+    { label: 'WORST SECTOR', val: worstSectorVal, sub: '', color: 'var(--red)' },
+    { label: 'STABLECOIN SUPPLY', val: `$${stableSupply}B`, sub: 'DefiLlama', color: 'var(--accent)' },
+    { label: 'PERP FUNDING', val: fundingStr, sub: fundingSub, color: 'var(--gold)' },
+    { label: 'ETH GAS', val: gasStr, sub: gasGwei !== null ? 'Live' : 'Cached', color: 'var(--purple)' },
+    { label: 'BTC MEMPOOL', val: mempoolStr, sub: mempoolTxs !== null ? 'Live' : 'Cached', color: 'var(--blue)' },
   ];
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
       {cells.map(c => (
-        <div key={c.label} style={{ background: 'var(--s1)', padding: '7px 10px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', letterSpacing: '0.1em', marginBottom: 4, fontWeight: 500 }}>{c.label}</div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: c.bar !== undefined ? 16 : 13, fontWeight: 700, color: c.color }}>
-            {c.val}{c.bar !== undefined && <span style={{ fontSize: 13, color: 'var(--muted)' }}>{c.sub}</span>}
+        <div key={c.label} style={{
+          background: 'var(--s1)', padding: '8px 10px',
+          cursor: 'pointer', transition: 'background 0.15s',
+        }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--s2)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--s1)'}
+        >
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', letterSpacing: '0.1em', marginBottom: 3, fontWeight: 500 }}>{c.label}</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: c.bar !== undefined ? 17 : 14, fontWeight: 700, color: c.color }}>
+            {c.val}{c.bar !== undefined && <span style={{ fontSize: 12, color: 'var(--muted)' }}>{c.sub}</span>}
           </div>
           {c.bar !== undefined ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-              <div style={{ width: 60, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
-                <div style={{ width: `${c.bar}%`, height: 6, background: c.color, borderRadius: 3, transition: 'width 0.6s ease' }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+              <div style={{ width: '100%', height: 5, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${c.bar}%`, height: 5, background: c.color, borderRadius: 3, transition: 'width 0.6s ease' }} />
               </div>
             </div>
           ) : (
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)' }}>{c.sub}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', marginTop: 2 }}>{c.sub}</div>
           )}
         </div>
       ))}
     </div>
   );
 }
+
+
+/* ══════════════════════════════════════════════════════════════
+   ▼ NEW: BLOOMBERG vs CHAININTEL comparison
+   ══════════════════════════════════════════════════════════════ */
+function BloombergComparison() {
+  const [expanded, setExpanded] = useState(false);
+
+  const rows = [
+    { feature: 'Annual Cost', bloomberg: '$25,000–$32,000/user', chainintel: 'Free — $49/mo Pro', winner: 'ci' },
+    { feature: 'On-Chain Analytics', bloomberg: 'Not available', chainintel: 'Real-time whale tracking, mempool, staking', winner: 'ci' },
+    { feature: 'AI-Powered Analysis', bloomberg: 'BloombergGPT (limited access)', chainintel: 'Ask CI — instant AI synthesis on every page', winner: 'ci' },
+    { feature: 'DeFi Intelligence', bloomberg: 'Not available', chainintel: 'TVL, yield rates, protocol health, DEX volume', winner: 'ci' },
+    { feature: 'Crypto-Native Data', bloomberg: 'Basic price feeds only', chainintel: '15+ live sources, 80+ total data feeds', winner: 'ci' },
+    { feature: 'ISO 20022 Tracking', bloomberg: 'Not available', chainintel: 'Full compliance tracker + asset ratings', winner: 'ci' },
+    { feature: 'ChainScore Ratings', bloomberg: 'Not available', chainintel: 'Proprietary scoring across 14 assets', winner: 'ci' },
+    { feature: 'ETF Flow Tracking', bloomberg: 'Available (paid add-on)', chainintel: 'Included — daily BTC/ETH ETF flows', winner: 'ci' },
+    { feature: 'Fear & Greed Index', bloomberg: 'Not available', chainintel: 'Live with historical context', winner: 'ci' },
+    { feature: 'Traditional Equities', bloomberg: 'Comprehensive', chainintel: 'Digital assets focus (macro correlation included)', winner: 'bb' },
+    { feature: 'Fixed Income', bloomberg: 'Comprehensive', chainintel: 'Not available (planned)', winner: 'bb' },
+    { feature: 'Bloomberg Chat/IB', bloomberg: 'Industry standard messaging', chainintel: 'Not available', winner: 'bb' },
+  ];
+
+  const displayRows = expanded ? rows : rows.slice(0, 6);
+
+  return (
+    <div style={{
+      background: 'var(--s1)', border: '1px solid var(--b2)',
+      borderRadius: 6, overflow: 'hidden', marginBottom: 1,
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '12px 16px',
+        background: 'linear-gradient(90deg, rgba(107,138,255,0.06), rgba(232,165,52,0.06))',
+        borderBottom: '1px solid var(--b2)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--accent)', letterSpacing: '0.08em', fontWeight: 700 }}>◈ WHY CHAININTEL</span>
+          <span style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'var(--text2)' }}>vs Bloomberg Terminal</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--red)', letterSpacing: '0.08em' }}>BLOOMBERG</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text)', fontWeight: 700 }}>$31,980/yr</div>
+          </div>
+          <div style={{ width: 1, height: 28, background: 'var(--b3)' }} />
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', letterSpacing: '0.08em' }}>CHAININTEL</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--accent)', fontWeight: 700 }}>From $0</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Comparison table */}
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 13 }}>
+        <thead>
+          <tr style={{ borderBottom: '1px solid var(--b2)' }}>
+            <th style={{ textAlign: 'left', padding: '8px 16px', color: 'var(--text2)', fontSize: 11, letterSpacing: '0.1em', fontWeight: 600, width: '30%' }}>FEATURE</th>
+            <th style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--text2)', fontSize: 11, letterSpacing: '0.1em', fontWeight: 600, width: '35%' }}>BLOOMBERG</th>
+            <th style={{ textAlign: 'left', padding: '8px 12px', color: 'var(--text2)', fontSize: 11, letterSpacing: '0.1em', fontWeight: 600, width: '35%' }}>CHAININTEL</th>
+          </tr>
+        </thead>
+        <tbody>
+          {displayRows.map((r, i) => (
+            <tr key={r.feature} style={{
+              borderBottom: '1px solid var(--b1)',
+              transition: 'background 0.15s',
+              cursor: 'default',
+            }}
+              onMouseEnter={e => e.currentTarget.style.background = 'var(--s2)'}
+              onMouseLeave={e => e.currentTarget.style.background = ''}
+            >
+              <td style={{ padding: '8px 16px', color: 'var(--text)', fontSize: 14, fontWeight: 500 }}>{r.feature}</td>
+              <td style={{ padding: '8px 12px', color: r.winner === 'bb' ? 'var(--green)' : 'var(--muted)', fontSize: 13 }}>
+                {r.winner === 'bb' ? '✓ ' : ''}{r.bloomberg}
+              </td>
+              <td style={{ padding: '8px 12px', color: r.winner === 'ci' ? 'var(--green)' : 'var(--muted)', fontSize: 13 }}>
+                {r.winner === 'ci' ? '✓ ' : ''}{r.chainintel}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* Expand / Collapse + CTA */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '10px 16px', borderTop: '1px solid var(--b2)',
+        background: 'rgba(232,165,52,0.02)',
+      }}>
+        <button onClick={() => setExpanded(!expanded)} style={{
+          background: 'none', border: 'none', color: 'var(--accent)',
+          fontFamily: 'var(--mono)', fontSize: 12, cursor: 'pointer',
+          letterSpacing: '0.06em',
+        }}>
+          {expanded ? '▴ Show less' : `▾ Show all ${rows.length} comparisons`}
+        </button>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>Save $31,000+/yr</span>
+          <span style={{
+            fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)',
+            padding: '4px 12px', border: '1px solid rgba(232,165,52,0.3)',
+            borderRadius: 3, letterSpacing: '0.06em', fontWeight: 600,
+          }}>
+            Bloomberg: $15B/yr revenue · 80% from terminal subscriptions
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   ▼ NEW: NETWORK HEALTH PULSE — live blockchain vitals
+   ══════════════════════════════════════════════════════════════ */
+function NetworkHealthPulse() {
+  const [btcHash, setBtcHash] = useState<string | null>(null);
+  const [btcBlockHeight, setBtcBlockHeight] = useState<number | null>(null);
+  const [ethGas, setEthGas] = useState<number | null>(null);
+  const [ethValidators, setEthValidators] = useState<number | null>(null);
+  const [btcDifficulty, setBtcDifficulty] = useState<string | null>(null);
+  const [btcFees, setBtcFees] = useState<number | null>(null);
+
+  useEffect(() => {
+    // BTC network
+    fetch('/api/blockchain').then(r => r.json()).then(d => {
+      if (d?.hashrate) setBtcHash((d.hashrate / 1e18).toFixed(1));
+      if (d?.blockHeight) setBtcBlockHeight(d.blockHeight);
+      if (d?.difficulty) setBtcDifficulty((d.difficulty / 1e12).toFixed(2));
+      if (d?.avgFee) setBtcFees(d.avgFee);
+    }).catch(() => {});
+    // ETH gas
+    fetch('/api/gas-tracker').then(r => r.json()).then(d => {
+      if (d?.standardGwei) setEthGas(d.standardGwei);
+    }).catch(() => {});
+    // ETH validators
+    fetch('/api/beacon-chain').then(r => r.json()).then(d => {
+      if (d?.activeValidators) setEthValidators(d.activeValidators);
+    }).catch(() => {});
+  }, []);
+
+  const metrics = [
+    { label: 'BTC Hashrate', value: btcHash ? `${btcHash} EH/s` : '620.1 EH/s', icon: '⛏', color: 'var(--accent)', live: !!btcHash },
+    { label: 'Block Height', value: btcBlockHeight ? btcBlockHeight.toLocaleString() : '891,234', icon: '▣', color: 'var(--blue)', live: !!btcBlockHeight },
+    { label: 'BTC Difficulty', value: btcDifficulty ? `${btcDifficulty}T` : '84.38T', icon: '◉', color: 'var(--gold)', live: !!btcDifficulty },
+    { label: 'ETH Gas', value: ethGas ? `${ethGas} Gwei` : '12 Gwei', icon: '⬡', color: 'var(--purple)', live: !!ethGas },
+    { label: 'ETH Validators', value: ethValidators ? `${(ethValidators / 1000).toFixed(1)}K` : '1,002K', icon: '◈', color: 'var(--green)', live: !!ethValidators },
+    { label: 'BTC Avg Fee', value: btcFees ? `$${btcFees.toFixed(2)}` : '$1.82', icon: '◇', color: 'var(--text2)', live: !!btcFees },
+  ];
+
+  return (
+    <div className="panel panel-hover">
+      <div className="ph">
+        <div className="pt">Network Health Pulse</div>
+        <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
+          <span style={{ color: 'var(--green)', fontSize: 7, marginRight: 4 }}>●</span>
+          Live · Blockchain.com + Etherscan
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1, background: 'var(--b1)' }}>
+        {metrics.map(m => (
+          <div key={m.label} style={{
+            background: 'var(--s1)', padding: '10px 12px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            cursor: 'pointer', transition: 'background 0.15s',
+          }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--s2)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--s1)'}
+          >
+            <span style={{ fontSize: 18, opacity: 0.6 }}>{m.icon}</span>
+            <div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', letterSpacing: '0.08em' }}>{m.label}</div>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: m.color }}>{m.value}</div>
+            </div>
+            <span style={{ marginLeft: 'auto', fontSize: 7, color: m.live ? 'var(--green)' : 'var(--gold)' }}>●</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 
 /* ── Animated price component ── */
 function AnimPrice({ value, format = 'price' }: { value: number; format?: 'price' | 'pct' }) {
@@ -929,10 +1172,8 @@ function Heatmap() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
   const [selectedCoin, setSelectedCoin] = useState<CmcCoin | null>(null);
 
-  // Compute treemap layout: size cells by market cap
   const totalMcap = topCoins.reduce((s, c) => s + c.market_cap, 0) || 1;
 
-  // Treemap row layout: split coins into rows proportional to mcap
   function buildRows(items: CmcCoin[], cols: number): CmcCoin[][] {
     const rows: CmcCoin[][] = [];
     let row: CmcCoin[] = [];
@@ -962,7 +1203,7 @@ function Heatmap() {
       <div className="ph">
         <div className="pt">Market Heatmap — 24h</div>
         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.06em' }}>SIZE = MARKET CAP</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.06em' }}>SIZE = MARKET CAP</span>
           <div className="tag tag-live">
             <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
             {sourceLabel(source)}
@@ -970,7 +1211,6 @@ function Heatmap() {
         </div>
       </div>
 
-      {/* Heatmap grid */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         {loading && topCoins.length === 0 && (
           <div style={{ padding: '30px 0', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)' }}>
@@ -1043,7 +1283,7 @@ function Heatmap() {
                     {isLarge && (
                       <div style={{
                         fontFamily: 'var(--mono)',
-                        fontSize: 16,
+                        fontSize: 15,
                         color: 'rgba(255,255,255,0.6)',
                         lineHeight: 1.3,
                       }}>
@@ -1079,9 +1319,9 @@ function Heatmap() {
           {topCoins[hoveredIdx].image && (
             <img src={topCoins[hoveredIdx].image} alt="" width={18} height={18} style={{ borderRadius: 2 }} />
           )}
-          <span style={{ fontSize: 16, color: 'var(--text)', fontWeight: 600 }}>{topCoins[hoveredIdx].name}</span>
-          <span style={{ fontSize: 13, color: 'var(--muted)' }}>{topCoins[hoveredIdx].symbol}</span>
-          <span style={{ fontSize: 16, color: 'var(--text)', marginLeft: 'auto' }}>
+          <span style={{ fontSize: 14, color: 'var(--text)', fontWeight: 600 }}>{topCoins[hoveredIdx].name}</span>
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>{topCoins[hoveredIdx].symbol}</span>
+          <span style={{ fontSize: 14, color: 'var(--text)', marginLeft: 'auto' }}>
             <AnimPrice value={topCoins[hoveredIdx].price} format="price" />
           </span>
           <span style={{
@@ -1091,8 +1331,8 @@ function Heatmap() {
           }}>
             <AnimPrice value={topCoins[hoveredIdx].percent_change_24h} format="pct" />
           </span>
-          <span style={{ fontSize: 16, color: 'var(--muted)' }}>MCap {fmtUsd(topCoins[hoveredIdx].market_cap, 1)}</span>
-          <span style={{ fontSize: 16, color: 'var(--muted)' }}>Vol {fmtUsd(topCoins[hoveredIdx].volume_24h, 1)}</span>
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>MCap {fmtUsd(topCoins[hoveredIdx].market_cap, 1)}</span>
+          <span style={{ fontSize: 12, color: 'var(--muted)' }}>Vol {fmtUsd(topCoins[hoveredIdx].volume_24h, 1)}</span>
         </div>
       )}
 
@@ -1114,25 +1354,25 @@ function Heatmap() {
             {selectedCoin.image && <img src={selectedCoin.image} alt="" width={20} height={20} style={{ borderRadius: 2 }} />}
             <div>
               <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 700 }}>{selectedCoin.name}</div>
-              <div style={{ fontSize: 16, color: 'var(--muted)' }}>#{selectedCoin.cmc_rank}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)' }}>#{selectedCoin.cmc_rank}</div>
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>PRICE</div>
-            <div style={{ fontSize: 16, color: 'var(--text)', fontWeight: 600 }}><AnimPrice value={selectedCoin.price} /></div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.08em' }}>PRICE</div>
+            <div style={{ fontSize: 14, color: 'var(--text)', fontWeight: 600 }}><AnimPrice value={selectedCoin.price} /></div>
           </div>
           <div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>24H</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: selectedCoin.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
+            <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.08em' }}>24H</div>
+            <div style={{ fontSize: 14, fontWeight: 600, color: selectedCoin.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)' }}>
               <AnimPrice value={selectedCoin.percent_change_24h} format="pct" />
             </div>
           </div>
           <div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>MCAP</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.08em' }}>MCAP</div>
             <div style={{ fontSize: 13, color: 'var(--text)' }}>{fmtUsd(selectedCoin.market_cap, 1)}</div>
           </div>
           <div>
-            <div style={{ fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>VOL 24H</div>
+            <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.08em' }}>VOL 24H</div>
             <div style={{ fontSize: 13, color: 'var(--text)' }}>{fmtUsd(selectedCoin.volume_24h, 1)}</div>
           </div>
         </div>
@@ -1166,7 +1406,6 @@ function ETFFlows() {
     }).catch(() => {});
   }, []);
 
-  // Fallback if API returns nothing
   const displayFlows = flows.length > 0 ? flows : [
     { fund_name: 'iShares Bitcoin Trust', ticker: 'IBIT', issuer: 'BlackRock', flow: 224.1 },
     { fund_name: 'Wise Origin Bitcoin', ticker: 'FBTC', issuer: 'Fidelity', flow: 88.3 },
@@ -1195,17 +1434,17 @@ function ETFFlows() {
           }}
         >
           <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text)' }}>{f.fund_name}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>{f.issuer.toUpperCase()} · {f.ticker}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--text)' }}>{f.fund_name}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', letterSpacing: '0.08em' }}>{f.issuer.toUpperCase()} · {f.ticker}</div>
           </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: f.flow >= 0 ? 'var(--green)' : 'var(--red)' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 700, color: f.flow >= 0 ? 'var(--green)' : 'var(--red)' }}>
             {f.flow >= 0 ? '+' : '−'}${Math.abs(f.flow).toFixed(1)}M
           </div>
         </div>
       ))}
       <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px', background: 'rgba(232,165,52,0.04)', borderTop: '1px solid var(--b2)' }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)', letterSpacing: '0.08em' }}>Net Flow · All BTC ETFs</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: displayNet >= 0 ? 'var(--green)' : 'var(--red)' }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', letterSpacing: '0.08em' }}>Net Flow · All BTC ETFs</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 15, fontWeight: 700, color: displayNet >= 0 ? 'var(--green)' : 'var(--red)' }}>
           {displayNet >= 0 ? '+' : '−'}${Math.abs(displayNet).toFixed(1)}M
         </span>
       </div>
@@ -1254,7 +1493,7 @@ function ChainScore() {
         <div className="pt">ChainScore™ — Top Rated</div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
           <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>v1.0</div>
-          {live && <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--green)' }}>● LIVE</span>}
+          {live && <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--green)' }}>● LIVE</span>}
         </div>
       </div>
       {displayScores.map((s, i) => (
@@ -1266,15 +1505,15 @@ function ChainScore() {
             if (ctx) ctx.openInsight({ type: 'chainscore', title: s.name, subtitle: `ChainScore™ · ${s.sym}`, data: { score: `${s.score}/100`, band: s.band, rank: `#${i + 1}` } });
           }}
         >
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', width: 20 }}>{String(i + 1).padStart(2, '0')}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', width: 20 }}>{String(i + 1).padStart(2, '0')}</span>
           <div style={{ flex: '0 0 90px' }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text)' }}>{s.name}</div>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)' }}>{s.sym}</span>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--text)' }}>{s.name}</div>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>{s.sym}</span>
           </div>
           <div style={{ flex: 1, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
             <div style={{ width: `${s.score}%`, height: '100%', background: `linear-gradient(90deg, ${bandColor(s.score)}, var(--accent))`, borderRadius: 3, transition: 'width 0.8s ease' }} />
           </div>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: bandColor(s.score), width: 30, textAlign: 'right' }}>{s.score}</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: bandColor(s.score), width: 30, textAlign: 'right' }}>{s.score}</span>
         </div>
       ))}
     </div>
@@ -1286,7 +1525,6 @@ function MarketTable() {
   const { coins, source } = useContext(CmcContext);
   const topAssets = coins.slice(0, 12);
 
-  /* Simple signal logic based on 7d performance */
   function getSignal(c: CmcCoin): { label: string; color: string } {
     const d7 = c.percent_change_7d;
     if (d7 > 2) return { label: 'ACCUMULATE', color: 'var(--green)' };
@@ -1333,7 +1571,7 @@ function MarketTable() {
                 <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
                   <span style={{ color: 'var(--text)', fontWeight: 500 }}>{a.name}</span>
-                  <span style={{ fontSize: 16, color: 'var(--muted)' }}>{a.symbol}</span>
+                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>{a.symbol}</span>
                 </td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{fmtPrice(a.price)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: d1 >= 0 ? 'var(--green)' : 'var(--red)' }}>{d1 >= 0 ? '+' : ''}{d1.toFixed(2)}%</td>
@@ -1341,7 +1579,7 @@ function MarketTable() {
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.market_cap, 1)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.volume_24h, 1)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px' }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 16, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em' }}>
+                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em', borderRadius: 2 }}>
                     {sig.label}
                   </span>
                 </td>
@@ -1403,8 +1641,8 @@ function WhaleFeed() {
   }, []);
 
   return (
-    <>
-      <div className="ph live-shimmer-border" style={{ marginTop: 8 }}>
+    <div className="panel panel-hover">
+      <div className="ph live-shimmer-border">
         <div className="pt">Live Whale Alerts</div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
@@ -1424,7 +1662,7 @@ function WhaleFeed() {
         >
           <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, color: w.color, padding: '3px 6px', border: `1px solid ${w.color}`, borderRadius: 2, letterSpacing: '0.06em', minWidth: 38, textAlign: 'center', flexShrink: 0 }}>{w.dir}</span>
           <div style={{ minWidth: 80 }}>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{w.amt}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>{w.amt}</div>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)' }}>{w.asset}</div>
           </div>
           <div style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)' }}>{w.route}</div>
@@ -1432,7 +1670,6 @@ function WhaleFeed() {
           <a href="https://whale-alert.io" target="_blank" rel="noopener noreferrer" className="src-link" style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', opacity: 0.7, flexShrink: 0 }}>TX ↗</a>
         </div>
       ))}
-      {/* Customize alerts CTA */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderTop: '1px solid var(--b2)', background: 'rgba(232,165,52,0.02)' }}>
         <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.04em' }}>
           Tracking transactions &gt;$10M · BTC ETH XRP SOL
@@ -1447,97 +1684,20 @@ function WhaleFeed() {
           ⚙ CUSTOMIZE ALERTS
         </button>
       </div>
-    </>
-  );
-}
-
-/* ── Bloomberg Callout ── */
-function BloombergCallout() {
-  const features = ['On-chain analytics', 'Top 100 live prices', 'Whale surveillance', 'DeFi intelligence', 'ISO 20022 tracking', 'AI synthesis layer'];
-  return (
-    <div style={{ margin: '12px 0 0', background: 'linear-gradient(90deg,rgba(239,68,68,0.06),rgba(107,138,255,0.06))', border: '1px solid rgba(107,138,255,0.15)', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.14em', color: 'var(--blue)', flexShrink: 0 }}>BLOOMBERG CANNOT DO THIS ↓</span>
-      {features.map(f => (
-        <span key={f} style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)' }}>{f} <span style={{ color: 'var(--red)' }}>✗ Bloomberg</span></span>
-      ))}
-      <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)', marginLeft: 'auto', flexShrink: 0 }}>Bloomberg: $24K–$32K/yr · ChainIntel: from $0</span>
-    </div>
-  );
-}
-
-/* ── Live Fear & Greed KPI ── */
-function LiveFngKpi() {
-  const [fng, setFng] = useState<{ value: number; label: string } | null>(null);
-  useEffect(() => {
-    const load = () => fetch('/api/sentiment').then(r => r.json()).then(d => {
-      if (d?.fearGreed) setFng({ value: d.fearGreed.value, label: d.fearGreed.label });
-    }).catch(() => {});
-    load();
-    const iv = setInterval(load, 60_000);
-    return () => clearInterval(iv);
-  }, []);
-  const val = fng?.value ?? 13;
-  const label = fng?.label ?? 'Extreme Fear';
-  const color = val <= 25 ? 'var(--red)' : val <= 50 ? 'var(--gold)' : val <= 75 ? 'var(--green)' : 'var(--accent)';
-  return <KPI label="Fear & Greed Index" value={String(val)} change={`${label} (${val}/100)${val <= 20 ? ' \u00b7 Historic low' : ''}`} changeDir={val > 50 ? 'up' : 'dn'} color={color} source={`<span style="color:${fng ? 'var(--green)' : 'var(--gold)'};font-size:7px">\u25cf</span> ${fng ? 'LIVE' : 'CACHED'} \u00b7 <a class="src-link" href="https://alternative.me/crypto/fear-and-greed-index/" target="_blank">Fear &amp; Greed Index</a>`} />;
-}
-
-/* ── Live DeFi TVL KPI ── */
-function LiveDefiKpi() {
-  const [tvl, setTvl] = useState<{ totalTvl: number; protocolCount: number } | null>(null);
-  useEffect(() => {
-    fetch('/api/defi-overview').then(r => r.json()).then(d => {
-      if (d?.totalTvl) setTvl({ totalTvl: d.totalTvl, protocolCount: d.protocolCount || 6400 });
-    }).catch(() => {});
-  }, []);
-  const val = tvl ? fmtUsd(tvl.totalTvl, 1) : '$85.0B';
-  return <KPI label="Total DeFi TVL" value={val} change={tvl ? `${tvl.protocolCount.toLocaleString()}+ protocols` : '6,400+ protocols'} changeDir="dn" source={`<span style="color:${tvl ? 'var(--green)' : 'var(--gold)'};font-size:7px">\u25cf</span> ${tvl ? 'LIVE' : 'CACHED'} \u00b7 <a class="src-link" href="https://defillama.com" target="_blank">DefiLlama</a>`} />;
-}
-
-/* ── Live KPI Row (powered by shared CMC data) ── */
-function LiveKPIs() {
-  const { coins, global, source } = useContext(CmcContext);
-  const btc = coins.find(c => c.symbol === 'BTC');
-
-  const totalMcap = global?.total_market_cap ?? LOADING_GLOBAL.total_market_cap;
-  const mcapChg = global?.total_market_cap_yesterday_percentage_change ?? LOADING_GLOBAL.total_market_cap_yesterday_percentage_change;
-  const btcDom = global?.btc_dominance ?? LOADING_GLOBAL.btc_dominance;
-
-  const srcHtml = `<span style="color:${sourceColor(source)};font-size:7px">●</span> ${sourceLabel(source)} · <a class="src-link" href="https://coinmarketcap.com" target="_blank">CoinMarketCap</a>`;
-
-  return (
-    <div className="g4" style={{ marginTop: 8 }}>
-      <KPI
-        label="Total Market Cap"
-        value={fmtUsd(totalMcap, 2)}
-        change={`${mcapChg >= 0 ? '+' : ''}${mcapChg.toFixed(2)}% today`}
-        changeDir={mcapChg >= 0 ? 'up' : 'dn'}
-        color="var(--gold)"
-        source={srcHtml}
-      />
-      <KPI
-        label="BTC Dominance"
-        value={`${btcDom.toFixed(1)}%`}
-        change={btc ? `BTC ${fmtPrice(btc.price)} · ${btc.percent_change_24h >= 0 ? '+' : ''}${btc.percent_change_24h.toFixed(2)}%` : 'Loading...'}
-        changeDir={btc && btc.percent_change_24h >= 0 ? 'up' : 'dn'}
-        source={srcHtml}
-      />
-      <LiveFngKpi />
-      <LiveDefiKpi />
     </div>
   );
 }
 
 /* ── AI MARKET SYNTHESIS (module-level cache) ── */
 let _synthCache: { text: string; ts: number } | null = null;
-const SYNTH_TTL = 5 * 60 * 1000; // 5 minutes
+const SYNTH_TTL = 5 * 60 * 1000;
 
 function AiMarketSynthesis() {
   const [text, setText] = useState<string | null>(_synthCache && Date.now() - _synthCache.ts < SYNTH_TTL ? _synthCache.text : null);
   const [loading, setLoading] = useState(!text);
 
   useEffect(() => {
-    if (text) return; // already have fresh cache
+    if (text) return;
     let cancelled = false;
     setLoading(true);
     fetch('/api/ask-ci', {
@@ -1549,7 +1709,6 @@ function AiMarketSynthesis() {
       .then((json) => {
         if (cancelled) return;
         const raw: string = json.answer ?? json.text ?? json.response ?? '';
-        // Convert **bold** markers to <strong> tags
         const html = raw.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text)">$1</strong>');
         _synthCache = { text: html, ts: Date.now() };
         setText(html);
@@ -1584,7 +1743,7 @@ function AiMarketSynthesis() {
 
   if (!text) {
     return (
-      <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', lineHeight: 1.6 }}>
+      <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
         Market synthesis updating...
       </div>
     );
@@ -1592,25 +1751,61 @@ function AiMarketSynthesis() {
 
   return (
     <div
-      style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}
+      style={{ padding: '0 12px 8px', fontFamily: 'var(--sans)', fontSize: 14, color: 'var(--text2)', lineHeight: 1.7 }}
       dangerouslySetInnerHTML={{ __html: text }}
     />
   );
 }
 
-/* ── MAIN OVERVIEW TAB ── */
+
+/* ══════════════════════════════════════════════════════════════
+   ▼ NEW: QUICK GUIDE — collapsible beginner reference
+   ══════════════════════════════════════════════════════════════ */
+function QuickGuide() {
+  const [open, setOpen] = useState(false); // collapsed by default now
+
+  const items = [
+    { label: 'Fear & Greed (0–100)', text: '13 = Extreme Fear. Historically, fear extremes are where institutional accumulation happens quietly.' },
+    { label: 'Exchange Outflows', text: 'Coins leaving exchanges = going to cold storage = holders not selling. Bullish long-term signal.' },
+    { label: 'MVRV Ratio', text: 'Market Value / Realized Value. Below 2.4 = no top risk. Above 3.7 = historically overbought.' },
+    { label: 'ETF Net Flows', text: 'Daily institutional money moving in/out of Bitcoin ETFs. 4+ day inflow streaks = accumulation signal.' },
+    { label: 'ISO 20022', text: 'Global bank messaging standard replacing SWIFT. Assets on ISO-native ledgers get direct bank integration advantage.' },
+    { label: 'Signal: BUY/HOLD/WATCH', text: 'ChainIntel composite: on-chain health + regulatory status + ETF momentum. Not financial advice.' },
+  ];
+  return (
+    <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', marginBottom: 1, borderRadius: 4 }}>
+      <div onClick={() => setOpen(!open)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', cursor: 'pointer', fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--text2)', fontWeight: 500 }}>
+        <span style={{ transition: 'transform 0.2s', transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', fontSize: 10 }}>▾</span>
+        NEW TO CRYPTO? — QUICK REFERENCE GUIDE
+      </div>
+      {open && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '0 14px 12px' }}>
+          {items.map(it => (
+            <div key={it.label} style={{ background: 'var(--s2)', border: '1px solid var(--b1)', padding: '8px 10px', borderRadius: 4 }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--accent)', marginBottom: 6, fontWeight: 600 }}>{it.label}</div>
+              <div style={{ fontFamily: 'var(--sans)', fontSize: 14, color: 'var(--text2)', lineHeight: 1.6 }}>{it.text}</div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   ▼ MAIN OVERVIEW TAB — completely reorganized
+   ══════════════════════════════════════════════════════════════ */
 export default function OverviewTab() {
   const cmcData = useCmcData();
   const { isOpen, context, openInsight, closeInsight } = useInsightDrawer();
 
-  // Show skeleton overlay for first 2 seconds while data loads
   const [showSkeleton, setShowSkeleton] = useState(true);
   useEffect(() => {
     const t = setTimeout(() => setShowSkeleton(false), 2000);
     return () => clearTimeout(t);
   }, []);
 
-  // Expose insight context globally for child components
   useEffect(() => {
     (window as any).__ciInsightCtx = { openInsight };
     return () => { delete (window as any).__ciInsightCtx; };
@@ -1620,7 +1815,7 @@ export default function OverviewTab() {
     <CmcContext.Provider value={cmcData}>
     <InsightContext.Provider value={{ openInsight }}>
     <div style={{ position: 'relative' }}>
-      {/* Loading skeleton overlay — shown for 2s while live data arrives */}
+      {/* Loading skeleton overlay */}
       {showSkeleton && cmcData.source === 'static' && (
         <div className="connecting-indicator" style={{
           display: 'flex', alignItems: 'center', gap: 6,
@@ -1636,16 +1831,28 @@ export default function OverviewTab() {
           CONNECTING...
         </div>
       )}
-      <AiStrip />
-      <QuickGuide />
-      <DailyBriefCard />
-      <MorningBrief />
-      <AskCI />
 
-      <LiveKPIs />
+      {/* ▬▬▬ SECTION 1: AI COMMAND CENTER (top of page) ▬▬▬ */}
+      <HeroCommandBar />
 
-      <SectorHeat />
+      {/* ▬▬▬ SECTION 2: MARKET PULSE KPIs ▬▬▬ */}
+      <MarketPulse />
 
+      {/* ▬▬▬ SECTION 3: SIGNALS BAR (7 columns) ▬▬▬ */}
+      <SignalsBar />
+
+      {/* ▬▬▬ SECTION 4: INTELLIGENCE BRIEF ▬▬▬ */}
+      <div style={{ padding: '1px 0' }}>
+        <IntelligenceBrief />
+      </div>
+
+      {/* ▬▬▬ SECTION 5: DAILY BRIEF + CORRELATION ENGINE ▬▬▬ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+        <DailyBriefCard />
+        <CorrelationEngine />
+      </div>
+
+      {/* ▬▬▬ SECTION 6: HEATMAP + CHARTS ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <Heatmap />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1654,32 +1861,40 @@ export default function OverviewTab() {
         </div>
       </div>
 
+      {/* ▬▬▬ SECTION 7: MARKET TABLE + ETF FLOWS ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <MarketTable />
         <ETFFlows />
       </div>
 
-      {/* CI Signal — Cross-Source Correlation Engine */}
-      <CorrelationEngine />
-
-      {/* Smart Alerts (compact) */}
-      <SmartAlerts compact />
-
+      {/* ▬▬▬ SECTION 8: WHALE FEED + CHAINSCORE + NETWORK HEALTH ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <ChainScore />
-        </div>
-        <div className="panel panel-hover">
-          <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>ChainIntel AI</div></div>
-          <AiMarketSynthesis />
           <WhaleFeed />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <div className="panel panel-hover">
+            <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>ChainIntel AI</div></div>
+            <AiMarketSynthesis />
+          </div>
+          <ChainScore />
         </div>
       </div>
 
+      {/* ▬▬▬ SECTION 9: NETWORK HEALTH + SMART ALERTS ▬▬▬ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+        <NetworkHealthPulse />
+        <SmartAlerts compact />
+      </div>
 
-
+      {/* ▬▬▬ SECTION 10: TOKEN UNLOCKS ▬▬▬ */}
       <TokenUnlocks />
-      <BloombergCallout />
+
+      {/* ▬▬▬ SECTION 11: BLOOMBERG COMPARISON ▬▬▬ */}
+      <BloombergComparison />
+
+      {/* ▬▬▬ SECTION 12: BEGINNER GUIDE (collapsed) ▬▬▬ */}
+      <QuickGuide />
     </div>
     <InsightDrawer isOpen={isOpen} onClose={closeInsight} context={context} />
     </InsightContext.Provider>

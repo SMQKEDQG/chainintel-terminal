@@ -134,9 +134,31 @@ export async function GET() {
     const btc = btcData.value;
     const assets: MacroAsset[] = [];
 
+    // Track which tickers failed for retry
+    const failedIndices: number[] = [];
+    const resultsMap = [...macroResults];
+
+    for (let i = 0; i < MACRO_TICKERS.length; i++) {
+      if (macroResults[i].status === 'rejected') {
+        failedIndices.push(i);
+      }
+    }
+
+    // Retry failed tickers once with 2-second delay (only if < 3 succeeded and no cache)
+    const successCount = MACRO_TICKERS.length - failedIndices.length;
+    if (failedIndices.length > 0 && successCount < 3 && !cache) {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      const retryResults = await Promise.allSettled(
+        failedIndices.map(i => fetchYahoo(MACRO_TICKERS[i].yahooTicker))
+      );
+      for (let j = 0; j < failedIndices.length; j++) {
+        resultsMap[failedIndices[j]] = retryResults[j];
+      }
+    }
+
     for (let i = 0; i < MACRO_TICKERS.length; i++) {
       const ticker = MACRO_TICKERS[i];
-      const result = macroResults[i];
+      const result = resultsMap[i];
 
       if (result.status === 'fulfilled') {
         const { closes, latest, change7d, changeBps } = result.value;

@@ -254,8 +254,8 @@ export default function MarketsTab() {
     <div>
       {/* Loading indicator shown while dataSource is 'fallback' and fetching */}
       {dataSource === 'fallback' && loading && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0 6px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.12em' }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+        <div className="connecting-indicator" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0 6px', fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.12em' }}>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'connectingPulse 2s infinite' }} />
           CONNECTING...
         </div>
       )}

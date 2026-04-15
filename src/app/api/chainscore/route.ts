@@ -46,8 +46,15 @@ export async function GET(request: NextRequest) {
   }
 
   if (!supabaseKey) {
+    const fallback = getFallbackRatings(asset, all);
+    if (asset && !all) {
+      return NextResponse.json(
+        fallback ? { ...fallback, source: 'cached' } : { error: `Asset ${asset} not found.` },
+        { status: fallback ? 200 : 404, headers }
+      );
+    }
     return NextResponse.json(
-      { error: 'Service temporarily unavailable', ratings: getFallbackRatings(asset, all) },
+      { count: (fallback as any[]).length, ratings: fallback, source: 'cached' },
       { status: 200, headers }
     );
   }
@@ -63,8 +70,15 @@ export async function GET(request: NextRequest) {
     const { data, error } = await query;
 
     if (error) {
+      const fallback = getFallbackRatings(asset, all);
+      if (asset && !all) {
+        return NextResponse.json(
+          fallback ? { ...fallback, source: 'cached' } : { error: `Asset ${asset} not found.` },
+          { status: fallback ? 200 : 404, headers }
+        );
+      }
       return NextResponse.json(
-        { error: 'Database error', ratings: getFallbackRatings(asset, all) },
+        { count: (fallback as any[]).length, ratings: fallback, source: 'cached' },
         { status: 200, headers }
       );
     }
@@ -107,12 +121,19 @@ export async function GET(request: NextRequest) {
     }));
 
     return NextResponse.json(
-      asset && !all ? ratings[0] : { count: ratings.length, ratings },
+      asset && !all ? { ...ratings[0], source: 'live' } : { count: ratings.length, ratings, source: 'live' },
       { status: 200, headers }
     );
   } catch {
+    const fallback = getFallbackRatings(asset, all);
+    if (asset && !all) {
+      return NextResponse.json(
+        fallback ? { ...fallback, source: 'cached' } : { error: `Asset ${asset} not found.` },
+        { status: fallback ? 200 : 404, headers }
+      );
+    }
     return NextResponse.json(
-      { error: 'Internal error', ratings: getFallbackRatings(asset, all) },
+      { count: (fallback as any[]).length, ratings: fallback, source: 'cached' },
       { status: 200, headers }
     );
   }

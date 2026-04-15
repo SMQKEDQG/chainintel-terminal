@@ -214,10 +214,10 @@ export default function DerivativesTab() {
           {isLive ? (
             <><span style={{ color: 'var(--green)', marginRight: '4px' }}>●</span> LIVE · CoinGecko</>
           ) : loading ? (
-            <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span>
+            <span className="connecting-indicator" style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span>
           ) : (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--muted)', display: 'inline-block', animation: 'pulse 2s infinite' }} />
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--muted)', display: 'inline-block', animation: 'connectingPulse 2s infinite' }} />
               <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>
             </span>
           )}
@@ -256,7 +256,7 @@ export default function DerivativesTab() {
         <div className="panel panel-hover">
           <div className="ph">
             <div className="pt">Perpetual Funding Rates · Cross-Exchange</div>
-            <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : loading ? <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span> : <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>}</div>
+            <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : loading ? <span className="connecting-indicator" style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span> : <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>}</div>
           </div>
           <table className="fr-table dt">
             <thead>
@@ -300,7 +300,7 @@ export default function DerivativesTab() {
           <div className="panel panel-hover">
             <div className="ph">
               <div className="pt">Open Interest by Asset</div>
-              <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : loading ? <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span> : <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>}</div>
+              <div className={`tag ${isLive ? 'tag-live' : 'tag-pro'}`}>{isLive ? 'LIVE' : loading ? <span className="connecting-indicator" style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>CONNECTING...</span> : <span style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)', letterSpacing: '0.1em' }}>LOADING...</span>}</div>
             </div>
             <div className="chart-wrap" style={{ height: '160px' }}>
               <Bar data={oiChartData} options={oiOptions as any} />

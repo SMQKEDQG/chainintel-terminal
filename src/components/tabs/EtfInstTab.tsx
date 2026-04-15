@@ -50,19 +50,23 @@ interface AltcoinEtfData {
 
 // ── Fallback static data ─────────────────────────────────────────────────────
 
-const ETF_FLOW_LABELS = ['Mar 26','Mar 27','Mar 28','Mar 31','Apr 1','Apr 2','Apr 3','Apr 4','Apr 7','Apr 8','Apr 9','Apr 10','Apr 11','Apr 14'];
-const ETF_FLOW_DATA   = [-84, 112, 203, -62, 88, 145, 92, -18, 134, 156, 176, 148, 190, 169.6];
+const ETF_FLOW_LABELS_FALLBACK = ['Mar 26','Mar 27','Mar 28','Mar 31','Apr 1','Apr 2','Apr 3','Apr 4','Apr 7','Apr 8','Apr 9','Apr 10','Apr 11','Apr 14'];
+const ETF_FLOW_DATA_FALLBACK   = [-84, 112, 203, -62, 88, 145, 92, -18, 134, 156, 176, 148, 190, 169.6];
 
-const etfFlowChartData = {
-  labels: ETF_FLOW_LABELS,
-  datasets: [{
-    label: 'Net Flow ($M)',
-    data: ETF_FLOW_DATA,
-    backgroundColor: ETF_FLOW_DATA.map((v) => v >= 0 ? 'rgba(16,185,129,0.7)' : 'rgba(239,68,68,0.7)'),
-    borderColor: ETF_FLOW_DATA.map((v) => v >= 0 ? '#10b981' : '#ef4444'),
-    borderWidth: 1,
-  }],
-};
+// ── Chart helpers ─────────────────────────────────────────────────────────────
+
+function buildEtfFlowChartData(labels: string[], data: number[]) {
+  return {
+    labels,
+    datasets: [{
+      label: 'Net Flow ($M)',
+      data,
+      backgroundColor: data.map((v) => v >= 0 ? 'rgba(52,211,153,0.7)' : 'rgba(248,113,113,0.7)'),
+      borderColor: data.map((v) => v >= 0 ? '#34D399' : '#F87171'),
+      borderWidth: 1,
+    }],
+  };
+}
 
 const etfFlowChartOptions = {
   responsive: true,
@@ -173,13 +177,39 @@ function AltcoinFundTable({ data, asset, accentColor }: { data: AltcoinEtfAsset;
 
 // ── Main Component ───────────────────────────────────────────────────────────
 
+// ── Date formatter for chart labels ───────────────────────────────────────────────────
+
+function formatChartDate(dateStr: string): string {
+  // dateStr: "2026-03-26" → "Mar 26"
+  const d = new Date(dateStr + 'T00:00:00'); // avoid TZ shifting
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
 export default function EtfInstTab() {
   const [dateStr, setDateStr] = useState('');
   const [altcoinData, setAltcoinData] = useState<AltcoinEtfData | null>(null);
   const [altcoinLoading, setAltcoinLoading] = useState(true);
 
+  // ETF flow chart state — starts with fallback, updates from live API
+  const [etfFlowChartData, setEtfFlowChartData] = useState(
+    () => buildEtfFlowChartData(ETF_FLOW_LABELS_FALLBACK, ETF_FLOW_DATA_FALLBACK)
+  );
+
   useEffect(() => {
     setDateStr(new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }));
+  }, []);
+
+  // Fetch live ETF flow data
+  useEffect(() => {
+    fetch('/api/etf-flows')
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((json: { dailyFlows: { date: string; net: number }[] }) => {
+        if (!Array.isArray(json.dailyFlows) || json.dailyFlows.length === 0) return;
+        const labels = json.dailyFlows.map((d) => formatChartDate(d.date));
+        const data   = json.dailyFlows.map((d) => d.net);
+        setEtfFlowChartData(buildEtfFlowChartData(labels, data));
+      })
+      .catch(() => { /* silent fail — fallback static data remains */ });
   }, []);
 
   const fetchAltcoinEtfs = useCallback(async () => {

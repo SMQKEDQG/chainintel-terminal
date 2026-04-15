@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense, lazy, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import TerminalLayout from '@/components/TerminalLayout';
+import SplashScreen, { hasSplashBeenShown, markSplashShown } from '@/components/SplashScreen';
 import { type TabId } from '@/lib/constants';
 import OverviewTab from '@/components/tabs/OverviewTab';
 import UpgradeGate from '@/components/UpgradeGate';
@@ -145,6 +146,7 @@ function CheckoutBanner() {
 }
 
 export default function Home() {
+  const [showSplash, setShowSplash] = useState(() => !hasSplashBeenShown());
   const [activeTab, setActiveTab] = useState<TabId>('mktovr');
   const tier = useSubscription();
   const ActiveComponent = TAB_COMPONENTS[activeTab] || TAB_COMPONENTS['mktovr'];
@@ -190,12 +192,20 @@ export default function Home() {
     return tabContent;
   };
 
+  const handleSplashComplete = useCallback(() => {
+    markSplashShown();
+    setShowSplash(false);
+  }, []);
+
   return (
+    <>
+      {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
     <TerminalLayout activeTab={activeTab} onTabChange={setActiveTab}>
       <Suspense fallback={null}>
         <CheckoutBanner />
       </Suspense>
       {renderTab()}
     </TerminalLayout>
+    </>
   );
 }

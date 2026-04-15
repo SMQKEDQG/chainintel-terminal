@@ -1528,6 +1528,76 @@ function LiveKPIs() {
   );
 }
 
+/* ── AI MARKET SYNTHESIS (module-level cache) ── */
+let _synthCache: { text: string; ts: number } | null = null;
+const SYNTH_TTL = 5 * 60 * 1000; // 5 minutes
+
+function AiMarketSynthesis() {
+  const [text, setText] = useState<string | null>(_synthCache && Date.now() - _synthCache.ts < SYNTH_TTL ? _synthCache.text : null);
+  const [loading, setLoading] = useState(!text);
+
+  useEffect(() => {
+    if (text) return; // already have fresh cache
+    let cancelled = false;
+    setLoading(true);
+    fetch('/api/ask-ci', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: 'Give a 2-sentence market synthesis for the Overview dashboard. Include BTC price, fear and greed score, and the most important signal right now.' }),
+    })
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((json) => {
+        if (cancelled) return;
+        const raw: string = json.answer ?? json.text ?? json.response ?? '';
+        // Convert **bold** markers to <strong> tags
+        const html = raw.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text)">$1</strong>');
+        _synthCache = { text: html, ts: Date.now() };
+        setText(html);
+      })
+      .catch(() => { if (!cancelled) setText(''); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading) {
+    return (
+      <div style={{ padding: '0 12px 8px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <div style={{
+          height: '14px',
+          background: 'linear-gradient(90deg, var(--s1) 25%, var(--s2) 50%, var(--s1) 75%)',
+          backgroundSize: '200% 100%',
+          animation: 'pulseShimmer 1.4s infinite linear',
+          borderRadius: '2px',
+          width: '90%',
+        }} />
+        <div style={{
+          height: '14px',
+          background: 'linear-gradient(90deg, var(--s1) 25%, var(--s2) 50%, var(--s1) 75%)',
+          backgroundSize: '200% 100%',
+          animation: 'pulseShimmer 1.4s infinite linear',
+          borderRadius: '2px',
+          width: '75%',
+        }} />
+      </div>
+    );
+  }
+
+  if (!text) {
+    return (
+      <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', lineHeight: 1.6 }}>
+        Market synthesis updating...
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}
+      dangerouslySetInnerHTML={{ __html: text }}
+    />
+  );
+}
+
 /* ── MAIN OVERVIEW TAB ── */
 export default function OverviewTab() {
   const cmcData = useCmcData();
@@ -1552,7 +1622,7 @@ export default function OverviewTab() {
     <div style={{ position: 'relative' }}>
       {/* Loading skeleton overlay — shown for 2s while live data arrives */}
       {showSkeleton && cmcData.source === 'static' && (
-        <div style={{
+        <div className="connecting-indicator" style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '4px 0 6px',
           fontFamily: 'var(--mono)', fontSize: '7px',
@@ -1561,7 +1631,7 @@ export default function OverviewTab() {
           <span style={{
             width: 6, height: 6, borderRadius: '50%',
             background: 'var(--accent)', display: 'inline-block',
-            animation: 'pulse 2s infinite',
+            animation: 'connectingPulse 2s infinite',
           }} />
           CONNECTING...
         </div>
@@ -1601,9 +1671,7 @@ export default function OverviewTab() {
         </div>
         <div className="panel panel-hover">
           <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>ChainIntel AI</div></div>
-          <div style={{ padding: '0 12px 8px', fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)', lineHeight: 1.6 }}>
-            <strong style={{ color: 'var(--text)' }}>Bitcoin holding $73K at Extreme Fear (13/100).</strong> Price stability against capitulation-level sentiment historically precedes 8–15% bounces. ETF flows constructive: IBIT +$224M, net +$169.6M, 4th consecutive inflow day. Exchange reserves −42,800 BTC in 30 days. LTH supply at 74.8%. <strong style={{ color: 'var(--text)' }}>Setup cautiously bullish for 90+ day horizon.</strong>
-          </div>
+          <AiMarketSynthesis />
           <WhaleFeed />
         </div>
       </div>

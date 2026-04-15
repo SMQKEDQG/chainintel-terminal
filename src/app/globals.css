@@ -1,2 +1,22 @@
 @import "tailwindcss";
 @import "../styles/terminal.css";
+
+/* Smooth connecting indicator transitions */
+@keyframes connectingFadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes connectingFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+@keyframes connectingPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.connecting-indicator {
+  animation: connectingFadeIn 0.3s ease-out;
+}
+.connecting-indicator.hiding {
+  animation: connectingFadeOut 0.5s ease-out forwards;
+}

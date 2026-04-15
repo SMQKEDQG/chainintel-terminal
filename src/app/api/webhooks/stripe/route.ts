@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { createClient } from '@supabase/supabase-js';
+import { sendEmail, getWelcomeEmailHtml } from '@/lib/email';
 
 // ─── Price ID → tier mapping ────────────────────────────────────────────────
 const PRICE_TIER_MAP: Record<string, 'pro' | 'enterprise'> = {
@@ -145,10 +146,22 @@ export async function POST(req: NextRequest) {
 
         if (!tier) break;
 
-        const { userId } = await resolveUserId(stripe, supabase, customerId);
+        const { userId, email: customerEmail } = await resolveUserId(stripe, supabase, customerId);
         if (userId) {
           await setUserTier(supabase, userId, tier, customerId, subscriptionId || undefined);
           console.log(`[stripe-webhook] checkout.session.completed: user=${userId} tier=${tier}`);
+
+          // Send welcome email
+          if (customerEmail) {
+            const html = getWelcomeEmailHtml(tier, customerEmail);
+            await sendEmail({
+              to: customerEmail,
+              subject: tier === 'enterprise'
+                ? 'Welcome to ChainIntel Enterprise — Your Terminal is Ready'
+                : 'Welcome to ChainIntel Pro — Your Terminal is Ready',
+              html,
+            });
+          }
         } else {
           // User hasn't signed up yet — store in subscriptions table for later matching
           const customer = await stripe.customers.retrieve(customerId);

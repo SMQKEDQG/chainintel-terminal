@@ -35,7 +35,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Overview Dashboard',
     description: 'Your command center — market snapshot, correlation engine, daily AI brief, smart alerts, and portfolio allocation intelligence all in one view.',
     position: 'bottom',
-    tabSwitch: 'overview',
+    tabSwitch: 'mktovr',
   },
   {
     target: 'alert-btn',

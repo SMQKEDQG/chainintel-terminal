@@ -119,7 +119,7 @@ function CheckoutBanner() {
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('mktovr');
   const tier = useSubscription();
-  const ActiveComponent = TAB_COMPONENTS[activeTab];
+  const ActiveComponent = TAB_COMPONENTS[activeTab] || TAB_COMPONENTS['mktovr'];
 
   // Listen for goPage events from UpgradeGate and PricingTab CTAs
   const handleGoPage = useCallback((e: Event) => {

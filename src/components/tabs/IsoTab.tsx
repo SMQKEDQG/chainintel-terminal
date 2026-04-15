@@ -145,7 +145,6 @@ export default function IsoTab() {
             <tr style={{ borderBottom: '1px solid var(--b2)' }}>
               <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>ASSET</th>
               <th style={{ textAlign: 'left', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>NETWORK</th>
-              <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>STATUS</th>
               <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>PRICE</th>
               <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>24H %</th>
               <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 12 }}>MKT CAP</th>
@@ -167,13 +166,6 @@ export default function IsoTab() {
                     <div style={{ fontSize: 12, color: 'var(--muted)' }}>{a.name}</div>
                   </td>
                   <td style={{ padding: '5px 8px', fontSize: 11, color: 'var(--text2)' }}>{a.network}</td>
-                  <td style={{ textAlign: 'center', padding: '5px 8px' }}>
-                    <span style={{
-                      fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 8px', fontWeight: 600,
-                      background: a.status === 'CERTIFIED' ? 'rgba(16,185,129,0.15)' : 'rgba(240,192,64,0.12)',
-                      color: a.statusColor, borderRadius: 2,
-                    }}>{a.status}</span>
-                  </td>
                   <td style={{ textAlign: 'right', padding: '5px 8px', fontWeight: 600, color: 'var(--text)' }}>
                     {p ? fmtPrice(p.price) : '—'}
                   </td>

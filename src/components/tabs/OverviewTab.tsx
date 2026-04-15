@@ -1406,13 +1406,15 @@ function WhaleFeed() {
     <>
       <div className="ph live-shimmer-border" style={{ marginTop: 8 }}>
         <div className="pt">Live Whale Alerts</div>
-        <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
-          {isLive && <span style={{ color: 'var(--green)', fontSize: 13, marginRight: 4 }}>●</span>}
-          <a className="src-link" href="https://whale-alert.io" target="_blank" rel="noopener noreferrer">Whale Alert API</a>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
+            {isLive && <span style={{ color: 'var(--green)', fontSize: 10, marginRight: 4 }}>●</span>}
+            <a className="src-link" href="https://whale-alert.io" target="_blank" rel="noopener noreferrer">Whale Alert API</a>
+          </div>
         </div>
       </div>
       {whales.map((w, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 12px', borderBottom: '1px solid var(--b1)', cursor: 'pointer', transition: 'background 0.15s' }}
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderBottom: '1px solid var(--b1)', cursor: 'pointer', transition: 'background 0.15s' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           onClick={() => {
@@ -1420,16 +1422,31 @@ function WhaleFeed() {
             if (ctx) ctx.openInsight({ type: 'whale', title: w.asset, subtitle: `${w.dir} · ${w.amt}`, data: { direction: w.dir, amount: w.amt, route: w.route, time: w.age } });
           }}
         >
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: w.color, padding: '2px 6px', border: `1px solid ${w.color}`, letterSpacing: '0.06em', width: 36, textAlign: 'center' }}>{w.dir}</span>
-          <div>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 9, fontWeight: 700, color: w.color, padding: '3px 6px', border: `1px solid ${w.color}`, borderRadius: 2, letterSpacing: '0.06em', minWidth: 38, textAlign: 'center', flexShrink: 0 }}>{w.dir}</span>
+          <div style={{ minWidth: 80 }}>
             <div style={{ fontFamily: 'var(--mono)', fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{w.amt}</div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)' }}>{w.asset}</div>
+            <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)' }}>{w.asset}</div>
           </div>
-          <div style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)' }}>{w.route}</div>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--muted)' }}>{w.age}</span>
-          <a href="https://whale-alert.io" target="_blank" rel="noopener noreferrer" className="src-link" style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)', opacity: 0.7 }}>TX ↗</a>
+          <div style={{ flex: 1, fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)' }}>{w.route}</div>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', whiteSpace: 'nowrap', flexShrink: 0 }}>{w.age}</span>
+          <a href="https://whale-alert.io" target="_blank" rel="noopener noreferrer" className="src-link" style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', opacity: 0.7, flexShrink: 0 }}>TX ↗</a>
         </div>
       ))}
+      {/* Customize alerts CTA */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', borderTop: '1px solid var(--b2)', background: 'rgba(232,165,52,0.02)' }}>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', letterSpacing: '0.04em' }}>
+          Tracking transactions &gt;$10M · BTC ETH XRP SOL
+        </span>
+        <button
+          onClick={() => {
+            const btn = document.querySelector('[data-tour="alert-btn"]') as HTMLElement;
+            if (btn) btn.click();
+          }}
+          style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--accent)', background: 'rgba(232,165,52,0.08)', border: '1px solid rgba(232,165,52,0.2)', padding: '4px 12px', cursor: 'pointer', borderRadius: 2, letterSpacing: '0.06em', fontWeight: 600 }}
+        >
+          ⚙ CUSTOMIZE ALERTS
+        </button>
+      </div>
     </>
   );
 }

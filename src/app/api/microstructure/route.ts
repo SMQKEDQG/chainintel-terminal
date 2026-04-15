@@ -25,8 +25,8 @@ async function cachedFetch(key: string, url: string): Promise<any> {
 export async function GET() {
   const [btcDepth, ethDepth, btcLiqs, ethLiqs, btcOI, ethOI, btcFunding, btcLS, btcTrades] = await Promise.allSettled([
     // Order Book Depth (20 levels)
-    cachedFetch('btc-depth', 'https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=20'),
-    cachedFetch('eth-depth', 'https://api.binance.com/api/v3/depth?symbol=ETHUSDT&limit=20'),
+    cachedFetch('btc-depth', 'https://data-api.binance.vision/api/v3/depth?symbol=BTCUSDT&limit=20'),
+    cachedFetch('eth-depth', 'https://data-api.binance.vision/api/v3/depth?symbol=ETHUSDT&limit=20'),
     // Liquidations
     cachedFetch('btc-liq', 'https://fapi.binance.com/fapi/v1/allForceOrders?symbol=BTCUSDT&limit=50'),
     cachedFetch('eth-liq', 'https://fapi.binance.com/fapi/v1/allForceOrders?symbol=ETHUSDT&limit=30'),
@@ -38,7 +38,7 @@ export async function GET() {
     // Long/Short
     cachedFetch('btc-ls', 'https://fapi.binance.com/futures/data/topLongShortAccountRatio?symbol=BTCUSDT&period=1h&limit=12'),
     // Recent trades for flow analysis
-    cachedFetch('btc-trades', 'https://api.binance.com/api/v3/trades?symbol=BTCUSDT&limit=100'),
+    cachedFetch('btc-trades', 'https://data-api.binance.vision/api/v3/trades?symbol=BTCUSDT&limit=100'),
   ]);
 
   const val = (r: PromiseSettledResult<any>) => r.status === 'fulfilled' ? r.value : null;

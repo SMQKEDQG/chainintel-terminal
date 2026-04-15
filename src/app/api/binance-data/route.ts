@@ -24,10 +24,10 @@ async function cachedFetch(key: string, url: string, timeout = 6000): Promise<an
 
 export async function GET() {
   const [ticker, depth, futuresOI, funding, longShort, liquidations, krakenTicker] = await Promise.allSettled([
-    // 1. Binance 24h Ticker (top pairs)
-    cachedFetch('bn-ticker', 'https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","ADAUSDT","DOTUSDT","LINKUSDT","AVAXUSDT"]'),
+    // 1. Binance 24h Ticker (top pairs) — use data-api mirror for geo-compatibility
+    cachedFetch('bn-ticker', 'https://data-api.binance.vision/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT","XRPUSDT","ADAUSDT","DOTUSDT","LINKUSDT","AVAXUSDT"]'),
     // 2. Binance Order Book Depth (BTC)
-    cachedFetch('bn-depth', 'https://api.binance.com/api/v3/depth?symbol=BTCUSDT&limit=20'),
+    cachedFetch('bn-depth', 'https://data-api.binance.vision/api/v3/depth?symbol=BTCUSDT&limit=20'),
     // 3. Binance Futures Open Interest
     cachedFetch('bn-oi', 'https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT'),
     // 4. Binance Funding Rate

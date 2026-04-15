@@ -768,27 +768,27 @@ function AskCI() {
           placeholder="Ask anything: 'BTC price target?' · 'Explain MVRV' · 'Best ISO 20022 asset?'"
           style={{ flex: 1, background: 'transparent', border: 'none', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 13, padding: '8px 0', outline: 'none' }}
         />
-        <button onClick={() => handleAsk()} disabled={loading} style={{ background: loading ? 'var(--s2)' : 'rgba(232,165,52,0.08)', border: '1px solid rgba(232,165,52,0.2)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 16, letterSpacing: '0.12em', padding: '6px 14px', cursor: loading ? 'wait' : 'pointer', margin: 4 }}>{loading ? 'ANALYZING...' : 'ANALYZE'}</button>
+        <button onClick={() => handleAsk()} disabled={loading} style={{ background: loading ? 'var(--s2)' : 'rgba(232,165,52,0.08)', border: '1px solid rgba(232,165,52,0.2)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', padding: '6px 14px', cursor: loading ? 'wait' : 'pointer', margin: 4, fontWeight: 700 }}>{loading ? 'ANALYZING...' : 'ANALYZE'}</button>
       </div>
       <div style={{ display: 'flex', gap: 4, padding: '4px 8px', background: 'var(--s1)', flexWrap: 'wrap' }}>
         {chips.map(c => (
-          <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 16, padding: '3px 8px', cursor: 'pointer' }}>{c}</button>
+          <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 11, padding: '4px 10px', cursor: 'pointer', letterSpacing: '0.04em' }}>{c}</button>
         ))}
       </div>
       {loading && (
-        <div style={{ background: 'var(--s1)', padding: '12px 14px', fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ background: 'var(--s1)', padding: '12px 14px', fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
           <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>◈</span> CI·AI analyzing your query...
         </div>
       )}
       {response && !loading && (
         <div style={{ background: 'var(--s1)', border: '1px solid var(--b1)', padding: '12px 14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--accent)', letterSpacing: '0.1em' }}>◈ CI·AI RESPONSE</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', fontWeight: 700 }}>◈ CI·AI RESPONSE</span>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: source === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
               {source === 'live' ? '● LIVE AI' : source === 'cached' ? '● CACHED INTELLIGENCE' : '● OFFLINE'}
             </span>
           </div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 16, color: 'var(--text2)', lineHeight: 1.7 }}
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)', lineHeight: 1.75 }}
             dangerouslySetInnerHTML={{ __html: response.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>') }}
           />
         </div>

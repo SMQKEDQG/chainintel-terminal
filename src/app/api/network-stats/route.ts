@@ -35,8 +35,8 @@ export async function GET() {
     cachedFetch('eth-gas', `https://api.etherscan.io/api?module=gastracker&action=gasoracle${etherscanKey ? `&apikey=${etherscanKey}` : ''}`),
     // 4. Etherscan ETH Supply
     cachedFetch('eth-supply', `https://api.etherscan.io/api?module=stats&action=ethsupply2${etherscanKey ? `&apikey=${etherscanKey}` : ''}`),
-    // 5. Beaconcha.in Validators (public endpoint)
-    cachedFetch('beacon-val', 'https://beaconcha.in/api/v1/epoch/latest', { accept: 'application/json' }),
+    // 5. Ethereum Beacon Chain stats via Etherscan
+    cachedFetch('beacon-val', `https://api.etherscan.io/api?module=stats&action=ethsupply2${etherscanKey ? `&apikey=${etherscanKey}` : ''}`),
     // 6-8. Blockchair Multi-Chain Stats
     cachedFetch('bc-btc', 'https://api.blockchair.com/bitcoin/stats'),
     cachedFetch('bc-eth', 'https://api.blockchair.com/ethereum/stats'),
@@ -79,14 +79,15 @@ export async function GET() {
     burntFees: parseFloat(supplyData.result.BurntFees || '0') / 1e18,
   } : null;
 
-  // Parse Beaconcha.in validators
+  // Parse Ethereum staking/beacon data from Etherscan supply endpoint
   const beaconData = val(beaconValidators);
-  const parsedValidators = beaconData?.data ? {
-    epoch: beaconData.data.epoch,
-    validatorsCount: beaconData.data.validatorscount,
-    activeValidators: beaconData.data.activevalidators || beaconData.data.validatorscount,
-    participation: beaconData.data.globalparticipationrate,
-    finalized: beaconData.data.finalized,
+  const ethStaking = beaconData?.result ? parseFloat(beaconData.result.EthStaking || '0') : 0;
+  const parsedValidators = beaconData?.result ? {
+    epoch: null,
+    validatorsCount: ethStaking > 0 ? Math.floor(ethStaking / 1e18 / 32) : null,
+    activeValidators: ethStaking > 0 ? Math.floor(ethStaking / 1e18 / 32) : null,
+    participation: null,
+    finalized: true,
   } : null;
 
   // Parse Blockchair multi-chain

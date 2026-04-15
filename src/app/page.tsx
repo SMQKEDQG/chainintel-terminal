@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, Suspense, lazy } from 'react';
+import { useState, useEffect, useCallback, Suspense, lazy, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import TerminalLayout from '@/components/TerminalLayout';
 import { type TabId } from '@/lib/constants';
 import OverviewTab from '@/components/tabs/OverviewTab';
@@ -70,6 +71,51 @@ function TabLoadingFallback() {
   );
 }
 
+function CheckoutBanner() {
+  const searchParams = useSearchParams();
+  const checkout = searchParams.get('checkout');
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (checkout === 'success') {
+      setVisible(true);
+      // Clean URL without reload
+      window.history.replaceState({}, '', '/');
+      const timer = setTimeout(() => setVisible(false), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [checkout]);
+
+  if (!visible) return null;
+
+  return (
+    <div style={{
+      background: 'linear-gradient(90deg, rgba(52,211,153,0.12), rgba(232,165,52,0.08))',
+      border: '1px solid rgba(52,211,153,0.3)',
+      padding: '10px 20px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <span style={{ fontSize: 14 }}>✓</span>
+        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', letterSpacing: '0.08em', fontWeight: 700 }}>
+          SUBSCRIPTION ACTIVATED
+        </span>
+        <span style={{ fontFamily: 'var(--sans)', fontSize: 12, color: 'var(--text2)' }}>
+          Welcome to ChainIntel Pro. All modules are now unlocked.
+        </span>
+      </div>
+      <button
+        onClick={() => setVisible(false)}
+        style={{ background: 'none', border: 'none', color: 'var(--muted)', cursor: 'pointer', fontSize: 14 }}
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabId>('mktovr');
   const tier = useSubscription();
@@ -118,6 +164,9 @@ export default function Home() {
 
   return (
     <TerminalLayout activeTab={activeTab} onTabChange={setActiveTab}>
+      <Suspense fallback={null}>
+        <CheckoutBanner />
+      </Suspense>
       {renderTab()}
     </TerminalLayout>
   );

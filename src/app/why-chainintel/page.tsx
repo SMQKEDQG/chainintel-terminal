@@ -443,7 +443,7 @@ export default function WhyChainIntelPage() {
           </FadeIn>
 
           <Prose>
-            ChainIntel is the first terminal to integrate all six data domains — with an AI synthesis layer (powered by Perplexity Sonar) that connects signals across them in real time. When our Overview module surfaces a market briefing, it has seen the on-chain data, the DeFi flows, the whale movements, and the regulatory calendar before generating its analysis.
+            ChainIntel is the first terminal to integrate all six data domains — with an AI synthesis layer that connects signals across them in real time. When our Overview module surfaces a market briefing, it has seen the on-chain data, the DeFi flows, the whale movements, and the regulatory calendar before generating its analysis.
           </Prose>
 
           {/* ── Section 3: Why Now ── */}
@@ -624,7 +624,7 @@ export default function WhyChainIntelPage() {
           </Prose>
 
           <Prose>
-            ChainIntel was built AI-first, not AI-bolted-on. The Perplexity Sonar API is embedded at the intelligence layer — not as a chat widget sitting on top of a legacy data system. When ChainIntel synthesizes market conditions, it draws on 89 data sources in real time, applies language model reasoning, and surfaces insights in plain language. No mnemonics. No training course.
+            ChainIntel was built AI-first, not AI-bolted-on. Advanced LLM reasoning is embedded at the intelligence layer — not as a chat widget sitting on top of a legacy data system. When ChainIntel synthesizes market conditions, it draws on 89 data sources in real time, applies language model reasoning, and surfaces insights in plain language. No mnemonics. No training course.
           </Prose>
 
           <FadeIn>

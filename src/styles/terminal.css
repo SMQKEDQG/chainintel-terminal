@@ -800,7 +800,7 @@ canvas{max-width:100% !important;}
 [style*="display: grid"],[style*="display:grid"],.kpi-row{grid-template-columns:1fr !important;}
 .hmap-grid{grid-template-columns:repeat(2,1fr) !important;}
 .price-tier{padding:10px !important;}
-[id="competitionBanner"]{flex-direction:column !important;gap:6px !important;text-align:center !important;}
+
 #vsBloombergTable{overflow-x:auto;}
 #vsBloombergTable table{min-width:500px;}
 .page button{font-size:8px !important;}

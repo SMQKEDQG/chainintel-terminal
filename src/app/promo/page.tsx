@@ -248,7 +248,7 @@ export default function PromoPage() {
           position: 'relative',
         }}>
           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block', animation: 'pulse 2s ease-in-out infinite' }} />
-          Perplexity Billion Dollar Build 2026
+          AI-Native Financial Intelligence
         </div>
 
         {/* Hero headline */}
@@ -271,7 +271,7 @@ export default function PromoPage() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
-          }}>Has Competition.</span>
+          }}>Has Arrived.</span>
         </h1>
 
         <p style={{
@@ -654,7 +654,7 @@ export default function PromoPage() {
                   '50+ DeFi protocols with TVL tracking',
                   'ISO 20022 banking tracker (6 assets)',
                   'Whale tracking with ChainScore AI',
-                  'Perplexity Sonar AI synthesis layer',
+                  'AI-native synthesis layer (89 sources)',
                   'Modern terminal UI — built 2026',
                   '89 verified, transparent data sources',
                   'Free tier for builders & developers',

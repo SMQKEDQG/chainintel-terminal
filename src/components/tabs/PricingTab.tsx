@@ -3,11 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 
-const COMPETITION_DEADLINE = new Date('2026-06-02T23:59:59Z');
-
 function getCountdown() {
   const now = new Date();
-  const diff = COMPETITION_DEADLINE.getTime() - now.getTime();
+  const diff = 0;
   if (diff <= 0) return 'DEADLINE PASSED';
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -131,23 +129,7 @@ export default function PricingTab() {
         <div className="section-h-line"></div>
       </div>
 
-      {/* Competition countdown */}
-      <div
-        id="competitionBanner"
-        style={{ background: 'linear-gradient(135deg,rgba(107,138,255,0.08),rgba(232,165,52,0.06))', border: '1px solid rgba(107,138,255,0.25)', padding: '8px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{ fontSize: '16px' }}>🏆</span>
-          <div>
-            <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--blue)', letterSpacing: '0.12em', fontWeight: 700 }}>PERPLEXITY BILLION DOLLAR BUILD 2026</div>
-            <div id="compSubtitle" style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--text2)' }}>Deadline Jun 2, 2026 &middot; Entry #CI-2026</div>
-          </div>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', fontWeight: 700 }}>{countdown}</div>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: '7px', color: 'var(--muted)' }}>Competition Deadline</div>
-        </div>
-      </div>
+
 
       <div
         style={{ background: 'rgba(232,165,52,0.06)', border: '1px solid rgba(232,165,52,0.2)', borderRadius: '3px', padding: '6px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', cursor: 'pointer' }}

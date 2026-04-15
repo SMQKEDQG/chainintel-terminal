@@ -14,7 +14,7 @@ const slides = [
   { id: '05', label: 'MARKET', title: 'Market Size' },
   { id: '06', label: 'TRACTION', title: 'Traction' },
   { id: '07', label: 'BUSINESS MODEL', title: 'Business Model' },
-  { id: '08', label: 'COMPETITION', title: 'Competition' },
+  { id: '08', label: 'LANDSCAPE', title: 'Competitive Landscape' },
   { id: '09', label: 'WHY NOW', title: 'Why Now' },
   { id: '10', label: 'TEAM', title: 'Team' },
   { id: '11', label: 'INVESTMENT', title: 'The Ask' },
@@ -238,7 +238,7 @@ export default function DeckPage() {
               background: 'var(--cyan-dim)',
             }}>
               <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)', display: 'inline-block' }} />
-              Perplexity Billion Dollar Build 2026
+              Investor Pitch — April 2026
             </div>
 
             <h1 style={{
@@ -525,32 +525,32 @@ export default function DeckPage() {
           <div style={{ maxWidth: '1000px', width: '100%' }}>
             <SlideLabel>Market Opportunity</SlideLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', marginBottom: '48px', lineHeight: 1.15 }}>
-              A <span style={{ color: 'var(--blue)' }}>$36.8 trillion</span> opportunity<br />
+              A <span style={{ color: 'var(--blue)' }}>$2–$3B/yr</span> revenue opportunity<br />
               with no dominant crypto-native terminal.
             </h2>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '48px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '32px' }}>
               {[
                 {
                   label: 'Financial Data Terminal Market',
-                  value: '$33B',
-                  subvalue: 'Bloomberg holds ~30% share at $10B ARR',
-                  note: 'Source: MarketsandMarkets 2024',
+                  value: '$40B',
+                  subvalue: 'Bloomberg holds ~33% share at $12B+ ARR. Growing 7.5% CAGR.',
+                  note: 'Source: Sparkco AI / Statista 2024',
                   color: 'var(--blue)',
                 },
                 {
-                  label: 'Crypto Market Capitalization',
-                  value: '$3.8T',
-                  subvalue: 'All-time high. Institutional adoption accelerating.',
-                  note: 'Source: CoinGecko 2025',
-                  color: 'var(--accent)',
+                  label: 'Crypto Data & Analytics TAM',
+                  value: '$6.3B',
+                  subvalue: 'Growing 14.5% CAGR → $18B+ by 2033. Nascent, fragmented.',
+                  note: 'Source: Grand View Research 2025',
+                  color: 'var(--green)',
                 },
                 {
-                  label: 'Crypto Data & Analytics TAM',
-                  value: '$4.2B',
-                  subvalue: 'Growing 28% CAGR. Nascent, fragmented market.',
-                  note: 'Source: Grand View Research 2024',
-                  color: 'var(--green)',
+                  label: 'Crypto Market Cap',
+                  value: '$3.8T',
+                  subvalue: '500M+ users. $180B in ETF/ETP AUM. Institutional capital flooding in.',
+                  note: 'Source: CoinGecko / TRM Labs 2025',
+                  color: 'var(--accent)',
                 },
               ].map(market => (
                 <div key={market.label} style={{
@@ -571,6 +571,31 @@ export default function DeckPage() {
               ))}
             </div>
 
+            {/* Revenue trajectory math */}
+            <div style={{ padding: '24px 32px', border: '1px solid var(--blue)30', borderRadius: '4px', background: 'rgba(107,138,255,0.04)', marginBottom: '24px' }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--blue)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>
+                REVENUE TRAJECTORY — THE MATH
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+                {[
+                  { year: 'YEAR 1', users: '5K paid', rev: '$3M ARR', note: 'Product-led growth + early adopters' },
+                  { year: 'YEAR 2', users: '25K paid', rev: '$18M ARR', note: '5x growth via institutional sales' },
+                  { year: 'YEAR 3', users: '100K paid', rev: '$120M ARR', note: 'Enterprise contracts + API licensing' },
+                  { year: 'YEAR 5', users: '500K paid', rev: '$2–$3B ARR', note: 'Global institutional standard' },
+                ].map(t => (
+                  <div key={t.year} style={{ padding: '12px', border: '1px solid var(--b2)', borderRadius: '3px' }}>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--blue)', letterSpacing: '0.1em', marginBottom: '6px' }}>{t.year}</div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: '20px', fontWeight: 700, color: '#fff', marginBottom: '4px' }}>{t.rev}</div>
+                    <div style={{ fontSize: '12px', color: 'var(--text2)', marginBottom: '2px' }}>{t.users} subscribers</div>
+                    <div style={{ fontSize: '11px', color: 'var(--muted)' }}>{t.note}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.6, borderTop: '1px solid var(--b2)', paddingTop: '12px' }}>
+                <strong style={{ color: '#fff' }}>The math:</strong> Crypto data TAM is $6.3B today, growing to $18B+ by 2033. Bloomberg captures 33% of the $40B terminal market ($12B+ ARR) with 350,000 seats at $25K/yr. ChainIntel targets the crypto-native segment at 1/50th the price—capturing even 5–10% of the crypto analytics TAM alone represents $300M–$1.8B in annual revenue. Adding institutional enterprise contracts ($499–$4,999/mo) and API data licensing pushes the ceiling to $2–$3B/yr.
+              </div>
+            </div>
+
             <div style={{
               padding: '24px 32px',
               border: '1px solid var(--b3)',
@@ -582,13 +607,13 @@ export default function DeckPage() {
               flexWrap: 'wrap',
             }}>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                Serviceable Market (SAM):
+                Serviceable Addressable Market:
               </div>
               <div style={{ fontFamily: 'var(--mono)', fontSize: '28px', fontWeight: 700, color: '#fff', letterSpacing: '-0.02em' }}>
-                ~$400M
+                $2–$3B/yr
               </div>
               <div style={{ fontSize: '14px', color: 'var(--text2)', flex: 1, minWidth: '200px' }}>
-                10% capture of crypto-native terminal TAM — achievable with product-led growth and existing traction.
+                5–10% capture of the crypto data & terminal TAM. Bloomberg proved this market rewards the dominant platform with winner-take-most economics.
               </div>
             </div>
           </div>
@@ -648,7 +673,7 @@ export default function DeckPage() {
               </div>
               <div style={{ padding: '24px', border: '1px solid var(--b3)', borderRadius: '4px', background: 'var(--s1)' }}>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--blue)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>
-                  COMPETITION ENTRY
+                  TECHNOLOGY
                 </div>
                 <div style={{
                   padding: '16px',
@@ -658,14 +683,14 @@ export default function DeckPage() {
                   marginBottom: '16px',
                 }}>
                   <div style={{ fontFamily: 'var(--mono)', fontSize: '13px', fontWeight: 600, color: '#fff', marginBottom: '6px' }}>
-                    Perplexity Billion Dollar Build 2026
+                    AI-Native Architecture
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.5 }}>
-                    Entered as a full-stack AI-native financial terminal. ChainIntel uses Perplexity Sonar API for its AI synthesis layer, combining real-time web intelligence with on-chain data signals.
+                    Full-stack AI-native financial terminal. ChainIntel uses advanced LLM APIs for its AI synthesis layer, combining real-time web intelligence with on-chain data signals across 89 verified sources.
                   </div>
                 </div>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.06em' }}>
-                  TECH STACK: Next.js 16 · TypeScript · Supabase · Tailwind CSS · Perplexity Sonar API · Stripe
+                  TECH STACK: Next.js 16 · TypeScript · Supabase · Tailwind CSS · AI Synthesis APIs · Stripe
                 </div>
               </div>
             </div>
@@ -929,7 +954,7 @@ export default function DeckPage() {
                 },
                 {
                   title: 'AI-Native Infrastructure Ready',
-                  desc: 'LLM APIs, real-time web search (Perplexity Sonar), and vector databases make it possible to build a terminal that synthesizes 89 sources in seconds. This wasn\'t possible 2 years ago.',
+                  desc: 'LLM APIs, real-time web search, and vector databases make it possible to build a terminal that synthesizes 89 sources in seconds. This wasn\'t possible 2 years ago.',
                   color: 'var(--purple)',
                 },
                 {

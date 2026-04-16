@@ -58,7 +58,6 @@ export async function GET() {
   }
 
   try {
-    const CMC_KEY = process.env.CMC_API_KEY || 'a45ac72ec0834ee58ae4f6f16b5756ff';
     let coins: CoinData[] = [];
 
     // Try CoinGecko first
@@ -76,22 +75,20 @@ export async function GET() {
         throw new Error(`CoinGecko ${res.status}`);
       }
     } catch (geckoErr) {
-      // Fallback to CMC
-      console.log('CoinGecko failed, falling back to CMC:', geckoErr);
-      const symbols = COINS.map(c => c.symbol).join(',');
-      const cmcRes = await fetch(
-        `https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=200&convert=USD`,
-        { headers: { 'X-CMC_PRO_API_KEY': CMC_KEY, 'Accept': 'application/json' }, next: { revalidate: 120 } } as any
+      // Fallback to CoinPaprika
+      console.log('CoinGecko failed, falling back to CoinPaprika:', geckoErr);
+      const paprikaRes = await fetch(
+        'https://api.coinpaprika.com/v1/tickers?quotes=USD',
+        { next: { revalidate: 300 } } as any
       );
-      if (cmcRes.ok) {
-        const cmcJson = await cmcRes.json();
-        const cmcData = cmcJson.data || [];
+      if (paprikaRes.ok) {
+        const paprikaData = await paprikaRes.json();
         const symbolSet = new Set(COINS.map(c => c.symbol));
-        coins = cmcData.filter((c: any) => symbolSet.has(c.symbol)).map((c: any) => {
-          const q = c.quote.USD;
+        coins = paprikaData.filter((c: any) => symbolSet.has(c.symbol)).map((c: any) => {
+          const q = c.quotes?.USD || {};
           const coin = COINS.find(x => x.symbol === c.symbol);
           return {
-            id: coin?.id || c.slug,
+            id: coin?.id || c.id,
             symbol: c.symbol,
             current_price: q.price,
             market_cap: q.market_cap,

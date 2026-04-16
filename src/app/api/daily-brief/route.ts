@@ -3,13 +3,11 @@ import { NextResponse } from 'next/server';
 // ═══════════════════════════════════════════════════════════════════
 // DAILY INTELLIGENCE BRIEF — Comprehensive Market Digest
 // Aggregates: CoinGecko, DefiLlama, Mempool, Etherscan Gas,
-//             CMC Global Metrics, Fear & Greed, Whale Activity
+//             CoinPaprika Global Metrics, Fear & Greed, Whale Activity
 // ═══════════════════════════════════════════════════════════════════
 
 let briefCache: { data: any; ts: number } | null = null;
 const CACHE_TTL = 180_000; // 3 min cache
-
-const CMC_KEY = process.env.CMC_API_KEY || '';
 
 function fmt(n: number, decimals = 0): string {
   if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
@@ -50,7 +48,7 @@ export async function GET() {
     mempoolData,
     gasData,
     cgTrending,
-    cmcGlobal,
+    paprikaGlobal,
   ] = await Promise.all([
     safeFetch('https://api.alternative.me/fng/?limit=1'),
     safeFetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin,ripple&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true'),
@@ -60,9 +58,7 @@ export async function GET() {
     safeFetch('https://mempool.space/api/mempool'),
     safeFetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle${process.env.ETHERSCAN_API_KEY ? `&apikey=${process.env.ETHERSCAN_API_KEY}` : ''}`),
     safeFetch('https://api.coingecko.com/api/v3/search/trending'),
-    CMC_KEY ? safeFetch('https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest', {
-      headers: { 'X-CMC_PRO_API_KEY': CMC_KEY, Accept: 'application/json' },
-    }) : null,
+    safeFetch('https://api.coinpaprika.com/v1/global'),
   ]);
 
   // ── 1. MARKET SNAPSHOT ──
@@ -189,22 +185,20 @@ export async function GET() {
     }
   }
 
-  // ── 6. CMC GLOBAL (if available) ──
+  // ── 6. COINPAPRIKA GLOBAL (if available) ──
   let cmcMetrics: any = null;
-  if (cmcGlobal?.data) {
-    const d = cmcGlobal.data;
-    const quote = d.quote?.USD || {};
+  if (paprikaGlobal) {
     cmcMetrics = {
-      totalMcap: quote.total_market_cap || 0,
-      vol24h: quote.total_volume_24h || 0,
-      defiVol24h: quote.defi_volume_24h || 0,
-      defiMcap: quote.defi_market_cap || 0,
-      stablecoinVol24h: quote.stablecoin_volume_24h || 0,
-      derivativesVol24h: quote.derivatives_volume_24h || 0,
-      btcDominance: d.btc_dominance || 0,
-      ethDominance: d.eth_dominance || 0,
-      activeCryptos: d.active_cryptocurrencies || 0,
-      activeExchanges: d.active_exchanges || 0,
+      totalMcap: paprikaGlobal.market_cap_usd || 0,
+      vol24h: paprikaGlobal.volume_24h_usd || 0,
+      defiVol24h: 0,
+      defiMcap: 0,
+      stablecoinVol24h: 0,
+      derivativesVol24h: 0,
+      btcDominance: paprikaGlobal.bitcoin_dominance_percentage || 0,
+      ethDominance: ethDominance || 0,
+      activeCryptos: paprikaGlobal.cryptocurrencies_number || 0,
+      activeExchanges: 0,
     };
   }
 

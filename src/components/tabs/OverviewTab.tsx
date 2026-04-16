@@ -21,9 +21,9 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, BarController, PointElement, LineElement, LineController, Tooltip, Legend, Filler);
 
-/* ── CMC shared data context (single API call powers KPI, Heatmap, MarketTable) ── */
+/* ── Shared market data context (single API call powers KPI, Heatmap, MarketTable) ── */
 interface CmcCoin {
-  id: number;
+  id: string;
   name: string;
   symbol: string;
   slug: string;
@@ -48,14 +48,14 @@ interface CmcGlobal {
 interface CmcData {
   coins: CmcCoin[];
   global: CmcGlobal | null;
-  source: 'live' | 'cached' | 'coingecko' | 'static';
+  source: 'coinpaprika' | 'coingecko-fallback' | 'static-fallback';
   loading: boolean;
 }
 
 const CmcContext = createContext<CmcData>({
   coins: [],
   global: null,
-  source: 'static',
+  source: 'static-fallback',
   loading: true,
 });
 
@@ -65,57 +65,23 @@ interface InsightCtx {
 }
 const InsightContext = createContext<InsightCtx>({ openInsight: () => {} });
 
-/* Transform CMC listings response into our CmcCoin format */
-function cmcListingsToCoinData(data: any[]): CmcCoin[] {
-  return data.map((c: any) => ({
-    id: c.id,
-    name: c.name,
-    symbol: (c.symbol as string).toUpperCase(),
-    slug: c.slug,
-    cmc_rank: c.cmc_rank,
-    price: c.quote?.USD?.price ?? 0,
-    market_cap: c.quote?.USD?.market_cap ?? 0,
-    volume_24h: c.quote?.USD?.volume_24h ?? 0,
-    percent_change_24h: c.quote?.USD?.percent_change_24h ?? 0,
-    percent_change_7d: c.quote?.USD?.percent_change_7d ?? 0,
-    image: `https://s2.coinmarketcap.com/static/img/coins/64x64/${c.id}.png`,
-  }));
-}
-
-/* Transform CoinGecko /coins/markets response */
-function geckoToCoinData(data: any[]): CmcCoin[] {
-  return data.map((c: any, i: number) => ({
-    id: i,
-    name: c.name,
-    symbol: (c.symbol as string).toUpperCase(),
-    slug: c.id,
-    cmc_rank: c.market_cap_rank ?? i + 1,
-    price: c.current_price ?? 0,
-    market_cap: c.market_cap ?? 0,
-    volume_24h: c.total_volume ?? 0,
-    percent_change_24h: c.price_change_percentage_24h ?? 0,
-    percent_change_7d: c.price_change_percentage_7d_in_currency ?? 0,
-    image: c.image ?? '',
-  }));
-}
-
 /* Static fallback data */
 const LOADING_COINS: CmcCoin[] = [
-  { id: 1, name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', cmc_rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_24h: 0.82, percent_change_7d: -3.14, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1.png' },
-  { id: 1027, name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', cmc_rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_24h: -1.24, percent_change_7d: -8.32, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1027.png' },
-  { id: 52, name: 'XRP', symbol: 'XRP', slug: 'xrp', cmc_rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_24h: 1.87, percent_change_7d: -4.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/52.png' },
-  { id: 5426, name: 'Solana', symbol: 'SOL', slug: 'solana', cmc_rank: 4, price: 81, market_cap: 6.72e10, volume_24h: 4.2e9, percent_change_24h: -0.41, percent_change_7d: -5.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5426.png' },
-  { id: 1839, name: 'BNB', symbol: 'BNB', slug: 'bnb', cmc_rank: 5, price: 560, market_cap: 8.2e10, volume_24h: 1.8e9, percent_change_24h: 0.34, percent_change_7d: -1.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1839.png' },
-  { id: 74, name: 'Dogecoin', symbol: 'DOGE', slug: 'dogecoin', cmc_rank: 6, price: 0.082, market_cap: 1.2e10, volume_24h: 0.8e9, percent_change_24h: -0.9, percent_change_7d: -6.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/74.png' },
-  { id: 2010, name: 'Cardano', symbol: 'ADA', slug: 'cardano', cmc_rank: 7, price: 0.41, market_cap: 1.5e10, volume_24h: 0.5e9, percent_change_24h: -2.1, percent_change_7d: -5.4, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2010.png' },
-  { id: 4687, name: 'HBAR', symbol: 'HBAR', slug: 'hedera', cmc_rank: 8, price: 0.17, market_cap: 6.7e9, volume_24h: 0.3e9, percent_change_24h: 1.44, percent_change_7d: 2.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4687.png' },
-  { id: 1975, name: 'Chainlink', symbol: 'LINK', slug: 'chainlink', cmc_rank: 9, price: 12.5, market_cap: 7.8e9, volume_24h: 0.6e9, percent_change_24h: 0.92, percent_change_7d: -2.1, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1975.png' },
-  { id: 5805, name: 'Avalanche', symbol: 'AVAX', slug: 'avalanche', cmc_rank: 10, price: 22, market_cap: 9e9, volume_24h: 0.4e9, percent_change_24h: -3.8, percent_change_7d: -7.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/5805.png' },
-  { id: 3890, name: 'Polkadot', symbol: 'DOT', slug: 'polkadot', cmc_rank: 11, price: 4.2, market_cap: 5.9e9, volume_24h: 0.3e9, percent_change_24h: -1.5, percent_change_7d: -4.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3890.png' },
-  { id: 3408, name: 'Quant', symbol: 'QNT', slug: 'quant', cmc_rank: 12, price: 88, market_cap: 1.1e9, volume_24h: 44e6, percent_change_24h: 2.31, percent_change_7d: 1.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/3408.png' },
-  { id: 512, name: 'Stellar', symbol: 'XLM', slug: 'stellar', cmc_rank: 13, price: 0.27, market_cap: 8.3e9, volume_24h: 0.5e9, percent_change_24h: -0.62, percent_change_7d: -2.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/512.png' },
-  { id: 4030, name: 'Algorand', symbol: 'ALGO', slug: 'algorand', cmc_rank: 14, price: 0.18, market_cap: 1.3e9, volume_24h: 60e6, percent_change_24h: -0.8, percent_change_7d: -3.2, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/4030.png' },
-  { id: 1720, name: 'IOTA', symbol: 'IOTA', slug: 'iota', cmc_rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_24h: 1.14, percent_change_7d: 0.8, image: 'https://s2.coinmarketcap.com/static/img/coins/64x64/1720.png' },
+  { id: 'btc-bitcoin', name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', cmc_rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_24h: 0.82, percent_change_7d: -3.14, image: 'https://static.coinpaprika.com/coin/btc-bitcoin/logo.png' },
+  { id: 'eth-ethereum', name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', cmc_rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_24h: -1.24, percent_change_7d: -8.32, image: 'https://static.coinpaprika.com/coin/eth-ethereum/logo.png' },
+  { id: 'xrp-xrp', name: 'XRP', symbol: 'XRP', slug: 'xrp', cmc_rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_24h: 1.87, percent_change_7d: -4.2, image: 'https://static.coinpaprika.com/coin/xrp-xrp/logo.png' },
+  { id: 'sol-solana', name: 'Solana', symbol: 'SOL', slug: 'solana', cmc_rank: 4, price: 81, market_cap: 6.72e10, volume_24h: 4.2e9, percent_change_24h: -0.41, percent_change_7d: -5.8, image: 'https://static.coinpaprika.com/coin/sol-solana/logo.png' },
+  { id: 'bnb-binance-coin', name: 'BNB', symbol: 'BNB', slug: 'binance-coin', cmc_rank: 5, price: 560, market_cap: 8.2e10, volume_24h: 1.8e9, percent_change_24h: 0.34, percent_change_7d: -1.2, image: 'https://static.coinpaprika.com/coin/bnb-binance-coin/logo.png' },
+  { id: 'doge-dogecoin', name: 'Dogecoin', symbol: 'DOGE', slug: 'dogecoin', cmc_rank: 6, price: 0.082, market_cap: 1.2e10, volume_24h: 0.8e9, percent_change_24h: -0.9, percent_change_7d: -6.1, image: 'https://static.coinpaprika.com/coin/doge-dogecoin/logo.png' },
+  { id: 'ada-cardano', name: 'Cardano', symbol: 'ADA', slug: 'cardano', cmc_rank: 7, price: 0.41, market_cap: 1.5e10, volume_24h: 0.5e9, percent_change_24h: -2.1, percent_change_7d: -5.4, image: 'https://static.coinpaprika.com/coin/ada-cardano/logo.png' },
+  { id: 'hbar-hedera', name: 'Hedera', symbol: 'HBAR', slug: 'hedera', cmc_rank: 8, price: 0.17, market_cap: 6.7e9, volume_24h: 0.3e9, percent_change_24h: 1.44, percent_change_7d: 2.1, image: 'https://static.coinpaprika.com/coin/hbar-hedera/logo.png' },
+  { id: 'link-chainlink', name: 'Chainlink', symbol: 'LINK', slug: 'chainlink', cmc_rank: 9, price: 12.5, market_cap: 7.8e9, volume_24h: 0.6e9, percent_change_24h: 0.92, percent_change_7d: -2.1, image: 'https://static.coinpaprika.com/coin/link-chainlink/logo.png' },
+  { id: 'avax-avalanche', name: 'Avalanche', symbol: 'AVAX', slug: 'avalanche', cmc_rank: 10, price: 22, market_cap: 9e9, volume_24h: 0.4e9, percent_change_24h: -3.8, percent_change_7d: -7.2, image: 'https://static.coinpaprika.com/coin/avax-avalanche/logo.png' },
+  { id: 'dot-polkadot', name: 'Polkadot', symbol: 'DOT', slug: 'polkadot', cmc_rank: 11, price: 4.2, market_cap: 5.9e9, volume_24h: 0.3e9, percent_change_24h: -1.5, percent_change_7d: -4.8, image: 'https://static.coinpaprika.com/coin/dot-polkadot/logo.png' },
+  { id: 'qnt-quant', name: 'Quant', symbol: 'QNT', slug: 'quant', cmc_rank: 12, price: 88, market_cap: 1.1e9, volume_24h: 44e6, percent_change_24h: 2.31, percent_change_7d: 1.8, image: 'https://static.coinpaprika.com/coin/qnt-quant/logo.png' },
+  { id: 'xlm-stellar', name: 'Stellar', symbol: 'XLM', slug: 'stellar', cmc_rank: 13, price: 0.27, market_cap: 8.3e9, volume_24h: 0.5e9, percent_change_24h: -0.62, percent_change_7d: -2.8, image: 'https://static.coinpaprika.com/coin/xlm-stellar/logo.png' },
+  { id: 'algo-algorand', name: 'Algorand', symbol: 'ALGO', slug: 'algorand', cmc_rank: 14, price: 0.18, market_cap: 1.3e9, volume_24h: 60e6, percent_change_24h: -0.8, percent_change_7d: -3.2, image: 'https://static.coinpaprika.com/coin/algo-algorand/logo.png' },
+  { id: 'miota-iota', name: 'IOTA', symbol: 'IOTA', slug: 'iota', cmc_rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_24h: 1.14, percent_change_7d: 0.8, image: 'https://static.coinpaprika.com/coin/miota-iota/logo.png' },
 ];
 
 const LOADING_GLOBAL: CmcGlobal = {
@@ -130,7 +96,7 @@ const LOADING_GLOBAL: CmcGlobal = {
 function useCmcData(): CmcData {
   const [coins, setCoins] = useState<CmcCoin[]>(LOADING_COINS);
   const [global, setGlobal] = useState<CmcGlobal | null>(LOADING_GLOBAL);
-  const [source, setSource] = useState<CmcData['source']>('static');
+  const [source, setSource] = useState<CmcData['source']>('static-fallback');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -138,57 +104,36 @@ function useCmcData(): CmcData {
 
     async function fetchCmc() {
       try {
-        // Try CMC proxy for listings
-        const listingsRes = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=50&sort=market_cap&convert=USD');
-        if (!listingsRes.ok) throw new Error('CMC listings failed');
+        const listingsRes = await fetch('/api/market-data?limit=50');
+        if (!listingsRes.ok) throw new Error('market-data request failed');
         const listingsJson = await listingsRes.json();
         if (cancelled) return;
 
-        const cmcCoins = cmcListingsToCoinData(listingsJson.data?.data || []);
-        if (cmcCoins.length > 0) {
-          setCoins(cmcCoins);
-          setSource(listingsJson.source === 'live' ? 'live' : 'cached');
+        const marketCoins = Array.isArray(listingsJson?.coins)
+          ? listingsJson.coins.map((coin: any) => ({
+              id: coin.id,
+              name: coin.name,
+              symbol: (coin.symbol as string).toUpperCase(),
+              slug: coin.slug,
+              cmc_rank: coin.rank,
+              price: coin.price ?? 0,
+              market_cap: coin.market_cap ?? 0,
+              volume_24h: coin.volume_24h ?? 0,
+              percent_change_24h: coin.percent_change_24h ?? 0,
+              percent_change_7d: coin.percent_change_7d ?? 0,
+              image: coin.image ?? '',
+            }))
+          : [];
+
+        if (marketCoins.length > 0) {
+          setCoins(marketCoins);
+          setGlobal(listingsJson.global ?? LOADING_GLOBAL);
+          setSource(listingsJson.source ?? 'static-fallback');
         } else {
-          throw new Error('No CMC data returned');
+          throw new Error('No market data returned');
         }
-
-        // Also try global metrics
-        try {
-          const globalRes = await fetch('/api/cmc?endpoint=/v1/global-metrics/quotes/latest');
-          if (globalRes.ok) {
-            const globalJson = await globalRes.json();
-            const gd = globalJson.data?.data;
-            if (gd) {
-              setGlobal({
-                total_market_cap: gd.quote?.USD?.total_market_cap ?? LOADING_GLOBAL.total_market_cap,
-                total_volume_24h: gd.quote?.USD?.total_volume_24h ?? LOADING_GLOBAL.total_volume_24h,
-                btc_dominance: gd.btc_dominance ?? LOADING_GLOBAL.btc_dominance,
-                eth_dominance: gd.eth_dominance ?? LOADING_GLOBAL.eth_dominance,
-                active_cryptocurrencies: gd.active_cryptocurrencies ?? LOADING_GLOBAL.active_cryptocurrencies,
-                total_market_cap_yesterday_percentage_change: gd.quote?.USD?.total_market_cap_yesterday_percentage_change ?? LOADING_GLOBAL.total_market_cap_yesterday_percentage_change,
-              });
-            }
-          }
-        } catch { /* global metrics failure is non-critical */ }
-
       } catch {
-        // Fallback to CoinGecko
-        if (cancelled) return;
-        try {
-          const geckoRes = await fetch('/api/coingecko?path=/coins/markets&vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=7d');
-          if (!geckoRes.ok) throw new Error('CoinGecko failed');
-          const geckoJson = await geckoRes.json();
-          const geckoData = geckoJson.data || geckoJson;
-          if (cancelled) return;
-          const geckoCoins = geckoToCoinData(geckoData);
-          if (geckoCoins.length > 0) {
-            setCoins(geckoCoins);
-            setSource('coingecko');
-          }
-        } catch {
-          // Keep static fallback
-          if (!cancelled) setSource('static');
-        }
+        if (!cancelled) setSource('static-fallback');
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -219,14 +164,13 @@ function fmtPrice(n: number): string {
 
 function sourceLabel(src: CmcData['source']): string {
   switch (src) {
-    case 'live': return 'CMC Live';
-    case 'cached': return 'CMC Cached';
-    case 'coingecko': return 'CoinGecko';
+    case 'coinpaprika': return 'CoinPaprika';
+    case 'coingecko-fallback': return 'CoinGecko Fallback';
     default: return 'Fallback';
   }
 }
 function sourceColor(src: CmcData['source']): string {
-  return src === 'live' ? 'var(--green)' : src === 'cached' ? 'var(--gold)' : src === 'coingecko' ? 'var(--blue)' : 'var(--muted)';
+  return src === 'coinpaprika' ? 'var(--green)' : src === 'coingecko-fallback' ? 'var(--blue)' : 'var(--muted)';
 }
 
 /* ── Helpers for live chart data ── */
@@ -686,7 +630,7 @@ function MarketPulse() {
       change: `${mcapChg >= 0 ? '+' : ''}${mcapChg.toFixed(2)}%`,
       changeDir: mcapChg >= 0 ? 'up' : 'dn',
       color: 'var(--accent)',
-      src: 'CoinMarketCap',
+      src: 'CoinPaprika',
     },
     {
       label: 'BTC DOMINANCE',
@@ -694,7 +638,7 @@ function MarketPulse() {
       change: btc ? `BTC ${fmtPrice(btc.price)}` : 'Loading',
       changeDir: (btc?.percent_change_24h ?? 0) >= 0 ? 'up' : 'dn',
       color: '#E8A534',
-      src: 'CoinMarketCap',
+      src: 'CoinPaprika',
     },
     {
       label: 'FEAR & GREED',
@@ -1538,7 +1482,7 @@ function MarketTable() {
         <div className="pt">Top Assets by Market Cap</div>
         <div className="tag tag-live">
           <span style={{ marginRight: 4, color: sourceColor(source), fontSize: 7 }}>●</span>
-          {sourceLabel(source)} · <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CoinMarketCap</a>
+          {sourceLabel(source)} · <a className="src-link" href="https://coinpaprika.com" target="_blank" rel="noopener noreferrer">CoinPaprika</a>
         </div>
       </div>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 13 }}>
@@ -1816,7 +1760,7 @@ export default function OverviewTab() {
     <InsightContext.Provider value={{ openInsight }}>
     <div style={{ position: 'relative' }}>
       {/* Loading skeleton overlay */}
-      {showSkeleton && cmcData.source === 'static' && (
+      {showSkeleton && cmcData.source === 'static-fallback' && (
         <div className="connecting-indicator" style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '4px 0 6px',

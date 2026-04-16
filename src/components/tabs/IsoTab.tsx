@@ -5,7 +5,11 @@ import { useState, useEffect, useCallback } from 'react';
 interface CmcCoin {
   name: string;
   symbol: string;
-  quote: { USD: { price: number; percent_change_24h: number; percent_change_7d: number; market_cap: number; volume_24h: number } };
+  price: number;
+  percent_change_24h: number;
+  percent_change_7d: number;
+  market_cap: number;
+  volume_24h: number;
 }
 
 interface IsoAsset {
@@ -57,21 +61,19 @@ function fmtMcap(n: number): string {
 }
 
 export default function IsoTab() {
-  const [prices, setPrices] = useState<Record<string, CmcCoin['quote']['USD']>>({});
+  const [prices, setPrices] = useState<Record<string, CmcCoin>>({});
   const [loading, setLoading] = useState(true);
 
   const fetchPrices = useCallback(async () => {
     try {
-      const res = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=200');
+      const res = await fetch('/api/market-data?limit=200');
       if (!res.ok) return;
       const json = await res.json();
-      // CMC proxy nests data: json.data.data[]
-      const raw = json?.data;
-      const coins = Array.isArray(raw) ? raw : (raw?.data && Array.isArray(raw.data) ? raw.data : []);
-      const map: Record<string, CmcCoin['quote']['USD']> = {};
+      const coins = Array.isArray(json?.coins) ? json.coins : [];
+      const map: Record<string, CmcCoin> = {};
       for (const c of coins) {
         if (ISO_ASSETS.some(a => a.sym === c.symbol)) {
-          map[c.symbol] = c.quote.USD;
+          map[c.symbol] = c;
         }
       }
       setPrices(map);
@@ -105,7 +107,7 @@ export default function IsoTab() {
         <div style={{ flex: 1, height: 1, background: 'var(--b2)' }} />
         <span className="tag" style={{ background: 'rgba(107,138,255,0.1)', color: 'var(--blue)' }}>PRO · {ISO_ASSETS.length} Assets</span>
         <span className="tag tag-live">
-          <a className="src-link" href="https://coinmarketcap.com" target="_blank" rel="noopener noreferrer">CMC</a>
+          <a className="src-link" href="https://coinpaprika.com" target="_blank" rel="noopener noreferrer">CoinPaprika</a>
           {' · '}
           <a className="src-link" href="https://www.swift.com/standards/iso-20022" target="_blank" rel="noopener noreferrer">SWIFT</a>
         </span>

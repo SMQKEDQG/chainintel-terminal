@@ -7,6 +7,7 @@ const cache = new Map<string, { data: any; ts: number }>();
 const CACHE_TTL = 60_000; // 60 seconds
 
 export async function GET(req: NextRequest) {
+  const demoApiKey = process.env.COINGECKO_DEMO_API_KEY;
   const { searchParams } = new URL(req.url);
   const path = searchParams.get('path');
   if (!path) {
@@ -29,7 +30,9 @@ export async function GET(req: NextRequest) {
 
   try {
     const res = await fetch(url, {
-      headers: { 'Accept': 'application/json' },
+      headers: demoApiKey
+        ? { 'Accept': 'application/json', 'x-cg-demo-api-key': demoApiKey }
+        : { 'Accept': 'application/json' },
       next: { revalidate: 60 },
     });
 

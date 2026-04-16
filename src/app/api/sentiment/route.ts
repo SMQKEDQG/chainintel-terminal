@@ -23,17 +23,12 @@ async function fetchWithRetry(url: string, opts?: RequestInit, retries = 2): Pro
 
 export async function GET() {
   try {
-    const CMC_KEY = process.env.CMC_API_KEY || 'a45ac72ec0834ee58ae4f6f16b5756ff';
-
-    // Parallel fetch: Fear & Greed (current + history), CoinGecko trending, CMC global metrics
+    // Parallel fetch: Fear & Greed (current + history), CoinGecko trending, CoinPaprika global metrics
     const [fngRes, fngHistRes, trendingRes, globalRes] = await Promise.allSettled([
       fetchWithRetry('https://api.alternative.me/fng/?limit=1', { next: { revalidate: 300 } } as any),
       fetchWithRetry('https://api.alternative.me/fng/?limit=30', { next: { revalidate: 3600 } } as any),
       fetchWithRetry('https://api.coingecko.com/api/v3/search/trending', { next: { revalidate: 300 } } as any),
-      fetchWithRetry(`https://pro-api.coinmarketcap.com/v1/global-metrics/quotes/latest`, {
-        headers: { 'X-CMC_PRO_API_KEY': CMC_KEY, 'Accept': 'application/json' },
-        next: { revalidate: 300 },
-      } as any),
+      fetchWithRetry('https://api.coinpaprika.com/v1/global', { next: { revalidate: 300 } } as any),
     ]);
 
     // --- Fear & Greed ---
@@ -96,7 +91,7 @@ export async function GET() {
       }
     }
 
-    // --- Global Market Metrics (CMC) ---
+    // --- Global Market Metrics (CoinPaprika) ---
     let globalMetrics: {
       btcDominance: number;
       ethDominance: number;
@@ -112,22 +107,20 @@ export async function GET() {
     } | null = null;
 
     if (globalRes.status === 'fulfilled' && globalRes.value.ok) {
-      const data = await globalRes.value.json();
-      if (data?.data) {
-        const d = data.data;
-        const q = d.quote?.USD || {};
+      const d = await globalRes.value.json();
+      if (d) {
         globalMetrics = {
-          btcDominance: Number((d.btc_dominance || 0).toFixed(2)),
-          ethDominance: Number((d.eth_dominance || 0).toFixed(2)),
-          totalMarketCap: q.total_market_cap || 0,
-          totalVolume24h: q.total_volume_24h || 0,
-          activeCryptos: d.active_cryptocurrencies || 0,
-          activeExchanges: d.active_exchanges || 0,
-          defiVolume24h: d.defi_volume_24h || 0,
-          defiMarketCap: d.defi_market_cap || 0,
-          stablecoinVolume24h: d.stablecoin_volume_24h || 0,
-          stablecoinMarketCap: d.stablecoin_market_cap || 0,
-          totalMarketCapChange24h: q.total_market_cap_yesterday_percentage_change || 0,
+          btcDominance: Number((d.bitcoin_dominance_percentage || 0).toFixed(2)),
+          ethDominance: 0,
+          totalMarketCap: d.market_cap_usd || 0,
+          totalVolume24h: d.volume_24h_usd || 0,
+          activeCryptos: d.cryptocurrencies_number || 0,
+          activeExchanges: 0,
+          defiVolume24h: 0,
+          defiMarketCap: 0,
+          stablecoinVolume24h: 0,
+          stablecoinMarketCap: 0,
+          totalMarketCapChange24h: d.market_cap_change_24h || 0,
         };
       }
     }

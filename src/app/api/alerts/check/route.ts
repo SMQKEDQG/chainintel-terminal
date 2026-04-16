@@ -29,14 +29,14 @@ export async function POST() {
       return NextResponse.json({ checked: 0, triggered: 0, message: 'No active alerts' });
     }
 
-    // 2. Fetch current BTC/ETH prices from our own API
-    const priceRes = await fetch(`${supabaseUrl.replace('.supabase.co', '')}/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=20`).catch(() => null);
+    // 2. Fetch current prices from our own market-data API
+    const priceRes = await fetch(`${supabaseUrl.replace('.supabase.co', '')}/api/market-data?limit=20`).catch(() => null);
     let prices: Record<string, number> = {};
     if (priceRes?.ok) {
       const pData = await priceRes.json();
-      const listings = pData?.data?.data || [];
+      const listings = pData?.coins || [];
       for (const c of listings) {
-        prices[c.symbol] = c.quote?.USD?.price ?? 0;
+        prices[c.symbol] = c.price ?? 0;
       }
     }
 

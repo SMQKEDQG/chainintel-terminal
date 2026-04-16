@@ -665,7 +665,7 @@ export default function DeckPage() {
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: '16px' }}>
                   DATA INFRASTRUCTURE
                 </div>
-                {['CoinGecko Pro API (real-time prices)', 'Glassnode (on-chain metrics)', 'DefiLlama (DeFi TVL)', 'CoinMarketCap (market data)', 'Santiment (sentiment & social)', 'FRED Economic Data', 'SEC EDGAR (regulatory filings)', 'Alternative.me (Fear & Greed)'].map(s => (
+                {['CoinGecko Pro API (fallback + charts)', 'Glassnode (on-chain metrics)', 'DefiLlama (DeFi TVL)', 'CoinPaprika (market data)', 'Santiment (sentiment & social)', 'FRED Economic Data', 'SEC EDGAR (regulatory filings)', 'Alternative.me (Fear & Greed)'].map(s => (
                   <div key={s} style={{ fontSize: '13px', color: 'var(--text2)', padding: '5px 0', borderBottom: '1px solid var(--b1)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ color: 'var(--accent)', fontSize: '10px' }}>▶</span> {s}
                   </div>

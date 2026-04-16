@@ -2,9 +2,8 @@ import { NextResponse } from 'next/server';
 
 // ─── Trending Crypto API ─────────────────────────────────────────────────────
 // Aggregates trending signals from:
-// 1. CoinMarketCap trending/most-visited
-// 2. CoinGecko trending
-// 3. CryptoPanic hot news (extract mentioned coins)
+// 1. CoinGecko trending
+// 2. CryptoPanic hot news (extract mentioned coins)
 // Returns a ranked list of trending assets with social buzz scores
 
 interface CacheEntry { data: unknown; ts: number }
@@ -46,32 +45,8 @@ interface TrendingCoin {
 }
 
 export async function GET() {
-  const cmcKey = process.env.CMC_API_KEY;
-
-  // Fire all requests in parallel
-  const [cmcTrending, cmcMostVisited, cgTrending, cryptoPanic] = await Promise.allSettled([
-    // 1. CMC Trending
-    cmcKey
-      ? cachedFetch(
-          'cmc-trending',
-          'https://pro-api.coinmarketcap.com/v1/cryptocurrency/trending/latest?limit=30&convert=USD',
-          { 'X-CMC_PRO_API_KEY': cmcKey, Accept: 'application/json' }
-        )
-      : Promise.resolve(null),
-
-    // 2. CMC Most Visited
-    cmcKey
-      ? cachedFetch(
-          'cmc-most-visited',
-          'https://pro-api.coinmarketcap.com/v1/cryptocurrency/trending/most-visited?limit=30&convert=USD',
-          { 'X-CMC_PRO_API_KEY': cmcKey, Accept: 'application/json' }
-        )
-      : Promise.resolve(null),
-
-    // 3. CoinGecko Trending (free, no key)
+  const [cgTrending, cryptoPanic] = await Promise.allSettled([
     cachedFetch('cg-trending', 'https://api.coingecko.com/api/v3/search/trending'),
-
-    // 4. CryptoPanic Hot (extract coin mentions)
     cachedFetch(
       'cp-trending',
       'https://cryptopanic.com/api/free/v1/posts/?auth_token=free&public=true&filter=hot&kind=news'
@@ -133,46 +108,6 @@ export async function GET() {
         mentions: 1,
       });
     }
-  }
-
-  // ── Parse CMC Trending ──
-  const cmcTrendData = val(cmcTrending);
-  if (cmcTrendData?.data) {
-    const items = cmcTrendData.data;
-    (Array.isArray(items) ? items : []).forEach((item: any, i: number) => {
-      const q = item.quote?.USD || {};
-      upsert(
-        item.symbol || '',
-        item.name || '',
-        `https://s2.coinmarketcap.com/static/img/coins/64x64/${item.id}.png`,
-        q.price || 0,
-        q.percent_change_24h || 0,
-        q.market_cap || 0,
-        item.cmc_rank || 0,
-        30 - i, // higher rank = more points
-        'CMC Trending'
-      );
-    });
-  }
-
-  // ── Parse CMC Most Visited ──
-  const cmcVisitData = val(cmcMostVisited);
-  if (cmcVisitData?.data) {
-    const items = cmcVisitData.data;
-    (Array.isArray(items) ? items : []).forEach((item: any, i: number) => {
-      const q = item.quote?.USD || {};
-      upsert(
-        item.symbol || '',
-        item.name || '',
-        `https://s2.coinmarketcap.com/static/img/coins/64x64/${item.id}.png`,
-        q.price || 0,
-        q.percent_change_24h || 0,
-        q.market_cap || 0,
-        item.cmc_rank || 0,
-        20 - i,
-        'CMC Most Visited'
-      );
-    });
   }
 
   // ── Parse CoinGecko Trending ──
@@ -239,9 +174,7 @@ export async function GET() {
       id: v.symbol.toLowerCase(),
       symbol: v.symbol.toLowerCase(),
       name: v.name || v.symbol,
-      image:
-        v.image ||
-        `https://s2.coinmarketcap.com/static/img/coins/64x64/1.png`, // BTC fallback
+      image: v.image || 'https://static.coinpaprika.com/coin/btc-bitcoin/logo.png',
       current_price: v.price,
       price_change_percentage_24h: v.change24h,
       market_cap: v.mcap,
@@ -254,8 +187,8 @@ export async function GET() {
 
   return NextResponse.json({
     trending,
-    sources: ['CMC Trending', 'CMC Most Visited', 'CoinGecko Trending', 'CryptoPanic News'],
-    sourceCount: 4,
+    sources: ['CoinGecko Trending', 'CryptoPanic News'],
+    sourceCount: 2,
     timestamp: Date.now(),
   });
 }

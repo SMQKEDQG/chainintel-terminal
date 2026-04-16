@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getActiveSourceCount } from '@/lib/source-registry';
 
-// Source Status API — pings a representative subset of all 80 sources
+// Source Status API — pings a representative subset of active sources
 // to show live connectivity status on the Source Map
 
 interface SourceCheck {
@@ -35,7 +36,7 @@ async function pingSource(id: string, name: string, url: string, headers?: Recor
 
 // Representative sources from each category (one per category minimum)
 const SOURCES_TO_CHECK: { id: string; name: string; url: string; headers?: Record<string, string> }[] = [
-  { id: 'cmc', name: 'CoinMarketCap', url: 'https://pro-api.coinmarketcap.com/v1/cryptocurrency/listings/latest?limit=1&convert=USD', headers: { 'X-CMC_PRO_API_KEY': process.env.CMC_API_KEY || '' } },
+  { id: 'coinpaprika', name: 'CoinPaprika', url: 'https://api.coinpaprika.com/v1/tickers/btc-bitcoin?quotes=USD' },
   { id: 'coingecko', name: 'CoinGecko', url: 'https://api.coingecko.com/api/v3/ping' },
   { id: 'binance', name: 'Binance', url: 'https://data-api.binance.vision/api/v3/ping' },
   { id: 'binance-futures', name: 'Binance Futures', url: 'https://fapi.binance.com/fapi/v1/time' },
@@ -71,7 +72,7 @@ export async function GET() {
   return NextResponse.json({
     checks,
     summary: { up, slow, down: checks.length - up - slow, total: checks.length },
-    allSourcesRegistered: 80,
+    allSourcesRegistered: getActiveSourceCount(),
     timestamp: Date.now(),
   });
 }

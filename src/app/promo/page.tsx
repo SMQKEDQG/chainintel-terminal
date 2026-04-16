@@ -22,7 +22,7 @@ const MODULES = [
 ];
 
 const SOURCES = [
-  'CoinGecko', 'Glassnode', 'DefiLlama', 'Santiment', 'Nansen', 'CoinMarketCap',
+  'CoinGecko', 'Glassnode', 'DefiLlama', 'Santiment', 'Nansen', 'CoinPaprika',
   'Alternative.me', 'CryptoQuant', 'Messari', 'The Block', 'DeFi Pulse', 'Dune Analytics',
   'IntoTheBlock', 'LunarCrush', 'Whale Alert', 'Etherscan', 'BscScan', 'SEC EDGAR',
   'CFTC', 'BitMEX Research', 'Coinglass', 'FRED', 'CoinShares', 'Galaxy Digital',

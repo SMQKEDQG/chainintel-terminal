@@ -10,20 +10,19 @@ interface TickerItem {
   prevPrice?: string;
 }
 
-/* Map symbol → CMC data from the listings response */
-function cmcToTickerItems(cmcData: any[]): TickerItem[] {
+function marketDataToTickerItems(coins: any[]): TickerItem[] {
   const bySymbol = new Map<string, any>();
-  for (const c of cmcData) {
+  for (const c of coins) {
     bySymbol.set((c.symbol as string).toUpperCase(), c);
   }
   return TICKER_ASSETS.map(a => {
     const c = bySymbol.get(a.sym);
     if (!c) return { sym: a.sym, price: '—', chg: 0 };
-    const p = c.quote?.USD?.price ?? 0;
+    const p = c.price ?? 0;
     const price = p >= 1000 ? p.toLocaleString('en-US', { maximumFractionDigits: 0 })
       : p >= 1 ? p.toFixed(2)
       : p.toFixed(4);
-    return { sym: a.sym, price: `$${price}`, chg: c.quote?.USD?.percent_change_24h ?? 0 };
+    return { sym: a.sym, price: `$${price}`, chg: c.percent_change_24h ?? 0 };
   });
 }
 
@@ -39,50 +38,26 @@ export default function TickerTape() {
 
     async function fetchPrices() {
       try {
-        const res = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=200&sort=market_cap&convert=USD');
-        if (res.ok) {
-          const json = await res.json();
-          const data = json.data?.data || [];
-          if (data.length > 0 && !cancelled) {
-            const newItems = cmcToTickerItems(data);
-            // Detect price changes for flash effect
-            const newFlash: Record<string, 'up' | 'dn' | null> = {};
-            for (const item of newItems) {
-              const prev = prevPrices.current[item.sym];
-              if (prev && prev !== item.price) {
-                newFlash[item.sym] = item.price > prev ? 'up' : 'dn';
-              }
-              prevPrices.current[item.sym] = item.price;
-            }
-            if (Object.keys(newFlash).length > 0) {
-              setFlashMap(newFlash);
-              setTimeout(() => setFlashMap({}), 1200);
-            }
-            setItems(newItems);
-            return;
-          }
-        }
-      } catch { /* fall through to CoinGecko */ }
-
-      try {
-        const ids = TICKER_ASSETS.map(a => a.id).join(',');
-        const res = await fetch(
-          `/api/coingecko?path=/simple/price&ids=${ids}&vs_currencies=usd&include_24hr_change=true`
-        );
-        if (!res.ok || cancelled) return;
+        const res = await fetch('/api/market-data?limit=200');
+        if (!res.ok) throw new Error('market-data request failed');
         const json = await res.json();
-        const data = json.data || json;
-        if (cancelled) return;
-        setItems(
-          TICKER_ASSETS.map(a => {
-            const d = data[a.id];
-            if (!d) return { sym: a.sym, price: '—', chg: 0 };
-            const price = d.usd >= 1000 ? d.usd.toLocaleString('en-US', { maximumFractionDigits: 0 })
-              : d.usd >= 1 ? d.usd.toFixed(2)
-              : d.usd.toFixed(4);
-            return { sym: a.sym, price: `$${price}`, chg: d.usd_24h_change || 0 };
-          })
-        );
+        const data = json.coins || [];
+        if (data.length > 0 && !cancelled) {
+          const newItems = marketDataToTickerItems(data);
+          const newFlash: Record<string, 'up' | 'dn' | null> = {};
+          for (const item of newItems) {
+            const prev = prevPrices.current[item.sym];
+            if (prev && prev !== item.price) {
+              newFlash[item.sym] = item.price > prev ? 'up' : 'dn';
+            }
+            prevPrices.current[item.sym] = item.price;
+          }
+          if (Object.keys(newFlash).length > 0) {
+            setFlashMap(newFlash);
+            setTimeout(() => setFlashMap({}), 1200);
+          }
+          setItems(newItems);
+        }
       } catch { /* keep initial state */ }
     }
 

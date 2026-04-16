@@ -37,8 +37,8 @@ interface MarketSnapshot {
 }
 
 async function getMarketSnapshot(): Promise<MarketSnapshot> {
-  const [cmcData, sentimentData, etfData, defiData] = await Promise.allSettled([
-    fetchInternal('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=50&sort=market_cap&convert=USD'),
+  const [marketData, sentimentData, etfData, defiData] = await Promise.allSettled([
+    fetchInternal('/api/market-data?limit=50'),
     fetchInternal('/api/sentiment'),
     fetchInternal('/api/etf-flows'),
     fetchInternal('/api/defi-overview'),
@@ -52,29 +52,29 @@ async function getMarketSnapshot(): Promise<MarketSnapshot> {
     fearGreed: null, etfNetFlow: null, defiTvl: null,
   };
 
-  const cmc = cmcData.status === 'fulfilled' ? cmcData.value : null;
-  const coins = cmc?.data?.data || [];
+  const market = marketData.status === 'fulfilled' ? marketData.value : null;
+  const coins = market?.coins || [];
   if (coins.length > 0) {
     const btc = coins.find((c: any) => c.symbol === 'BTC');
     const eth = coins.find((c: any) => c.symbol === 'ETH');
     if (btc) {
-      snap.btcPrice = btc.quote?.USD?.price || 0;
-      snap.btcChange24h = btc.quote?.USD?.percent_change_24h || 0;
+      snap.btcPrice = btc.price || 0;
+      snap.btcChange24h = btc.percent_change_24h || 0;
     }
     if (eth) {
-      snap.ethPrice = eth.quote?.USD?.price || 0;
-      snap.ethChange24h = eth.quote?.USD?.percent_change_24h || 0;
+      snap.ethPrice = eth.price || 0;
+      snap.ethChange24h = eth.percent_change_24h || 0;
     }
-    snap.totalMcap = coins.reduce((s: number, c: any) => s + (c.quote?.USD?.market_cap || 0), 0);
-    if (btc) snap.btcDominance = (btc.quote?.USD?.market_cap || 0) / snap.totalMcap * 100;
+    snap.totalMcap = market?.global?.total_market_cap || coins.reduce((s: number, c: any) => s + (c.market_cap || 0), 0);
+    snap.btcDominance = market?.global?.btc_dominance || (btc ? ((btc.market_cap || 0) / Math.max(snap.totalMcap, 1)) * 100 : 0);
     
     const stablecoins = new Set(['USDT', 'USDC', 'DAI', 'BUSD', 'TUSD', 'FDUSD', 'PYUSD']);
     const nonStable = coins.filter((c: any) => !stablecoins.has(c.symbol));
-    const sorted = [...nonStable].sort((a: any, b: any) => (b.quote?.USD?.percent_change_24h || 0) - (a.quote?.USD?.percent_change_24h || 0));
-    if (sorted[0]) snap.topGainer = { name: sorted[0].name, symbol: sorted[0].symbol, change: sorted[0].quote?.USD?.percent_change_24h || 0 };
-    if (sorted[sorted.length - 1]) snap.topLoser = { name: sorted[sorted.length - 1].name, symbol: sorted[sorted.length - 1].symbol, change: sorted[sorted.length - 1].quote?.USD?.percent_change_24h || 0 };
-    snap.gainersCount = nonStable.filter((c: any) => (c.quote?.USD?.percent_change_24h || 0) > 0).length;
-    snap.losersCount = nonStable.filter((c: any) => (c.quote?.USD?.percent_change_24h || 0) <= 0).length;
+    const sorted = [...nonStable].sort((a: any, b: any) => (b.percent_change_24h || 0) - (a.percent_change_24h || 0));
+    if (sorted[0]) snap.topGainer = { name: sorted[0].name, symbol: sorted[0].symbol, change: sorted[0].percent_change_24h || 0 };
+    if (sorted[sorted.length - 1]) snap.topLoser = { name: sorted[sorted.length - 1].name, symbol: sorted[sorted.length - 1].symbol, change: sorted[sorted.length - 1].percent_change_24h || 0 };
+    snap.gainersCount = nonStable.filter((c: any) => (c.percent_change_24h || 0) > 0).length;
+    snap.losersCount = nonStable.filter((c: any) => (c.percent_change_24h || 0) <= 0).length;
   }
 
   const sent = sentimentData.status === 'fulfilled' ? sentimentData.value : null;

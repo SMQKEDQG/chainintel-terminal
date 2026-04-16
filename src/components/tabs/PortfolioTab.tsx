@@ -7,7 +7,7 @@ import { PortfolioModels } from '@/components/LevelUpModules';
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-// ── Initial prices — used only while CoinGecko loads ────────────────────────
+// ── Initial prices — used only until the first market-data fetch completes ───
 const INITIAL_PRICES: Record<string, number> = {
   BTC: 83240,
   ETH: 1582,
@@ -71,7 +71,7 @@ export default function PortfolioTab() {
   const [briefText, setBriefText] = useState('');
   const [showBrief, setShowBrief] = useState(false);
 
-  // Live prices from CoinGecko (seeded with INITIAL_PRICES until first fetch completes)
+  // Live prices from the normalized market-data route.
   const [livePrices, setLivePrices] = useState<Record<string, number>>(INITIAL_PRICES);
   const [pricesLoading, setPricesLoading] = useState(false);
   const [pricesUpdatedAt, setPricesUpdatedAt] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export default function PortfolioTab() {
 
   const addSectionRef = useRef<HTMLSelectElement>(null);
 
-  // ── Fetch live prices via our CMC proxy (avoids CoinGecko rate limits) ────
+  // ── Fetch live prices from the normalized market-data route ────────────────
   useEffect(() => {
     const assets = holdings.map(h => h.asset).filter(a => SUPPORTED_ASSETS.has(a));
     if (assets.length === 0) return;
@@ -88,18 +88,18 @@ export default function PortfolioTab() {
     setPricesLoading(true);
     setPricesError(false);
 
-    fetch(`/api/cmc?endpoint=/v1/cryptocurrency/quotes/latest&symbol=${symbols}&convert=USD`)
+    fetch(`/api/market-data?symbols=${symbols}`)
       .then(res => {
-        if (!res.ok) throw new Error('CMC proxy request failed');
+        if (!res.ok) throw new Error('market-data request failed');
         return res.json();
       })
       .then((json) => {
-        // CMC quotes response: data.data.{SYMBOL}.quote.USD.price
-        const quotes = json.data?.data || json.data || {};
+        const quotes = Array.isArray(json?.coins) ? json.coins : [];
         setLivePrices(prev => {
           const next = { ...prev };
-          for (const [symbol, info] of Object.entries(quotes) as [string, any][]) {
-            const price = info?.quote?.USD?.price;
+          for (const info of quotes) {
+            const symbol = info?.symbol;
+            const price = info?.price;
             if (price !== undefined && price > 0) {
               next[symbol] = price;
             }
@@ -219,7 +219,7 @@ LARGEST POSITION: ${topAsset.asset} — $${fmt(getValue(topAsset))} (${totalValu
 
 ISO 20022 EXPOSURE: ${isoExposurePct}% of your portfolio is in ISO 20022-compliant assets${isoHoldings.length > 0 ? ` (${isoHoldings.map(h => h.asset).join(', ')})` : ''}. ${parseFloat(isoExposurePct) > 40 ? 'HIGH exposure — well-positioned for SWIFT migration tailwinds.' : parseFloat(isoExposurePct) > 20 ? 'MODERATE exposure — consider increasing ISO 20022 allocation as SWIFT deadline approaches.' : 'LOW exposure — ISO 20022 infrastructure plays (XRP, HBAR, QNT) have structural tailwinds from SWIFT migration.'}
 
-MARKET CONTEXT: Live prices sourced via CoinMarketCap API. Cross-reference with ChainIntel Sentiment, Derivatives, and Whale tabs for full market context.
+MARKET CONTEXT: Live prices sourced via ChainIntel's free market data stack (CoinPaprika primary, CoinGecko fallback). Cross-reference with ChainIntel Sentiment, Derivatives, and Whale tabs for full market context.
 
 Bloomberg cannot generate this brief for your specific holdings. ChainIntel does it instantly.`;
     setBriefText(brief);

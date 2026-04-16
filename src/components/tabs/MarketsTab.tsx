@@ -30,21 +30,20 @@ interface TrendingCoin {
   trending_rank: number;
 }
 
-/* ── Transform CMC API response to our CoinData format ── */
+/* ── Transform normalized market data response to table rows ── */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function cmcToCoinData(item: any): CoinData {
-  const quote = item.quote?.USD || {};
+function marketCoinToCoinData(item: any): CoinData {
   return {
-    id: item.slug || String(item.id),
+    id: item.id || item.slug || '',
     symbol: (item.symbol || '').toLowerCase(),
     name: item.name || '',
-    image: `https://s2.coinmarketcap.com/static/img/coins/64x64/${item.id}.png`,
-    current_price: quote.price || 0,
-    market_cap: quote.market_cap || 0,
-    total_volume: quote.volume_24h || 0,
-    price_change_percentage_24h: quote.percent_change_24h || 0,
-    price_change_percentage_7d_in_currency: quote.percent_change_7d || 0,
-    market_cap_rank: item.cmc_rank || 0,
+    image: item.image || '',
+    current_price: item.price || 0,
+    market_cap: item.market_cap || 0,
+    total_volume: item.volume_24h || 0,
+    price_change_percentage_24h: item.percent_change_24h || 0,
+    price_change_percentage_7d_in_currency: item.percent_change_7d || 0,
+    market_cap_rank: item.rank || item.cmc_rank || 0,
   };
 }
 
@@ -90,8 +89,7 @@ function BuzzBar({ score }: { score: number }) {
 
 function SourcePills({ sources }: { sources: string[] }) {
   const colorMap: Record<string, string> = {
-    'CMC Trending': 'var(--accent)',
-    'CMC Most Visited': 'var(--gold)',
+    'CryptoPanic News': 'var(--blue)',
     'CoinGecko Trending': 'var(--green)',
     'Social/News Buzz': 'var(--blue)',
   };
@@ -104,9 +102,8 @@ function SourcePills({ sources }: { sources: string[] }) {
           color: colorMap[s] || 'var(--muted)',
           letterSpacing: '0.04em', whiteSpace: 'nowrap',
         }}>
-          {s === 'CMC Trending' ? '🔥 CMC' :
-           s === 'CMC Most Visited' ? '👁 VISITED' :
-           s === 'CoinGecko Trending' ? '📈 GECKO' :
+          {s === 'CoinGecko Trending' ? '📈 GECKO' :
+           s === 'CryptoPanic News' ? '📰 NEWS' :
            s === 'Social/News Buzz' ? '𝕏 BUZZ' : s}
         </span>
       ))}
@@ -119,7 +116,7 @@ export default function MarketsTab() {
   const [trending, setTrending] = useState<TrendingCoin[]>([]);
   const [trendingLoading, setTrendingLoading] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [dataSource, setDataSource] = useState<'live-cmc' | 'live-cg' | 'cached' | 'fallback'>('fallback');
+  const [dataSource, setDataSource] = useState<'coinpaprika' | 'coingecko-fallback' | 'fallback'>('fallback');
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [subTab, setSubTab] = useState<'all' | 'trend' | 'gain' | 'lose'>('all');
@@ -127,45 +124,22 @@ export default function MarketsTab() {
   const [sortDir, setSortDir] = useState<1 | -1>(1);
 
   const fetchCoins = useCallback(async () => {
-    // Strategy: try CMC proxy → CoinGecko fallback
-    
-    // 1) Try CoinMarketCap via our proxy
     try {
-      const cmcRes = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=100&sort=market_cap&convert=USD');
-      if (cmcRes.ok) {
-        const json = await cmcRes.json();
-        if (json.data?.data?.length > 0) {
-          const mapped = json.data.data.map(cmcToCoinData);
-          setCoins(mapped);
-          setDataSource(json.source === 'live' ? 'live-cmc' : 'cached');
-          setError(null);
-          setLoading(false);
-          return;
-        }
+      const marketRes = await fetch('/api/market-data?limit=100');
+      if (!marketRes.ok) throw new Error('market-data request failed');
+      const json = await marketRes.json();
+      if (json.coins?.length > 0) {
+        const mapped = json.coins.map(marketCoinToCoinData);
+        setCoins(mapped);
+        setDataSource(json.source === 'coinpaprika' ? 'coinpaprika' : json.source === 'coingecko-fallback' ? 'coingecko-fallback' : 'fallback');
+        setError(null);
+        setLoading(false);
+        return;
       }
     } catch {
-      // CMC failed, try CoinGecko
+      // Keep fallback state
     }
 
-    // 2) Fallback to CoinGecko (no API key needed)
-    try {
-      const cgRes = await fetch('/api/coingecko?path=/coins/markets&vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=7d');
-      if (cgRes.ok) {
-        const json = await cgRes.json();
-        const data: CoinData[] = json.data || json;
-        if (data && data.length > 0) {
-          setCoins(data);
-          setDataSource('live-cg');
-          setError(null);
-          setLoading(false);
-          return;
-        }
-      }
-    } catch {
-      // CoinGecko also failed
-    }
-
-    // 3) Keep fallback data, show warning
     setError('API rate limited — showing cached market data');
     setDataSource('fallback');
     setLoading(false);
@@ -244,11 +218,10 @@ export default function MarketsTab() {
     { id: 'lose' as const, label: 'TOP LOSERS' },
   ];
 
-  const sourceLabel = dataSource === 'live-cmc' ? '● LIVE · COINMARKETCAP' :
-    dataSource === 'live-cg' ? '● LIVE · COINGECKO' :
-    dataSource === 'cached' ? '● CACHED · COINMARKETCAP' :
+  const sourceLabel = dataSource === 'coinpaprika' ? '● LIVE · COINPAPRIKA' :
+    dataSource === 'coingecko-fallback' ? '● FALLBACK · COINGECKO' :
     coins.length > 0 ? '● CACHED' : '○ CONNECTING...';
-  const sourceColor = dataSource.startsWith('live') ? 'var(--green)' : 'var(--gold)';
+  const sourceColor = dataSource === 'coinpaprika' ? 'var(--green)' : dataSource === 'coingecko-fallback' ? 'var(--blue)' : 'var(--gold)';
 
   return (
     <div>
@@ -280,7 +253,7 @@ export default function MarketsTab() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ fontFamily: 'var(--mono)', fontSize: 13, letterSpacing: '0.14em', color: 'var(--text2)' }}>
           {subTab === 'trend' ? 'TRENDING ASSETS' : 'TOP 100 MARKETS'} <span style={{ color: 'var(--muted)' }}>
-            {subTab === 'trend' ? '· Social Buzz + CMC + CoinGecko' : '· By Market Cap · Live Feed'}
+            {subTab === 'trend' ? '· Social Buzz + CoinGecko + CryptoPanic' : '· By Market Cap · Live Feed'}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -352,7 +325,7 @@ export default function MarketsTab() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by name or ticker..."
             style={{ background: 'var(--s2)', border: '1px solid var(--b2)', color: 'var(--text)', fontFamily: 'var(--mono)', fontSize: 11, padding: '6px 10px', outline: 'none', flex: 1, maxWidth: 280 }} />
           <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)', marginLeft: 'auto' }}>
-            ⟳ AUTO-REFRESH 60s · <a className="src-link" href="https://coinmarketcap.com/api/" target="_blank" rel="noopener noreferrer">API DOCS</a>
+            ⟳ AUTO-REFRESH 60s · <a className="src-link" href="https://docs.coinpaprika.com" target="_blank" rel="noopener noreferrer">API DOCS</a>
           </div>
         </div>
       )}
@@ -367,7 +340,7 @@ export default function MarketsTab() {
           }}>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>🔥</span>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.5 }}>
-              Aggregated from <strong style={{ color: 'var(--text)' }}>CoinMarketCap Trending</strong>, <strong style={{ color: 'var(--text)' }}>CoinGecko Trending</strong>, and <strong style={{ color: 'var(--text)' }}>CryptoPanic News Buzz</strong>. Ranked by composite social signal score. Updates every 2 minutes.
+              Aggregated from <strong style={{ color: 'var(--text)' }}>CoinGecko Trending</strong> and <strong style={{ color: 'var(--text)' }}>CryptoPanic News Buzz</strong>. Ranked by composite social signal score. Updates every 2 minutes.
             </span>
           </div>
 
@@ -436,7 +409,7 @@ export default function MarketsTab() {
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
               <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>⬡ CI·AI</span>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
-                Trending signals aggregated from CMC search trends, CoinGecko community activity, and real-time crypto news mentions.
+                Trending signals aggregated from CoinGecko community activity and real-time crypto news mentions.
                 Buzz score reflects cross-platform social momentum — higher scores indicate assets generating discussion across multiple channels simultaneously.
               </div>
             </div>

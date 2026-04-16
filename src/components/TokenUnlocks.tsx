@@ -18,10 +18,9 @@ export default function TokenUnlocks() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Fetch from CoinGecko categories / public vesting data
     const fetchUnlocks = async () => {
       try {
-        const res = await fetch('/api/cmc?endpoint=/v1/cryptocurrency/listings/latest&limit=20');
+        const res = await fetch('/api/market-data?limit=100');
         const data = await res.json();
         
         // Generate unlock schedule from top assets with known vesting
@@ -36,8 +35,7 @@ export default function TokenUnlocks() {
           'AAVE': { pctMonthly: 0.2, totalLocked: 3500000 },
         };
 
-        // Handle both CMC proxy format {data: [...]} and direct array
-        const rawCoins = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        const rawCoins = Array.isArray(data?.coins) ? data.coins : [];
         const events: UnlockEvent[] = [];
         const now = new Date();
 
@@ -45,7 +43,7 @@ export default function TokenUnlocks() {
           const vesting = vestingAssets[coin.symbol];
           if (!vesting) continue;
 
-          const price = coin.quote?.USD?.price || 0;
+          const price = coin.price || 0;
           const unlockDate = new Date(now.getTime() + Math.random() * 14 * 86400000);
           const amount = Math.floor(vesting.totalLocked * vesting.pctMonthly / 100);
           const value = amount * price;

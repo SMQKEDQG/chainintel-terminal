@@ -21,7 +21,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: 'ticker-tape',
     title: 'Live Ticker Tape',
-    description: 'Real-time price feed from CoinMarketCap covering the top 20 digital assets. Prices update every 60 seconds.',
+    description: 'Real-time price feed powered by ChainIntel’s free market-data stack, with CoinPaprika as the primary source and CoinGecko as fallback. Prices refresh automatically.',
     position: 'bottom',
   },
   {

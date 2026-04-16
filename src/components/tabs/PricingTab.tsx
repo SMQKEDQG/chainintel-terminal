@@ -26,15 +26,15 @@ const faqs: FAQItem[] = [
   },
   {
     q: 'How accurate is the data?',
-    a: 'Price data is sourced from CoinMarketCap (updated every 60 seconds). On-chain metrics pull from Mempool.space, Blockchain.com, and Etherscan. Regulatory data is aggregated from the Federal Register, SEC EDGAR, and 10+ RSS feeds updated every 2 minutes. ETF flow data is sourced from Farside Investors and SEC filings.',
+    a: 'Price data is sourced from ChainIntel’s free market-data stack with CoinPaprika as the primary feed and CoinGecko fallback. On-chain metrics pull from Mempool.space, Blockchain.com, and Etherscan. Regulatory data is aggregated from the Federal Register, SEC EDGAR, and 10+ RSS feeds updated every 2 minutes. ETF flow data is sourced from Farside Investors and SEC filings.',
   },
   {
     q: 'Can I cancel my subscription anytime?',
     a: 'Yes, cancel anytime from your account settings. No long-term contracts. Your Pro access continues until the end of your billing period. We do not charge cancellation fees.',
   },
   {
-    q: 'What makes ChainIntel different from TradingView or CoinMarketCap?',
-    a: 'ChainIntel combines on-chain analytics, ISO 20022 institutional intelligence, ETF flow data, whale tracking, and AI synthesis in one terminal — things CoinMarketCap and TradingView do not offer. We are built for institutional-grade research, not retail price watching.',
+    q: 'What makes ChainIntel different from retail price trackers?',
+    a: 'ChainIntel combines on-chain analytics, ISO 20022 institutional intelligence, ETF flow data, whale tracking, and AI synthesis in one terminal. We are built for institutional-grade research, not just price watching.',
   },
   {
     q: 'Is there an API?',
@@ -278,7 +278,7 @@ export default function PricingTab() {
             <tr><td className="vs-dim">Whale / Smart Money</td><td style={{ color: 'var(--red)' }}>❌ Not available</td><td style={{ color: 'var(--green)' }}>✓ Real-time whale alerts + smart money tracking</td></tr>
             <tr><td className="vs-dim">Source Transparency</td><td style={{ color: 'var(--red)' }}>Black box — sources undisclosed</td><td style={{ color: 'var(--green)' }}>89 verified sources, all named and linked</td></tr>
             <tr><td className="vs-dim">Learning Curve</td><td style={{ color: 'var(--red)' }}>86-page manual · weeks of training</td><td style={{ color: 'var(--green)' }}>Beginner-friendly · Quick Guide built-in</td></tr>
-            <tr><td className="vs-dim">Live Price Feed</td><td style={{ color: 'var(--text2)' }}>Vendor-locked proprietary feed</td><td style={{ color: 'var(--green)' }}>CoinMarketCap + CoinGecko · 60s refresh</td></tr>
+            <tr><td className="vs-dim">Live Price Feed</td><td style={{ color: 'var(--text2)' }}>Vendor-locked proprietary feed</td><td style={{ color: 'var(--green)' }}>CoinPaprika + CoinGecko fallback · auto refresh</td></tr>
           </tbody>
         </table>
         <div style={{ paddingTop: '10px', fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--muted)', textAlign: 'center', letterSpacing: '0.08em' }}>

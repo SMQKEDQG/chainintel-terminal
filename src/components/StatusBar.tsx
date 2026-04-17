@@ -17,7 +17,7 @@ export default function StatusBar() {
     apiHealth: 'operational',
     dataLatency: 0,
     activeFeeds: 0,
-    totalFeeds: 84,
+    totalFeeds: 0,
     lastSync: '',
     wsConnected: false,
   });
@@ -26,13 +26,23 @@ export default function StatusBar() {
     const checkHealth = async () => {
       const start = Date.now();
       try {
-        const res = await fetch('/api/sentiment');
+        const res = await fetch('/api/source-status');
         const latency = Date.now() - start;
+        const data = await res.json().catch(() => null);
+        const summary = data?.summary;
+        const totalFeeds = data?.allSourcesRegistered ?? summary?.total ?? 0;
+        const activeFeeds = (summary?.up ?? 0) + (summary?.slow ?? 0);
+
         setStatus(prev => ({
           ...prev,
-          apiHealth: res.ok ? 'operational' : 'degraded',
+          apiHealth: !res.ok
+            ? 'down'
+            : summary?.down > 0
+              ? 'degraded'
+              : 'operational',
           dataLatency: latency,
-          activeFeeds: Math.floor(60 + Math.random() * 10),
+          activeFeeds,
+          totalFeeds,
           lastSync: new Date().toISOString(),
         }));
       } catch {

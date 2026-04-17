@@ -18,6 +18,10 @@ interface CorrelationData {
   assets: CISignalAsset[];
   inputs: { fearGreed: { value: number; label: string; signal: number }; funding: { rate: number; signal: number }; etf: { signal: number; streak: number; direction: string } };
   methodology: string;
+  sources?: string[];
+  sourceCount?: number;
+  priceSource?: string;
+  timestamp?: number;
 }
 
 export function CorrelationEngine() {
@@ -31,9 +35,33 @@ export function CorrelationEngine() {
   }, []);
 
   if (loading) return <div className="panel" style={{ padding: 16 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Loading Correlation Engine...</div></div>;
-  if (!data) return null;
+  if (!data) {
+    return (
+      <div className="panel panel-hover" style={{ padding: 16 }}>
+        <div className="ph">
+          <div className="pt" style={{ color: 'var(--accent)' }}>◈ CI Signal — Cross-Source Correlation Engine</div>
+          <div className="tag" style={{ color: 'var(--gold)', border: '1px solid rgba(232,165,52,0.25)' }}>STANDBY</div>
+        </div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.7 }}>
+          Correlation inputs are temporarily unavailable. The module will resume automatically when market, ETF, and sentiment sources reconnect.
+        </div>
+      </div>
+    );
+  }
 
   const signalColor = data.global.signal >= 60 ? 'var(--green)' : data.global.signal >= 45 ? 'var(--gold)' : 'var(--red)';
+  const sortedAssets = [...data.assets].sort((a, b) => b.ciSignal - a.ciSignal);
+  const strongestAsset = sortedAssets[0];
+  const weakestAsset = sortedAssets[sortedAssets.length - 1];
+  const driverCandidates = [
+    { label: 'Sentiment', signal: data.inputs.fearGreed.signal, detail: data.inputs.fearGreed.label },
+    { label: 'Funding', signal: data.inputs.funding.signal, detail: data.inputs.funding.rate > 0 ? 'Longs paying' : 'Shorts paying' },
+    { label: 'ETF Flows', signal: data.inputs.etf.signal, detail: `${data.inputs.etf.streak}d ${data.inputs.etf.direction}` },
+  ];
+  const dominantDriver = [...driverCandidates].sort((a, b) => Math.abs(b.signal - 50) - Math.abs(a.signal - 50))[0];
+  const updatedAt = data.timestamp
+    ? new Date(data.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+    : null;
 
   return (
     <div className="panel panel-hover" style={{ border: `1px solid ${signalColor}40` }}>
@@ -55,11 +83,36 @@ export function CorrelationEngine() {
         </div>
       </div>
 
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 8 }}>
+        <SummaryTile
+          label="STRONGEST SETUP"
+          value={strongestAsset ? `${strongestAsset.symbol} ${strongestAsset.ciSignal}` : '—'}
+          sub={strongestAsset ? `${strongestAsset.ciLabel} · ${strongestAsset.change7d >= 0 ? '+' : ''}${strongestAsset.change7d.toFixed(1)}% 7d` : 'Awaiting data'}
+          color={strongestAsset?.ciColor || 'var(--accent)'}
+        />
+        <SummaryTile
+          label="WEAKEST SETUP"
+          value={weakestAsset ? `${weakestAsset.symbol} ${weakestAsset.ciSignal}` : '—'}
+          sub={weakestAsset ? `${weakestAsset.ciLabel} · ${weakestAsset.change7d >= 0 ? '+' : ''}${weakestAsset.change7d.toFixed(1)}% 7d` : 'Awaiting data'}
+          color={weakestAsset?.ciColor || 'var(--gold)'}
+        />
+        <SummaryTile
+          label="DOMINANT DRIVER"
+          value={dominantDriver?.label || '—'}
+          sub={dominantDriver?.detail || 'Cross-source blend'}
+          color={Math.abs((dominantDriver?.signal || 50) - 50) >= 20 ? signalColor : 'var(--text2)'}
+        />
+      </div>
+
       {/* Input signals */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 8 }}>
         <SignalBox label="FEAR & GREED" value={`${data.inputs.fearGreed.value}`} sub={data.inputs.fearGreed.label} signal={data.inputs.fearGreed.signal} />
         <SignalBox label="FUNDING RATE" value={`${(data.inputs.funding.rate * 100).toFixed(4)}%`} sub={data.inputs.funding.rate > 0 ? 'Longs paying' : 'Shorts paying'} signal={data.inputs.funding.signal} />
         <SignalBox label="ETF FLOWS" value={`${data.inputs.etf.streak}d ${data.inputs.etf.direction}`} sub={`Streak signal`} signal={data.inputs.etf.signal} />
+      </div>
+
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', marginBottom: 8, letterSpacing: '0.06em' }}>
+        BREAKDOWN BARS: S sentiment · F funding · E ETF flows · M momentum · C chain score
       </div>
 
       {/* Per-asset signals */}
@@ -84,9 +137,24 @@ export function CorrelationEngine() {
           </div>
         ))}
       </div>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', padding: '6px 0 0', letterSpacing: '0.04em' }}>
-        {data.methodology} · Updated every 60s · 5 cross-source inputs
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, padding: '6px 0 0', flexWrap: 'wrap' }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.04em' }}>
+          {data.methodology} · Updated every 60s · {data.sourceCount || 5} cross-source inputs
+        </div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.04em' }}>
+          Price feed: {(data.priceSource || 'standby-cache').toUpperCase()} {updatedAt ? `· ${updatedAt}` : ''}
+        </div>
       </div>
+    </div>
+  );
+}
+
+function SummaryTile({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+  return (
+    <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '7px 8px' }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 3 }}>{label}</div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--text2)', marginTop: 2, lineHeight: 1.4 }}>{sub}</div>
     </div>
   );
 }

@@ -10,12 +10,13 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const resendKey = process.env.RESEND_API_KEY;
 
-export async function POST() {
+export async function POST(req: Request) {
   if (!supabaseServiceKey) {
     return NextResponse.json({ error: 'SUPABASE_SERVICE_ROLE_KEY not configured' }, { status: 503 });
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const appOrigin = new URL(req.url).origin;
 
   try {
     // 1. Fetch all active alerts
@@ -30,7 +31,7 @@ export async function POST() {
     }
 
     // 2. Fetch current prices from our own market-data API
-    const priceRes = await fetch(`${supabaseUrl.replace('.supabase.co', '')}/api/market-data?limit=20`).catch(() => null);
+    const priceRes = await fetch(`${appOrigin}/api/market-data?limit=20`).catch(() => null);
     let prices: Record<string, number> = {};
     if (priceRes?.ok) {
       const pData = await priceRes.json();

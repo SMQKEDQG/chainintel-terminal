@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { TICKER_ASSETS } from '@/lib/constants';
 
 interface TickerItem {
@@ -10,10 +10,15 @@ interface TickerItem {
   prevPrice?: string;
 }
 
+const STABLECOIN_SYMBOLS = new Set(['USDT', 'USDC', 'DAI', 'USDS', 'USDE', 'TUSD', 'FDUSD', 'BUSD', 'PYUSD', 'USDD', 'FRAX', 'GUSD']);
+const TICKER_SYMBOLS = TICKER_ASSETS.map((asset) => asset.sym).join(',');
+
 function marketDataToTickerItems(coins: any[]): TickerItem[] {
   const bySymbol = new Map<string, any>();
   for (const c of coins) {
-    bySymbol.set((c.symbol as string).toUpperCase(), c);
+    const symbol = (c.symbol as string).toUpperCase();
+    if (STABLECOIN_SYMBOLS.has(symbol)) continue;
+    bySymbol.set(symbol, c);
   }
   return TICKER_ASSETS.map(a => {
     const c = bySymbol.get(a.sym);
@@ -38,7 +43,7 @@ export default function TickerTape() {
 
     async function fetchPrices() {
       try {
-        const res = await fetch('/api/market-data?limit=200');
+        const res = await fetch(`/api/market-data?limit=${TICKER_ASSETS.length}&symbols=${TICKER_SYMBOLS}&exclude_stablecoins=1`);
         if (!res.ok) throw new Error('market-data request failed');
         const json = await res.json();
         const data = json.coins || [];

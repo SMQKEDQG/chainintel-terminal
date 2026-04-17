@@ -686,7 +686,7 @@ export default function DeckPage() {
                     AI-Native Architecture
                   </div>
                   <div style={{ fontSize: '13px', color: 'var(--text2)', lineHeight: 1.5 }}>
-                    Full-stack AI-native financial terminal. ChainIntel uses advanced LLM APIs for its AI synthesis layer, combining real-time web intelligence with on-chain data signals across 89 verified sources.
+                    Full-stack AI-native financial terminal. ChainIntel uses advanced LLM APIs for its AI synthesis layer, combining real-time web intelligence with on-chain data signals across a named, health-checked source registry.
                   </div>
                 </div>
                 <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--muted)', letterSpacing: '0.06em' }}>

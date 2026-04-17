@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchWithRetry } from '@/lib/fetch-utils';
+import staticMarketData from '@/data/market-static.json';
 
 type MarketDataSource = 'coinpaprika' | 'coingecko-fallback' | 'static-fallback';
 
@@ -37,36 +38,11 @@ interface MarketDataPayload {
 const COINPAPRIKA_BASE = 'https://api.coinpaprika.com/v1';
 const COINGECKO_BASE = 'https://api.coingecko.com/api/v3';
 const CACHE_TTL = 300_000;
+const STABLECOIN_SYMBOLS = new Set([
+  'USDT', 'USDC', 'DAI', 'USDS', 'USDE', 'TUSD', 'FDUSD', 'BUSD', 'PYUSD', 'USDD', 'FRAX', 'GUSD',
+]);
 
 let cache: { data: MarketDataPayload; ts: number } | null = null;
-
-const STATIC_COINS: MarketCoin[] = [
-  { id: 'btc-bitcoin', name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_24h: 0.82, percent_change_7d: -3.14, image: 'https://static.coinpaprika.com/coin/btc-bitcoin/logo.png' },
-  { id: 'eth-ethereum', name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_24h: -1.24, percent_change_7d: -8.32, image: 'https://static.coinpaprika.com/coin/eth-ethereum/logo.png' },
-  { id: 'xrp-xrp', name: 'XRP', symbol: 'XRP', slug: 'xrp', rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_24h: 1.87, percent_change_7d: -4.2, image: 'https://static.coinpaprika.com/coin/xrp-xrp/logo.png' },
-  { id: 'sol-solana', name: 'Solana', symbol: 'SOL', slug: 'solana', rank: 4, price: 81, market_cap: 6.72e10, volume_24h: 4.2e9, percent_change_24h: -0.41, percent_change_7d: -5.8, image: 'https://static.coinpaprika.com/coin/sol-solana/logo.png' },
-  { id: 'bnb-binance-coin', name: 'BNB', symbol: 'BNB', slug: 'binance-coin', rank: 5, price: 560, market_cap: 8.2e10, volume_24h: 1.8e9, percent_change_24h: 0.34, percent_change_7d: -1.2, image: 'https://static.coinpaprika.com/coin/bnb-binance-coin/logo.png' },
-  { id: 'doge-dogecoin', name: 'Dogecoin', symbol: 'DOGE', slug: 'dogecoin', rank: 6, price: 0.082, market_cap: 1.2e10, volume_24h: 0.8e9, percent_change_24h: -0.9, percent_change_7d: -6.1, image: 'https://static.coinpaprika.com/coin/doge-dogecoin/logo.png' },
-  { id: 'ada-cardano', name: 'Cardano', symbol: 'ADA', slug: 'cardano', rank: 7, price: 0.41, market_cap: 1.5e10, volume_24h: 0.5e9, percent_change_24h: -2.1, percent_change_7d: -5.4, image: 'https://static.coinpaprika.com/coin/ada-cardano/logo.png' },
-  { id: 'hbar-hedera', name: 'Hedera', symbol: 'HBAR', slug: 'hedera', rank: 8, price: 0.17, market_cap: 6.7e9, volume_24h: 0.3e9, percent_change_24h: 1.44, percent_change_7d: 2.1, image: 'https://static.coinpaprika.com/coin/hbar-hedera/logo.png' },
-  { id: 'link-chainlink', name: 'Chainlink', symbol: 'LINK', slug: 'chainlink', rank: 9, price: 12.5, market_cap: 7.8e9, volume_24h: 0.6e9, percent_change_24h: 0.92, percent_change_7d: -2.1, image: 'https://static.coinpaprika.com/coin/link-chainlink/logo.png' },
-  { id: 'avax-avalanche', name: 'Avalanche', symbol: 'AVAX', slug: 'avalanche', rank: 10, price: 22, market_cap: 9e9, volume_24h: 0.4e9, percent_change_24h: -3.8, percent_change_7d: -7.2, image: 'https://static.coinpaprika.com/coin/avax-avalanche/logo.png' },
-  { id: 'dot-polkadot', name: 'Polkadot', symbol: 'DOT', slug: 'polkadot', rank: 11, price: 4.2, market_cap: 5.9e9, volume_24h: 0.3e9, percent_change_24h: -1.5, percent_change_7d: -4.8, image: 'https://static.coinpaprika.com/coin/dot-polkadot/logo.png' },
-  { id: 'qnt-quant', name: 'Quant', symbol: 'QNT', slug: 'quant', rank: 12, price: 88, market_cap: 1.1e9, volume_24h: 44e6, percent_change_24h: 2.31, percent_change_7d: 1.8, image: 'https://static.coinpaprika.com/coin/qnt-quant/logo.png' },
-  { id: 'xlm-stellar', name: 'Stellar', symbol: 'XLM', slug: 'stellar', rank: 13, price: 0.27, market_cap: 8.3e9, volume_24h: 0.5e9, percent_change_24h: -0.62, percent_change_7d: -2.8, image: 'https://static.coinpaprika.com/coin/xlm-stellar/logo.png' },
-  { id: 'algo-algorand', name: 'Algorand', symbol: 'ALGO', slug: 'algorand', rank: 14, price: 0.18, market_cap: 1.3e9, volume_24h: 60e6, percent_change_24h: -0.8, percent_change_7d: -3.2, image: 'https://static.coinpaprika.com/coin/algo-algorand/logo.png' },
-  { id: 'miota-iota', name: 'IOTA', symbol: 'IOTA', slug: 'iota', rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_24h: 1.14, percent_change_7d: 0.8, image: 'https://static.coinpaprika.com/coin/miota-iota/logo.png' },
-  { id: 'xdc-xdc-network', name: 'XDC Network', symbol: 'XDC', slug: 'xdc-network', rank: 16, price: 0.038, market_cap: 1.1e9, volume_24h: 18e6, percent_change_24h: 0.54, percent_change_7d: 1.2, image: 'https://static.coinpaprika.com/coin/xdc-xdc-network/logo.png' },
-];
-
-const STATIC_GLOBAL: MarketGlobal = {
-  total_market_cap: 2.65e12,
-  total_volume_24h: 98.4e9,
-  btc_dominance: 63.0,
-  eth_dominance: 10.2,
-  active_cryptocurrencies: 10200,
-  total_market_cap_yesterday_percentage_change: 0.64,
-};
 
 function slugFromId(id: string): string {
   const parts = id.split('-');
@@ -79,16 +55,17 @@ function logoUrl(id: string): string {
 
 function createStaticPayload(): MarketDataPayload {
   return {
-    coins: STATIC_COINS,
-    global: STATIC_GLOBAL,
+    coins: staticMarketData.coins as MarketCoin[],
+    global: staticMarketData.global as MarketGlobal,
     source: 'static-fallback',
     cachedAt: Date.now(),
     stale: false,
   };
 }
 
-function applyFilters(payload: MarketDataPayload, limit: number, symbols: Set<string>): MarketDataPayload {
+function applyFilters(payload: MarketDataPayload, limit: number, symbols: Set<string>, excludeStablecoins: boolean): MarketDataPayload {
   const filteredCoins = payload.coins
+    .filter((coin) => !excludeStablecoins || !STABLECOIN_SYMBOLS.has(coin.symbol))
     .filter((coin) => symbols.size === 0 || symbols.has(coin.symbol))
     .slice(0, limit);
 
@@ -229,15 +206,16 @@ export async function GET(req: NextRequest) {
   const limitParam = Number.parseInt(searchParams.get('limit') || '100', 10);
   const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 250) : 100;
   const symbols = parseSymbols(searchParams.get('symbols'));
+  const excludeStablecoins = searchParams.get('exclude_stablecoins') === '1';
 
   if (cache && Date.now() - cache.ts < CACHE_TTL) {
-    return NextResponse.json(applyFilters(cache.data, limit, symbols));
+    return NextResponse.json(applyFilters(cache.data, limit, symbols, excludeStablecoins));
   }
 
   try {
     const paprikaData = await fetchCoinPaprikaMarketData();
     cache = { data: paprikaData, ts: Date.now() };
-    return NextResponse.json(applyFilters(paprikaData, limit, symbols));
+    return NextResponse.json(applyFilters(paprikaData, limit, symbols, excludeStablecoins));
   } catch (paprikaError) {
     console.error('[market-data] CoinPaprika failed:', paprikaError);
   }
@@ -245,15 +223,15 @@ export async function GET(req: NextRequest) {
   try {
     const geckoData = await fetchCoinGeckoFallback();
     cache = { data: geckoData, ts: Date.now() };
-    return NextResponse.json(applyFilters(geckoData, limit, symbols));
+    return NextResponse.json(applyFilters(geckoData, limit, symbols, excludeStablecoins));
   } catch (geckoError) {
     console.error('[market-data] CoinGecko fallback failed:', geckoError);
   }
 
   if (cache) {
-    return NextResponse.json(applyFilters({ ...cache.data, stale: true }, limit, symbols));
+    return NextResponse.json(applyFilters({ ...cache.data, stale: true }, limit, symbols, excludeStablecoins));
   }
 
   const staticPayload = createStaticPayload();
-  return NextResponse.json(applyFilters(staticPayload, limit, symbols), { status: 503 });
+  return NextResponse.json(applyFilters(staticPayload, limit, symbols, excludeStablecoins), { status: 503 });
 }

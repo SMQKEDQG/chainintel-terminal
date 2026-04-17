@@ -43,7 +43,7 @@ function marketCoinToCoinData(item: any): CoinData {
     total_volume: item.volume_24h || 0,
     price_change_percentage_24h: item.percent_change_24h || 0,
     price_change_percentage_7d_in_currency: item.percent_change_7d || 0,
-    market_cap_rank: item.rank || item.cmc_rank || 0,
+    market_cap_rank: item.rank || 0,
   };
 }
 
@@ -125,7 +125,7 @@ export default function MarketsTab() {
 
   const fetchCoins = useCallback(async () => {
     try {
-      const marketRes = await fetch('/api/market-data?limit=100');
+      const marketRes = await fetch('/api/market-data?limit=100&exclude_stablecoins=1');
       if (!marketRes.ok) throw new Error('market-data request failed');
       const json = await marketRes.json();
       if (json.coins?.length > 0) {
@@ -219,7 +219,7 @@ export default function MarketsTab() {
   ];
 
   const sourceLabel = dataSource === 'coinpaprika' ? '● LIVE · COINPAPRIKA' :
-    dataSource === 'coingecko-fallback' ? '● FALLBACK · COINGECKO' :
+    dataSource === 'coingecko-fallback' ? '● BACKUP · COINGECKO' :
     coins.length > 0 ? '● CACHED' : '○ CONNECTING...';
   const sourceColor = dataSource === 'coinpaprika' ? 'var(--green)' : dataSource === 'coingecko-fallback' ? 'var(--blue)' : 'var(--gold)';
 
@@ -474,7 +474,7 @@ export default function MarketsTab() {
               <span style={{ color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11, flexShrink: 0 }}>⬡ CI·AI</span>
               <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.6 }}>
                 Market breadth analysis: {gainers} of {coins.length} assets positive in 24h. BTC dominance {coins.length > 0 ? ((coins[0]?.market_cap / totalMcap) * 100).toFixed(1) : '—'}% — capital rotating to safety.
-                {dataSource === 'fallback' && <span style={{ color: 'var(--gold)' }}> Data may be delayed — live feed will resume when API is available.</span>}
+                {dataSource === 'fallback' && <span style={{ color: 'var(--gold)' }}> Backup cache active — market data may be slightly delayed.</span>}
               </div>
             </div>
           </div>

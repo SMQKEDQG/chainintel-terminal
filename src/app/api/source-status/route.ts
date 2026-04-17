@@ -56,7 +56,18 @@ const SOURCES_TO_CHECK: { id: string; name: string; url: string; headers?: Recor
 export async function GET() {
   if (statusCache && Date.now() - statusCache.ts < TTL) {
     const up = statusCache.checks.filter(s => s.status === 'up').length;
-    return NextResponse.json({ checks: statusCache.checks, summary: { up, down: statusCache.checks.length - up, total: statusCache.checks.length }, cached: true });
+    const slow = statusCache.checks.filter(s => s.status === 'slow').length;
+    return NextResponse.json({
+      checks: statusCache.checks,
+      summary: {
+        up,
+        slow,
+        down: statusCache.checks.length - up - slow,
+        total: statusCache.checks.length,
+      },
+      allSourcesRegistered: getActiveSourceCount(),
+      cached: true,
+    });
   }
 
   const results = await Promise.allSettled(

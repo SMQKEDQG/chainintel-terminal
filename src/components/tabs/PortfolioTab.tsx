@@ -47,7 +47,7 @@ const CHART_COLORS = [
   '#f472b6', '#14b8a6', '#8b5cf6', '#f97316',
 ];
 
-const DEMO_PORTFOLIO = [
+const STARTER_PORTFOLIO = [
   { asset: 'BTC', qty: 0.5, avgCost: 78000 },
   { asset: 'ETH', qty: 5, avgCost: 1800 },
   { asset: 'XRP', qty: 10000, avgCost: 0.92 },
@@ -140,7 +140,7 @@ export default function PortfolioTab() {
   };
 
   const clearPortfolio = () => setHoldings([]);
-  const loadDemoPortfolio = () => setHoldings(DEMO_PORTFOLIO);
+  const loadStarterPortfolio = () => setHoldings(STARTER_PORTFOLIO);
   const focusAddHolding = () => addSectionRef.current?.focus();
 
   // ── Price / value helpers (using live prices) ─────────────────────────────
@@ -849,7 +849,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '6px' }}>
                       <button
-                        onClick={loadDemoPortfolio}
+                        onClick={loadStarterPortfolio}
                         style={{
                           background: 'var(--accent)',
                           color: '#000',
@@ -863,7 +863,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                           letterSpacing: '0.06em',
                         }}
                       >
-                        LOAD DEMO PORTFOLIO
+                        LOAD STARTER ALLOCATION
                       </button>
                       <button
                         onClick={focusAddHolding}
@@ -879,7 +879,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                           letterSpacing: '0.06em',
                         }}
                       >
-                        + ADD MANUALLY
+                        + ADD HOLDINGS
                       </button>
                     </div>
                     <div
@@ -891,7 +891,7 @@ Bloomberg cannot generate this brief for your specific holdings. ChainIntel does
                         letterSpacing: '0.08em',
                       }}
                     >
-                      BLOOMBERG: $80K/YR ANALYST &nbsp;·&nbsp; CHAININTEL: INSTANT &amp; FREE
+                      STARTER ALLOCATION IS FOR PRODUCT EXPLORATION ONLY &nbsp;·&nbsp; LIVE PRICING UPDATES AUTOMATICALLY
                     </div>
                   </div>
                 </td>

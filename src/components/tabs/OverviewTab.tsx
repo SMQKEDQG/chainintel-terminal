@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, createContext, useContext } f
 import TokenUnlocks from '@/components/TokenUnlocks';
 import { DailyBriefCard, CorrelationEngine, SmartAlerts } from '@/components/LevelUpModules';
 import InsightDrawer, { useInsightDrawer } from '@/components/InsightDrawer';
+import staticMarketData from '@/data/market-static.json';
 import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -22,12 +23,12 @@ import {
 ChartJS.register(CategoryScale, LinearScale, BarElement, BarController, PointElement, LineElement, LineController, Tooltip, Legend, Filler);
 
 /* ── Shared market data context (single API call powers KPI, Heatmap, MarketTable) ── */
-interface CmcCoin {
+interface MarketCoin {
   id: string;
   name: string;
   symbol: string;
   slug: string;
-  cmc_rank: number;
+  rank: number;
   price: number;
   market_cap: number;
   volume_24h: number;
@@ -36,7 +37,7 @@ interface CmcCoin {
   image: string;
 }
 
-interface CmcGlobal {
+interface MarketGlobal {
   total_market_cap: number;
   total_volume_24h: number;
   btc_dominance: number;
@@ -45,14 +46,14 @@ interface CmcGlobal {
   total_market_cap_yesterday_percentage_change: number;
 }
 
-interface CmcData {
-  coins: CmcCoin[];
-  global: CmcGlobal | null;
+interface MarketDataState {
+  coins: MarketCoin[];
+  global: MarketGlobal | null;
   source: 'coinpaprika' | 'coingecko-fallback' | 'static-fallback';
   loading: boolean;
 }
 
-const CmcContext = createContext<CmcData>({
+const MarketDataContext = createContext<MarketDataState>({
   coins: [],
   global: null,
   source: 'static-fallback',
@@ -66,45 +67,21 @@ interface InsightCtx {
 const InsightContext = createContext<InsightCtx>({ openInsight: () => {} });
 
 /* Static fallback data */
-const LOADING_COINS: CmcCoin[] = [
-  { id: 'btc-bitcoin', name: 'Bitcoin', symbol: 'BTC', slug: 'bitcoin', cmc_rank: 1, price: 73000, market_cap: 1.44e12, volume_24h: 38.4e9, percent_change_24h: 0.82, percent_change_7d: -3.14, image: 'https://static.coinpaprika.com/coin/btc-bitcoin/logo.png' },
-  { id: 'eth-ethereum', name: 'Ethereum', symbol: 'ETH', slug: 'ethereum', cmc_rank: 2, price: 2210, market_cap: 2.7e11, volume_24h: 14.8e9, percent_change_24h: -1.24, percent_change_7d: -8.32, image: 'https://static.coinpaprika.com/coin/eth-ethereum/logo.png' },
-  { id: 'xrp-xrp', name: 'XRP', symbol: 'XRP', slug: 'xrp', cmc_rank: 3, price: 1.32, market_cap: 1.21e11, volume_24h: 7.8e9, percent_change_24h: 1.87, percent_change_7d: -4.2, image: 'https://static.coinpaprika.com/coin/xrp-xrp/logo.png' },
-  { id: 'sol-solana', name: 'Solana', symbol: 'SOL', slug: 'solana', cmc_rank: 4, price: 81, market_cap: 6.72e10, volume_24h: 4.2e9, percent_change_24h: -0.41, percent_change_7d: -5.8, image: 'https://static.coinpaprika.com/coin/sol-solana/logo.png' },
-  { id: 'bnb-binance-coin', name: 'BNB', symbol: 'BNB', slug: 'binance-coin', cmc_rank: 5, price: 560, market_cap: 8.2e10, volume_24h: 1.8e9, percent_change_24h: 0.34, percent_change_7d: -1.2, image: 'https://static.coinpaprika.com/coin/bnb-binance-coin/logo.png' },
-  { id: 'doge-dogecoin', name: 'Dogecoin', symbol: 'DOGE', slug: 'dogecoin', cmc_rank: 6, price: 0.082, market_cap: 1.2e10, volume_24h: 0.8e9, percent_change_24h: -0.9, percent_change_7d: -6.1, image: 'https://static.coinpaprika.com/coin/doge-dogecoin/logo.png' },
-  { id: 'ada-cardano', name: 'Cardano', symbol: 'ADA', slug: 'cardano', cmc_rank: 7, price: 0.41, market_cap: 1.5e10, volume_24h: 0.5e9, percent_change_24h: -2.1, percent_change_7d: -5.4, image: 'https://static.coinpaprika.com/coin/ada-cardano/logo.png' },
-  { id: 'hbar-hedera', name: 'Hedera', symbol: 'HBAR', slug: 'hedera', cmc_rank: 8, price: 0.17, market_cap: 6.7e9, volume_24h: 0.3e9, percent_change_24h: 1.44, percent_change_7d: 2.1, image: 'https://static.coinpaprika.com/coin/hbar-hedera/logo.png' },
-  { id: 'link-chainlink', name: 'Chainlink', symbol: 'LINK', slug: 'chainlink', cmc_rank: 9, price: 12.5, market_cap: 7.8e9, volume_24h: 0.6e9, percent_change_24h: 0.92, percent_change_7d: -2.1, image: 'https://static.coinpaprika.com/coin/link-chainlink/logo.png' },
-  { id: 'avax-avalanche', name: 'Avalanche', symbol: 'AVAX', slug: 'avalanche', cmc_rank: 10, price: 22, market_cap: 9e9, volume_24h: 0.4e9, percent_change_24h: -3.8, percent_change_7d: -7.2, image: 'https://static.coinpaprika.com/coin/avax-avalanche/logo.png' },
-  { id: 'dot-polkadot', name: 'Polkadot', symbol: 'DOT', slug: 'polkadot', cmc_rank: 11, price: 4.2, market_cap: 5.9e9, volume_24h: 0.3e9, percent_change_24h: -1.5, percent_change_7d: -4.8, image: 'https://static.coinpaprika.com/coin/dot-polkadot/logo.png' },
-  { id: 'qnt-quant', name: 'Quant', symbol: 'QNT', slug: 'quant', cmc_rank: 12, price: 88, market_cap: 1.1e9, volume_24h: 44e6, percent_change_24h: 2.31, percent_change_7d: 1.8, image: 'https://static.coinpaprika.com/coin/qnt-quant/logo.png' },
-  { id: 'xlm-stellar', name: 'Stellar', symbol: 'XLM', slug: 'stellar', cmc_rank: 13, price: 0.27, market_cap: 8.3e9, volume_24h: 0.5e9, percent_change_24h: -0.62, percent_change_7d: -2.8, image: 'https://static.coinpaprika.com/coin/xlm-stellar/logo.png' },
-  { id: 'algo-algorand', name: 'Algorand', symbol: 'ALGO', slug: 'algorand', cmc_rank: 14, price: 0.18, market_cap: 1.3e9, volume_24h: 60e6, percent_change_24h: -0.8, percent_change_7d: -3.2, image: 'https://static.coinpaprika.com/coin/algo-algorand/logo.png' },
-  { id: 'miota-iota', name: 'IOTA', symbol: 'IOTA', slug: 'iota', cmc_rank: 15, price: 0.21, market_cap: 0.58e9, volume_24h: 24e6, percent_change_24h: 1.14, percent_change_7d: 0.8, image: 'https://static.coinpaprika.com/coin/miota-iota/logo.png' },
-];
+const LOADING_COINS = staticMarketData.coins as MarketCoin[];
+const LOADING_GLOBAL = staticMarketData.global as MarketGlobal;
 
-const LOADING_GLOBAL: CmcGlobal = {
-  total_market_cap: 2.65e12,
-  total_volume_24h: 98.4e9,
-  btc_dominance: 63.0,
-  eth_dominance: 10.2,
-  active_cryptocurrencies: 10200,
-  total_market_cap_yesterday_percentage_change: 0.64,
-};
-
-function useCmcData(): CmcData {
-  const [coins, setCoins] = useState<CmcCoin[]>(LOADING_COINS);
-  const [global, setGlobal] = useState<CmcGlobal | null>(LOADING_GLOBAL);
-  const [source, setSource] = useState<CmcData['source']>('static-fallback');
+function useMarketData(): MarketDataState {
+  const [coins, setCoins] = useState<MarketCoin[]>(LOADING_COINS);
+  const [global, setGlobal] = useState<MarketGlobal | null>(LOADING_GLOBAL);
+  const [source, setSource] = useState<MarketDataState['source']>('static-fallback');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function fetchCmc() {
+    async function fetchMarketData() {
       try {
-        const listingsRes = await fetch('/api/market-data?limit=50');
+        const listingsRes = await fetch('/api/market-data?limit=50&exclude_stablecoins=1');
         if (!listingsRes.ok) throw new Error('market-data request failed');
         const listingsJson = await listingsRes.json();
         if (cancelled) return;
@@ -115,7 +92,7 @@ function useCmcData(): CmcData {
               name: coin.name,
               symbol: (coin.symbol as string).toUpperCase(),
               slug: coin.slug,
-              cmc_rank: coin.rank,
+              rank: coin.rank,
               price: coin.price ?? 0,
               market_cap: coin.market_cap ?? 0,
               volume_24h: coin.volume_24h ?? 0,
@@ -139,8 +116,8 @@ function useCmcData(): CmcData {
       }
     }
 
-    fetchCmc();
-    const interval = setInterval(fetchCmc, 120_000); // refresh every 2 min
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 120_000); // refresh every 2 min
     return () => { cancelled = true; clearInterval(interval); };
   }, []);
 
@@ -162,14 +139,14 @@ function fmtPrice(n: number): string {
   return `$${n.toFixed(4)}`;
 }
 
-function sourceLabel(src: CmcData['source']): string {
+function sourceLabel(src: MarketDataState['source']): string {
   switch (src) {
     case 'coinpaprika': return 'CoinPaprika';
-    case 'coingecko-fallback': return 'CoinGecko Fallback';
-    default: return 'Fallback';
+    case 'coingecko-fallback': return 'CoinGecko Backup';
+    default: return 'Standby Cache';
   }
 }
-function sourceColor(src: CmcData['source']): string {
+function sourceColor(src: MarketDataState['source']): string {
   return src === 'coinpaprika' ? 'var(--green)' : src === 'coingecko-fallback' ? 'var(--blue)' : 'var(--muted)';
 }
 
@@ -456,7 +433,7 @@ function EthChart() {
    ▼ NEW: HERO COMMAND BAR — Ask CI front & center
    ══════════════════════════════════════════════════════════════ */
 function HeroCommandBar() {
-  const { coins, global, source } = useContext(CmcContext);
+  const { coins, global, source } = useContext(MarketDataContext);
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
@@ -601,7 +578,7 @@ function HeroCommandBar() {
    ▼ NEW: MARKET PULSE — 4 KPIs in a hero row
    ══════════════════════════════════════════════════════════════ */
 function MarketPulse() {
-  const { coins, global, source } = useContext(CmcContext);
+  const { coins, global, source } = useContext(MarketDataContext);
   const [fng, setFng] = useState<{ value: number; label: string } | null>(null);
   const [tvl, setTvl] = useState<number | null>(null);
 
@@ -692,7 +669,7 @@ function MarketPulse() {
    ▼ NEW: AI INTELLIGENCE BRIEF — condensed from MorningBrief
    ══════════════════════════════════════════════════════════════ */
 function IntelligenceBrief() {
-  const { coins, global, source } = useContext(CmcContext);
+  const { coins, global, source } = useContext(MarketDataContext);
   const [fng, setFng] = useState<{ value: number; label: string } | null>(null);
   const [expanded, setExpanded] = useState(false);
 
@@ -812,7 +789,7 @@ function IntelligenceBrief() {
    ▼ NEW: SECTOR HEAT + NETWORK SIGNALS combined row
    ══════════════════════════════════════════════════════════════ */
 function SignalsBar() {
-  const { coins, global } = useContext(CmcContext);
+  const { coins, global } = useContext(MarketDataContext);
   const [sectors, setSectors] = useState<{ topLabel: string; topChg: number; worstLabel: string; worstChg: number } | null>(null);
   const [defi, setDefi] = useState<{ stablecoinSupply: number } | null>(null);
   const [perpFunding, setPerpFunding] = useState<number | null>(null);
@@ -1109,18 +1086,18 @@ function AnimPrice({ value, format = 'price' }: { value: number; format?: 'price
   );
 }
 
-/* ── Heatmap (powered by shared CMC data) — Treemap-style interactive ── */
+/* ── Heatmap (powered by shared market data) — Treemap-style interactive ── */
 function Heatmap() {
-  const { coins, source, loading } = useContext(CmcContext);
+  const { coins, source, loading } = useContext(MarketDataContext);
   const topCoins = coins.slice(0, 25);
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
-  const [selectedCoin, setSelectedCoin] = useState<CmcCoin | null>(null);
+  const [selectedCoin, setSelectedCoin] = useState<MarketCoin | null>(null);
 
   const totalMcap = topCoins.reduce((s, c) => s + c.market_cap, 0) || 1;
 
-  function buildRows(items: CmcCoin[], cols: number): CmcCoin[][] {
-    const rows: CmcCoin[][] = [];
-    let row: CmcCoin[] = [];
+  function buildRows(items: MarketCoin[], cols: number): MarketCoin[][] {
+    const rows: MarketCoin[][] = [];
+    let row: MarketCoin[] = [];
     let rowMcap = 0;
     const avgRowMcap = totalMcap / Math.ceil(items.length / cols);
     for (const c of items) {
@@ -1298,7 +1275,7 @@ function Heatmap() {
             {selectedCoin.image && <img src={selectedCoin.image} alt="" width={20} height={20} style={{ borderRadius: 2 }} />}
             <div>
               <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 700 }}>{selectedCoin.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--muted)' }}>#{selectedCoin.cmc_rank}</div>
+              <div style={{ fontSize: 11, color: 'var(--muted)' }}>#{selectedCoin.rank}</div>
             </div>
           </div>
           <div>
@@ -1441,7 +1418,7 @@ function ChainScore() {
         </div>
       </div>
       {displayScores.map((s, i) => (
-        <div key={s.sym} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'pointer' }}
+        <div key={`${s.sym}-${s.name}-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'pointer' }}
           onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
           onClick={() => {
@@ -1464,12 +1441,12 @@ function ChainScore() {
   );
 }
 
-/* ── Market Table (powered by shared CMC data) ── */
+/* ── Market Table (powered by shared market data) ── */
 function MarketTable() {
-  const { coins, source } = useContext(CmcContext);
+  const { coins, source } = useContext(MarketDataContext);
   const topAssets = coins.slice(0, 12);
 
-  function getSignal(c: CmcCoin): { label: string; color: string } {
+  function getSignal(c: MarketCoin): { label: string; color: string } {
     const d7 = c.percent_change_7d;
     if (d7 > 2) return { label: 'ACCUMULATE', color: 'var(--green)' };
     if (d7 > -3) return { label: 'HOLD', color: 'var(--gold)' };
@@ -1511,7 +1488,7 @@ function MarketTable() {
                     const ctx = (window as any).__ciInsightCtx;
                     if (ctx) ctx.openInsight({ type: 'asset', title: a.name, subtitle: a.symbol, data: { price: fmtPrice(a.price), '24h': `${a.percent_change_24h >= 0 ? '+' : ''}${a.percent_change_24h.toFixed(2)}%`, '7d': `${a.percent_change_7d >= 0 ? '+' : ''}${a.percent_change_7d.toFixed(2)}%`, mcap: fmtUsd(a.market_cap, 1), volume: fmtUsd(a.volume_24h, 1), signal: sig.label } });
                   }}>
-                <td style={{ padding: '6px 10px', color: 'var(--muted)', fontSize: 11 }}>{a.cmc_rank}</td>
+                <td style={{ padding: '6px 10px', color: 'var(--muted)', fontSize: 11 }}>{a.rank}</td>
                 <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                   {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
                   <span style={{ color: 'var(--text)', fontWeight: 500 }}>{a.name}</span>
@@ -1741,7 +1718,7 @@ function QuickGuide() {
    ▼ MAIN OVERVIEW TAB — completely reorganized
    ══════════════════════════════════════════════════════════════ */
 export default function OverviewTab() {
-  const cmcData = useCmcData();
+  const marketData = useMarketData();
   const { isOpen, context, openInsight, closeInsight } = useInsightDrawer();
 
   const [showSkeleton, setShowSkeleton] = useState(true);
@@ -1756,11 +1733,11 @@ export default function OverviewTab() {
   }, [openInsight]);
 
   return (
-    <CmcContext.Provider value={cmcData}>
+    <MarketDataContext.Provider value={marketData}>
     <InsightContext.Provider value={{ openInsight }}>
     <div style={{ position: 'relative' }}>
       {/* Loading skeleton overlay */}
-      {showSkeleton && cmcData.source === 'static-fallback' && (
+      {showSkeleton && marketData.source === 'static-fallback' && (
         <div className="connecting-indicator" style={{
           display: 'flex', alignItems: 'center', gap: 6,
           padding: '4px 0 6px',
@@ -1842,6 +1819,6 @@ export default function OverviewTab() {
     </div>
     <InsightDrawer isOpen={isOpen} onClose={closeInsight} context={context} />
     </InsightContext.Provider>
-    </CmcContext.Provider>
+    </MarketDataContext.Provider>
   );
 }

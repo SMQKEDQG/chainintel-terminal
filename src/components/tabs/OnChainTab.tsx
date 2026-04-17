@@ -108,7 +108,7 @@ export default function OnChainTab() {
   const flowDir = netExchangeFlow < 0 ? 'outflows dominate' : 'inflows increasing';
   const mvrvSignal = avgMvrv < 1 ? 'deep undervalued zone — historically strong entry' : avgMvrv < 2 ? 'fair value — accumulation zone' : avgMvrv < 3 ? 'heating up — watch for overextension' : 'overheated — caution warranted';
 
-  const sourceLabel = isLive ? '● LIVE · COINGECKO · MEMPOOL.SPACE' : '● CACHED · STATIC DATA';
+  const sourceLabel = isLive ? '● LIVE · COINGECKO · MEMPOOL.SPACE' : '● CACHE ACTIVE · ON-CHAIN SNAPSHOT';
 
   if (error && !lastUpdated) {
     return <ErrorState message="On-chain data feeds temporarily unavailable. This may be due to rate limiting from upstream providers." onRetry={fetchData} />;

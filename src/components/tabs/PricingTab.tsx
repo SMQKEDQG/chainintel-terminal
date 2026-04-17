@@ -1,18 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-
-function getCountdown() {
-  const now = new Date();
-  const diff = 0;
-  if (diff <= 0) return 'DEADLINE PASSED';
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const secs = Math.floor((diff % (1000 * 60)) / 1000);
-  return `${days}d ${hours}h ${mins}m ${secs}s`;
-}
 
 interface FAQItem {
   q: string;
@@ -38,22 +27,16 @@ const faqs: FAQItem[] = [
   },
   {
     q: 'Is there an API?',
-    a: 'Enterprise tier includes full REST API access. Pro API access is on the roadmap for Q3 2026. Enterprise customers can request early API access.',
+    a: 'Enterprise tier includes full REST API access today. Broader self-serve API access is planned, and Enterprise customers can request priority integrations immediately.',
   },
 ];
 
 export default function PricingTab() {
   const { user } = useAuth();
-  const [countdown, setCountdown] = useState(getCountdown());
   const [waitlistEmail, setWaitlistEmail] = useState('');
   const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
   const [openFaqs, setOpenFaqs] = useState<Record<number, boolean>>({});
   const [checkoutLoading, setCheckoutLoading] = useState<'pro' | 'ent' | null>(null);
-
-  useEffect(() => {
-    const timer = setInterval(() => setCountdown(getCountdown()), 1000);
-    return () => clearInterval(timer);
-  }, []);
 
   const toggleFaq = (i: number) => {
     setOpenFaqs(prev => ({ ...prev, [i]: !prev[i] }));
@@ -174,27 +157,26 @@ export default function PricingTab() {
                   onClick={submitWaitlist}
                   style={{ width: '100%', background: 'var(--s3)', border: '1px solid var(--b3)', color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: '8px', letterSpacing: '0.12em', padding: '6px', cursor: 'pointer' }}
                 >
-                  JOIN WAITLIST — FREE ACCESS
+                  GET PRODUCT UPDATES
                 </button>
               </>
             ) : null}
             {waitlistSubmitted && (
               <div id="waitlistMsg" style={{ fontFamily: 'var(--mono)', fontSize: '8px', color: 'var(--green)', marginTop: '4px' }}>
-                ✓ You're on the list. We'll notify you at launch.
+                ✓ Updates enabled. We&apos;ll send major releases and access announcements.
               </div>
             )}
           </div>
-          <a
-            href="javascript:void(0)"
+          <button
             onClick={() => {
               const event = new CustomEvent('goPage', { detail: 'mktovr' });
               window.dispatchEvent(event);
             }}
             className="tier-cta tier-cta-free"
-            style={{ textDecoration: 'none' }}
+            style={{ textDecoration: 'none', border: 'none', width: '100%' }}
           >
             ACCESS NOW — FREE
-          </a>
+          </button>
         </div>
 
         {/* Pro Tier */}
@@ -276,7 +258,7 @@ export default function PricingTab() {
             <tr><td className="vs-dim">ETF Flow Dashboard</td><td style={{ color: 'var(--text2)' }}>Secondary module</td><td style={{ color: 'var(--green)' }}>✓ Primary module · all US BTC/ETH ETFs daily</td></tr>
             <tr><td className="vs-dim">AI Analysis Layer</td><td style={{ color: 'var(--red)' }}>ASKB — no crypto context, beaten by GPT-4</td><td style={{ color: 'var(--green)' }}>✓ Ask CI + ambient AI synthesis on every tab</td></tr>
             <tr><td className="vs-dim">Whale / Smart Money</td><td style={{ color: 'var(--red)' }}>❌ Not available</td><td style={{ color: 'var(--green)' }}>✓ Real-time whale alerts + smart money tracking</td></tr>
-            <tr><td className="vs-dim">Source Transparency</td><td style={{ color: 'var(--red)' }}>Black box — sources undisclosed</td><td style={{ color: 'var(--green)' }}>89 verified sources, all named and linked</td></tr>
+            <tr><td className="vs-dim">Source Transparency</td><td style={{ color: 'var(--red)' }}>Black box — sources undisclosed</td><td style={{ color: 'var(--green)' }}>Named source registry · feed health checks built in</td></tr>
             <tr><td className="vs-dim">Learning Curve</td><td style={{ color: 'var(--red)' }}>86-page manual · weeks of training</td><td style={{ color: 'var(--green)' }}>Beginner-friendly · Quick Guide built-in</td></tr>
             <tr><td className="vs-dim">Live Price Feed</td><td style={{ color: 'var(--text2)' }}>Vendor-locked proprietary feed</td><td style={{ color: 'var(--green)' }}>CoinPaprika + CoinGecko fallback · auto refresh</td></tr>
           </tbody>
@@ -312,10 +294,10 @@ export default function PricingTab() {
       {/* Waitlist at bottom */}
       <div style={{ marginTop: '24px', background: 'var(--s1)', border: '1px solid var(--b2)', padding: '20px', textAlign: 'center' }}>
         <div style={{ fontFamily: 'var(--mono)', fontSize: '11px', color: 'var(--accent)', fontWeight: 700, letterSpacing: '0.1em', marginBottom: '6px' }}>
-          JOIN THE WAITLIST
+          GET PRODUCT UPDATES
         </div>
         <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--text2)', marginBottom: '12px' }}>
-          Get notified when new features launch. No spam. Unsubscribe anytime.
+          Product releases, roadmap milestones, and access announcements. No spam. Unsubscribe anytime.
         </div>
         {!waitlistSubmitted ? (
           <div style={{ display: 'flex', gap: '8px', maxWidth: '400px', margin: '0 auto' }}>
@@ -332,12 +314,12 @@ export default function PricingTab() {
               onClick={submitWaitlist}
               style={{ background: 'var(--accent)', color: '#000', border: 'none', fontFamily: 'var(--mono)', fontSize: '8px', fontWeight: 700, padding: '8px 14px', cursor: 'pointer', letterSpacing: '0.08em', whiteSpace: 'nowrap' }}
             >
-              JOIN →
+              SUBSCRIBE →
             </button>
           </div>
         ) : (
           <div style={{ fontFamily: 'var(--mono)', fontSize: '9px', color: 'var(--green)' }}>
-            ✓ You're on the list. We'll notify you at launch.
+            ✓ Updates enabled. We&apos;ll send major releases and access changes.
           </div>
         )}
       </div>

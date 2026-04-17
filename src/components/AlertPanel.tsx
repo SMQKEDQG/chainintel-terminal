@@ -133,6 +133,7 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [filter, setFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [feedError, setFeedError] = useState(false);
 
   /* ── Settings state ── */
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -152,9 +153,11 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
     if (!isOpen) return;
 
     const fetchAlerts = async () => {
+      setLoading(true);
       try {
         const qs = buildQueryParams(settings);
         const res = await fetch(`/api/smart-alerts?${qs}`);
+        if (!res.ok) throw new Error(`Alert feed ${res.status}`);
         const data = await res.json();
 
         const mapped: Alert[] = (data?.alerts || []).map((a: any, i: number) => ({
@@ -169,40 +172,11 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
         }));
 
         setAlerts(mapped);
+        setFeedError(false);
       } catch (e) {
         console.error('Alert fetch error:', e);
-        // Generate some sample alerts from recent market data
-        setAlerts([
-          {
-            id: '1',
-            type: 'whale',
-            title: 'Large BTC Transfer Detected',
-            message: 'A whale moved 2,500 BTC ($165M) from cold storage to exchange.',
-            timestamp: new Date(Date.now() - 1800000).toISOString(),
-            severity: 'warning',
-            read: false,
-            asset: 'BTC',
-          },
-          {
-            id: '2',
-            type: 'etf',
-            title: 'ETF Inflow Streak Continues',
-            message: 'Spot Bitcoin ETFs have seen 5 consecutive days of net inflows.',
-            timestamp: new Date(Date.now() - 3600000).toISOString(),
-            severity: 'info',
-            read: false,
-            asset: 'BTC',
-          },
-          {
-            id: '3',
-            type: 'regulatory',
-            title: 'New SEC Guidance Expected',
-            message: 'SEC expected to release updated crypto custody framework.',
-            timestamp: new Date(Date.now() - 7200000).toISOString(),
-            severity: 'info',
-            read: true,
-          },
-        ]);
+        setAlerts([]);
+        setFeedError(true);
       } finally {
         setLoading(false);
       }
@@ -495,7 +469,10 @@ export default function AlertPanel({ isOpen, onClose }: AlertPanelProps) {
             <div className="flex flex-col items-center justify-center py-12">
               <div className="text-2xl mb-2" style={{ opacity: 0.3 }}>🔔</div>
               <span className="font-mono text-[9px] tracking-wider" style={{ color: 'var(--muted)' }}>
-                NO ALERTS
+                {feedError ? 'ALERT FEED UNAVAILABLE' : 'NO ALERTS'}
+              </span>
+              <span className="font-mono text-[7px] tracking-wider mt-1" style={{ color: 'var(--muted)' }}>
+                {feedError ? 'Reconnect in progress. Live smart alerts will reappear automatically.' : 'No live alerts match your current filters.'}
               </span>
             </div>
           ) : (

@@ -730,7 +730,7 @@ export default function DefiTab() {
             <div className="kpi-val" style={{ color: 'var(--text)' }}>
               {rlusdLoading ? <PulseBox height="20px" /> : fmtBillions(rlusd?.marketCap ?? 0)}
             </div>
-            <div className="kpi-chg up">CMC Rank #48</div>
+            <div className="kpi-chg up">CoinGecko rank snapshot</div>
             <div className="kpi-src"><a className="src-link" href="https://www.coingecko.com/en/coins/ripple-usd" target="_blank" rel="noreferrer">CoinGecko</a></div>
           </div>
           <div className="kpi">

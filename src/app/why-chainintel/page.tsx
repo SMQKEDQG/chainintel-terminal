@@ -520,7 +520,7 @@ export default function WhyChainIntelPage() {
           <FadeIn>
             <SectionLabel color="var(--purple)">04 — The Data</SectionLabel>
             <h2 style={{ fontFamily: 'var(--sans)', fontSize: 'clamp(24px, 3.5vw, 40px)', fontWeight: 700, letterSpacing: '-0.02em', color: '#fff', lineHeight: 1.2, marginBottom: '24px' }}>
-              89 verified sources vs Bloomberg&apos;s black box.
+              Named source registry vs Bloomberg&apos;s black box.
             </h2>
           </FadeIn>
 

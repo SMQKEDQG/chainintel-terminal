@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { ISO_ASSETS, type IsoUpdate } from '@/data/iso-assets';
 
-interface CmcCoin {
+interface MarketCoin {
   name: string;
   symbol: string;
   price: number;
@@ -11,31 +12,6 @@ interface CmcCoin {
   market_cap: number;
   volume_24h: number;
 }
-
-interface IsoAsset {
-  sym: string;
-  name: string;
-  geckoId: string;
-  cmcSlug: string;
-  network: string;
-  status: 'CERTIFIED' | 'IN PROGRESS' | 'PARTIAL';
-  score: number;
-  banks: string;
-  txSpeed: string;
-  useCase: string;
-  statusColor: string;
-}
-
-const ISO_ASSETS: IsoAsset[] = [
-  { sym: 'XRP', name: 'XRP Ledger', geckoId: 'ripple', cmcSlug: 'XRP', network: 'Ripple · RippleNet', status: 'CERTIFIED', score: 94, banks: '300+', txSpeed: '3-5s', useCase: 'Cross-border payments, remittances, liquidity bridging', statusColor: 'var(--green)' },
-  { sym: 'XLM', name: 'Stellar Network', geckoId: 'stellar', cmcSlug: 'XLM', network: 'SDF · MoneyGram', status: 'CERTIFIED', score: 88, banks: '150+', txSpeed: '5s', useCase: 'Remittances, CBDC infrastructure, asset tokenization', statusColor: 'var(--green)' },
-  { sym: 'HBAR', name: 'Hedera Hashgraph', geckoId: 'hedera-hashgraph', cmcSlug: 'HBAR', network: 'Hedera Council', status: 'CERTIFIED', score: 86, banks: '50+', txSpeed: '3-5s', useCase: 'Enterprise DLT, tokenized assets, supply chain', statusColor: 'var(--green)' },
-  { sym: 'QNT', name: 'Quant Network', geckoId: 'quant-network', cmcSlug: 'QNT', network: 'Overledger', status: 'CERTIFIED', score: 82, banks: '40+', txSpeed: 'Bridge', useCase: 'Interoperability layer, multi-chain banking', statusColor: 'var(--green)' },
-  { sym: 'IOTA', name: 'IOTA Foundation', geckoId: 'iota', cmcSlug: 'IOTA', network: 'Shimmer · Assembly', status: 'IN PROGRESS', score: 68, banks: '10+', txSpeed: '10s', useCase: 'IoT payments, data integrity, feeless microtransactions', statusColor: 'var(--gold)' },
-  { sym: 'ADA', name: 'Cardano', geckoId: 'cardano', cmcSlug: 'ADA', network: 'EMURGO · IOG', status: 'IN PROGRESS', score: 64, banks: '5+', txSpeed: '20s', useCase: 'Identity solutions, DeFi, governance', statusColor: 'var(--gold)' },
-  { sym: 'ALGO', name: 'Algorand', geckoId: 'algorand', cmcSlug: 'ALGO', network: 'Algorand Foundation', status: 'PARTIAL', score: 58, banks: '10+', txSpeed: '3.9s', useCase: 'CBDC pilots, green DeFi, carbon credits', statusColor: 'var(--gold)' },
-  { sym: 'XDC', name: 'XDC Network', geckoId: 'xdce-crowd-sale', cmcSlug: 'XDC', network: 'XinFin · TradeFinex', status: 'PARTIAL', score: 54, banks: '10+', txSpeed: '2s', useCase: 'Trade finance, supply chain, tokenized invoices', statusColor: 'var(--gold)' },
-];
 
 const TIMELINE = [
   { date: 'Nov 2022', event: 'SWIFT mandates ISO 20022 for cross-border payments', done: true },
@@ -61,7 +37,10 @@ function fmtMcap(n: number): string {
 }
 
 export default function IsoTab() {
-  const [prices, setPrices] = useState<Record<string, CmcCoin>>({});
+  const [prices, setPrices] = useState<Record<string, MarketCoin>>({});
+  const [updates, setUpdates] = useState<Record<string, IsoUpdate>>(
+    Object.fromEntries(ISO_ASSETS.map((asset) => [asset.sym, asset.fallbackUpdate]))
+  );
   const [loading, setLoading] = useState(true);
 
   const fetchPrices = useCallback(async () => {
@@ -70,7 +49,7 @@ export default function IsoTab() {
       if (!res.ok) return;
       const json = await res.json();
       const coins = Array.isArray(json?.coins) ? json.coins : [];
-      const map: Record<string, CmcCoin> = {};
+      const map: Record<string, MarketCoin> = {};
       for (const c of coins) {
         if (ISO_ASSETS.some(a => a.sym === c.symbol)) {
           map[c.symbol] = c;
@@ -87,9 +66,34 @@ export default function IsoTab() {
     return () => clearInterval(iv);
   }, [fetchPrices]);
 
-  const certifiedCount = ISO_ASSETS.filter(a => a.status === 'CERTIFIED').length;
-  const inProgressCount = ISO_ASSETS.filter(a => a.status !== 'CERTIFIED').length;
-  const totalMcap = ISO_ASSETS.reduce((sum, a) => sum + (prices[a.sym]?.market_cap || 0), 0);
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchUpdates() {
+      try {
+        const res = await fetch('/api/iso-updates');
+        if (!res.ok) return;
+        const json = await res.json();
+        if (!cancelled && json?.updates) setUpdates(json.updates);
+      } catch { /* fail silently */ }
+    }
+    fetchUpdates();
+    const iv = setInterval(fetchUpdates, 15 * 60_000);
+    return () => {
+      cancelled = true;
+      clearInterval(iv);
+    };
+  }, []);
+
+  const assets = ISO_ASSETS.map((asset) => ({
+    ...asset,
+    recentUpdate: updates[asset.sym] || asset.fallbackUpdate,
+  }));
+  const totalMcap = assets.reduce((sum, a) => sum + (prices[a.sym]?.market_cap || 0), 0);
+  const latestUpdate = assets
+    .slice()
+    .sort((a, b) => (b.recentUpdate.timestamp || 0) - (a.recentUpdate.timestamp || 0))[0];
+  const liveUpdateCount = assets.filter((asset) => asset.recentUpdate.live).length;
+  const avgScore = Math.round(ISO_ASSETS.reduce((sum, asset) => sum + asset.score, 0) / ISO_ASSETS.length);
 
   return (
     <div>
@@ -111,6 +115,9 @@ export default function IsoTab() {
           {' · '}
           <a className="src-link" href="https://www.swift.com/standards/iso-20022" target="_blank" rel="noopener noreferrer">SWIFT</a>
         </span>
+        <span className="tag" style={{ color: liveUpdateCount > 0 ? 'var(--green)' : 'var(--muted)' }}>
+          {liveUpdateCount} Live Feeds
+        </span>
       </div>
 
       {/* KPI Row */}
@@ -121,19 +128,24 @@ export default function IsoTab() {
           <div className="kpi-chg">Total addressable market</div>
         </div>
         <div className="kpi">
-          <div className="kpi-label">Certified Assets</div>
-          <div className="kpi-val cyan">{certifiedCount}</div>
-          <div className="kpi-chg">{ISO_ASSETS.filter(a => a.status === 'CERTIFIED').map(a => a.sym).join(', ')}</div>
+          <div className="kpi-label">Tracked Assets</div>
+          <div className="kpi-val cyan">{ISO_ASSETS.length}</div>
+          <div className="kpi-chg">XRP, XLM, HBAR, QNT, IOTA, ADA, ALGO, XDC</div>
         </div>
         <div className="kpi">
-          <div className="kpi-label">In Progress / Partial</div>
-          <div className="kpi-val" style={{ color: 'var(--gold)' }}>{inProgressCount}</div>
-          <div className="kpi-chg">{ISO_ASSETS.filter(a => a.status !== 'CERTIFIED').map(a => a.sym).join(', ')}</div>
+          <div className="kpi-label">Official Updates Logged</div>
+          <div className="kpi-val" style={{ color: 'var(--gold)' }}>{ISO_ASSETS.length}</div>
+          <div className="kpi-chg">Latest: {latestUpdate.recentUpdate.date} · {latestUpdate.sym}</div>
         </div>
         <div className="kpi">
           <div className="kpi-label">Combined Market Cap</div>
           <div className="kpi-val" style={{ color: 'var(--text)' }}>{totalMcap > 0 ? fmtMcap(totalMcap) : '—'}</div>
           <div className={`kpi-chg ${loading ? '' : 'up'}`}>{loading ? 'Loading...' : 'Live'}</div>
+        </div>
+        <div className="kpi">
+          <div className="kpi-label">Avg CI Score</div>
+          <div className="kpi-val" style={{ color: 'var(--blue)' }}>{avgScore}</div>
+          <div className="kpi-chg">{liveUpdateCount} live official feeds · {ISO_ASSETS.length - liveUpdateCount} standby</div>
         </div>
       </div>
 
@@ -157,7 +169,7 @@ export default function IsoTab() {
             </tr>
           </thead>
           <tbody>
-            {ISO_ASSETS.map(a => {
+            {assets.map(a => {
               const p = prices[a.sym];
               return (
                 <tr key={a.sym} style={{ borderBottom: '1px solid var(--b1)' }}
@@ -192,18 +204,35 @@ export default function IsoTab() {
         </table>
       </div>
 
-      {/* Two-column bottom: Use cases + Timeline */}
+      {/* Two-column bottom: Recent updates + Timeline */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 12 }}>
-        {/* Use Cases */}
         <div className="panel">
           <div className="ph">
-            <div className="pt">Banking Use Cases</div>
+            <div className="pt">Recent Integration Updates</div>
           </div>
           <div style={{ padding: '8px 12px' }}>
-            {ISO_ASSETS.filter(a => a.status === 'CERTIFIED').map(a => (
-              <div key={a.sym} style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: '1px solid var(--b1)' }}>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--accent)', minWidth: 36 }}>{a.sym}</span>
-                <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.4 }}>{a.useCase}</span>
+            {assets.map((a) => (
+              <div key={a.sym} style={{ display: 'grid', gridTemplateColumns: '44px 1fr', gap: 8, padding: '8px 0', borderBottom: '1px solid var(--b1)' }}>
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 700, color: 'var(--accent)' }}>{a.sym}</span>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' }}>
+                    <a
+                      className="src-link"
+                      href={a.recentUpdate.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 600 }}
+                    >
+                      {a.recentUpdate.title}
+                    </a>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--gold)', whiteSpace: 'nowrap' }}>{a.recentUpdate.date}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 2 }}>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--blue)' }}>{a.integrationFocus}</div>
+                    <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: a.recentUpdate.live ? 'var(--green)' : 'var(--muted)' }}>{a.recentUpdate.sourceLabel}</div>
+                  </div>
+                  <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text2)', lineHeight: 1.45, marginTop: 3 }}>{a.recentUpdate.summary}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -244,9 +273,9 @@ export default function IsoTab() {
           <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)' }}>CI · ISO 20022 Intelligence</span>
         </div>
         <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text2)', lineHeight: 1.6 }}>
-          <strong style={{ color: 'var(--text)' }}>The SWIFT ISO 20022 migration is complete — this isn&apos;t future speculation, it&apos;s live infrastructure.</strong>{' '}
-          {certifiedCount} assets have full certification for banking message compatibility. XRP leads with 300+ banking partnerships and the fastest settlement at 3-5 seconds.
-          {totalMcap > 0 && <>{' '}Combined sector market cap of <strong style={{ color: 'var(--accent)' }}>{fmtMcap(totalMcap)}</strong> for exposure to $150T+ annual payment flows — the asymmetry here is the most compelling in all of crypto.</>}
+          <strong style={{ color: 'var(--text)' }}>The useful question is no longer who claims ISO alignment, but who is still shipping integration-relevant updates as the banking stack migrates.</strong>{' '}
+          XRP, XLM, and HBAR still lead the panel on operational signal, while IOTA, Cardano, and Algorand are more compelling when their recent integration work improves real payment, trade, or identity workflows.
+          {totalMcap > 0 && <>{' '}The tracked basket is worth <strong style={{ color: 'var(--accent)' }}>{fmtMcap(totalMcap)}</strong>, which is why current integration updates matter more than stale certification buckets.</>}
         </div>
       </div>
     </div>

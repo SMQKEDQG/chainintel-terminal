@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { Fragment, useState, useEffect, useCallback } from 'react';
 
 interface WhaleAlert {
   type: 'buy' | 'sell' | 'transfer';
@@ -264,8 +264,8 @@ export default function WhalesTab() {
                 </thead>
                 <tbody>
                   {chainScores.map(r => (
-                    <>
-                      <tr key={r.asset}
+                    <Fragment key={r.asset}>
+                      <tr
                         onClick={() => setExpandedAsset(expandedAsset === r.asset ? null : r.asset)}
                         style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
                         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
@@ -297,7 +297,7 @@ export default function WhalesTab() {
                         </td>
                       </tr>
                       {expandedAsset === r.asset && (
-                        <tr key={`${r.asset}-detail`} style={{ background: 'rgba(232,165,52,0.03)' }}>
+                        <tr style={{ background: 'rgba(232,165,52,0.03)' }}>
                           <td colSpan={4} style={{ padding: '10px 16px' }}>
                             <div style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)', marginBottom: 6, letterSpacing: '0.1em' }}>FACTOR BREAKDOWN (0-20 each)</div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
@@ -328,7 +328,7 @@ export default function WhalesTab() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   ))}
                 </tbody>
               </table>

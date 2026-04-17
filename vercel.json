@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/check-alerts",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/etf-flows",
+      "schedule": "0 23 * * 1-5"
+    },
+    {
+      "path": "/api/cron/sync-regulatory",
+      "schedule": "0 */2 * * *"
+    },
+    {
+      "path": "/api/cron/reset-free-views",
+      "schedule": "0 0 * * 1"
+    }
+  ]
+}

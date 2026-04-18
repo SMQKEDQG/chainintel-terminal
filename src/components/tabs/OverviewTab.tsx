@@ -474,33 +474,7 @@ function HeroCommandBar() {
       borderBottom: '1px solid var(--b2)',
       padding: '16px 0 12px',
     }}>
-      {/* Live ticker strip */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px 12px',
-        borderBottom: '1px solid var(--b1)', marginBottom: 12,
-        overflow: 'hidden',
-      }}>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', letterSpacing: '0.1em', fontWeight: 700, flexShrink: 0 }}>◈ LIVE</span>
-        <div style={{ display: 'flex', gap: 20, overflow: 'hidden', flex: 1 }}>
-          {coins.slice(0, 8).map(c => (
-            <div key={c.symbol} style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-              {c.image && <img src={c.image} alt="" width={14} height={14} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text)', fontWeight: 600 }}>{c.symbol}</span>
-              <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--text2)' }}>{fmtPrice(c.price)}</span>
-              <span style={{
-                fontFamily: 'var(--mono)', fontSize: 12, fontWeight: 600,
-                color: c.percent_change_24h >= 0 ? 'var(--green)' : 'var(--red)',
-              }}>
-                {c.percent_change_24h >= 0 ? '+' : ''}{c.percent_change_24h.toFixed(1)}%
-              </span>
-            </div>
-          ))}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: sourceColor(source), boxShadow: `0 0 6px ${sourceColor(source)}`, animation: 'pulse 2s infinite', display: 'inline-block' }} />
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)' }}>{sourceLabel(source)}</span>
-        </div>
-      </div>
+      {/* Price ticker removed — single scrolling ticker lives in TerminalLayout (TickerTape) */}
 
       {/* Command bar */}
       <div style={{ padding: '0 16px' }}>
@@ -1756,8 +1730,7 @@ export default function OverviewTab() {
       {/* ▬▬▬ SECTION 1: AI COMMAND CENTER (top of page) ▬▬▬ */}
       <HeroCommandBar />
 
-      {/* ▬▬▬ SECTION 2: MARKET PULSE KPIs ▬▬▬ */}
-      <MarketPulse />
+      {/* MarketPulse removed — consolidated into scrolling ticker above */}
 
       {/* ▬▬▬ SECTION 3: SIGNALS BAR (7 columns) ▬▬▬ */}
       <SignalsBar />

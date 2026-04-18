@@ -3,6 +3,9 @@
 import { useState, useEffect, useRef, useCallback, createContext, useContext } from 'react';
 import TokenUnlocks from '@/components/TokenUnlocks';
 import { DailyBriefCard, CorrelationEngine, SmartAlerts } from '@/components/LevelUpModules';
+import { useSubscription, type SubscriptionTier } from '@/lib/use-subscription';
+import ModuleGate from '@/components/ModuleGate';
+import InlineUpgradePrompt from '@/components/InlineUpgradePrompt';
 import InsightDrawer, { useInsightDrawer } from '@/components/InsightDrawer';
 import staticMarketData from '@/data/market-static.json';
 import { Bar } from 'react-chartjs-2';
@@ -432,12 +435,17 @@ function EthChart() {
 /* ══════════════════════════════════════════════════════════════
    ▼ NEW: HERO COMMAND BAR — Ask CI front & center
    ══════════════════════════════════════════════════════════════ */
+const FREE_QUERY_LIMIT = 3;
+
 function HeroCommandBar() {
   const { coins, global, source } = useContext(MarketDataContext);
+  const tier = useContext(TierContext);
   const [query, setQuery] = useState('');
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [responseSource, setResponseSource] = useState('');
+  const [queryCount, setQueryCount] = useState(0);
+  const limitReached = tier === 'free' && queryCount >= FREE_QUERY_LIMIT;
   const chips = ['Market overview', 'Bitcoin analysis', 'ETF flows today', 'Fear & Greed', 'DeFi TVL', 'ISO 20022 assets', 'Whale signals', 'Altcoin season?'];
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -448,6 +456,7 @@ function HeroCommandBar() {
   const handleAsk = useCallback(async (q?: string) => {
     const question = (q || query).trim();
     if (!question) return;
+    if (tier === 'free' && queryCount >= FREE_QUERY_LIMIT) return;
     setLoading(true);
     setResponse('');
     setResponseSource('');
@@ -460,13 +469,14 @@ function HeroCommandBar() {
       const data = await res.json();
       setResponse(data.answer || 'No response generated.');
       setResponseSource(data.source || 'cached');
+      if (tier === 'free') setQueryCount(prev => prev + 1);
     } catch {
       setResponse('CI·AI is temporarily unavailable. Please try again.');
       setResponseSource('error');
     } finally {
       setLoading(false);
     }
-  }, [query]);
+  }, [query, tier, queryCount]);
 
   return (
     <div style={{
@@ -478,50 +488,70 @@ function HeroCommandBar() {
 
       {/* Command bar */}
       <div style={{ padding: '0 16px' }}>
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          background: 'var(--s1)', border: '1px solid var(--b2)',
-          borderRadius: 8,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,165,52,0.05)',
-          overflow: 'hidden',
-        }}>
-          <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--accent)', padding: '0 14px', letterSpacing: '0.06em', whiteSpace: 'nowrap', fontWeight: 700 }}>◈ ASK CI</span>
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handleAsk()}
-            placeholder="Ask anything about crypto markets, on-chain data, ETFs, regulations..."
-            style={{
-              flex: 1, background: 'transparent', border: 'none',
-              color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 15,
-              padding: '14px 0', outline: 'none',
-            }}
-          />
-          <button onClick={() => handleAsk()} disabled={loading} style={{
-            background: loading ? 'var(--s2)' : 'linear-gradient(135deg, rgba(232,165,52,0.15), rgba(232,165,52,0.08))',
-            border: '1px solid rgba(232,165,52,0.25)',
-            color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 12,
-            letterSpacing: '0.1em', padding: '10px 20px', cursor: loading ? 'wait' : 'pointer',
-            margin: 6, fontWeight: 700, borderRadius: 6,
-            transition: 'all 0.2s ease',
-          }}>{loading ? 'ANALYZING...' : 'ANALYZE →'}</button>
-        </div>
+        {limitReached ? (
+          <div style={{
+            background: 'var(--s1)', border: '1px solid var(--b2)',
+            borderRadius: 8, overflow: 'hidden',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', padding: '10px 14px', gap: 8 }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--muted)', letterSpacing: '0.06em', fontWeight: 700 }}>◈ ASK CI</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--muted)' }}>Daily limit reached ({FREE_QUERY_LIMIT}/{FREE_QUERY_LIMIT} queries used)</span>
+            </div>
+            <InlineUpgradePrompt tier="pro" feature="unlimited Ask CI queries" compact />
+          </div>
+        ) : (
+          <>
+            <div style={{
+              display: 'flex', alignItems: 'center',
+              background: 'var(--s1)', border: '1px solid var(--b2)',
+              borderRadius: 8,
+              boxShadow: '0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(232,165,52,0.05)',
+              overflow: 'hidden',
+            }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--accent)', padding: '0 14px', letterSpacing: '0.06em', whiteSpace: 'nowrap', fontWeight: 700 }}>◈ ASK CI</span>
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleAsk()}
+                placeholder="Ask anything about crypto markets, on-chain data, ETFs, regulations..."
+                style={{
+                  flex: 1, background: 'transparent', border: 'none',
+                  color: 'var(--text)', fontFamily: 'var(--sans)', fontSize: 15,
+                  padding: '14px 0', outline: 'none',
+                }}
+              />
+              {tier === 'free' && (
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', padding: '0 8px', whiteSpace: 'nowrap' }}>
+                  {queryCount}/{FREE_QUERY_LIMIT}
+                </span>
+              )}
+              <button onClick={() => handleAsk()} disabled={loading} style={{
+                background: loading ? 'var(--s2)' : 'linear-gradient(135deg, rgba(232,165,52,0.15), rgba(232,165,52,0.08))',
+                border: '1px solid rgba(232,165,52,0.25)',
+                color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 12,
+                letterSpacing: '0.1em', padding: '10px 20px', cursor: loading ? 'wait' : 'pointer',
+                margin: 6, fontWeight: 700, borderRadius: 6,
+                transition: 'all 0.2s ease',
+              }}>{loading ? 'ANALYZING...' : 'ANALYZE →'}</button>
+            </div>
 
-        {/* Quick chips */}
-        <div style={{ display: 'flex', gap: 6, padding: '8px 0 0', flexWrap: 'wrap' }}>
-          {chips.map(c => (
-            <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{
-              background: 'var(--s2)', border: '1px solid var(--b2)',
-              color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 12,
-              padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.04em',
-              borderRadius: 4, transition: 'all 0.15s ease',
-            }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'var(--s2)'; e.currentTarget.style.color = 'var(--text2)'; e.currentTarget.style.borderColor = 'var(--b2)'; }}
-            >{c}</button>
-          ))}
-        </div>
+            {/* Quick chips */}
+            <div style={{ display: 'flex', gap: 6, padding: '8px 0 0', flexWrap: 'wrap' }}>
+              {chips.map(c => (
+                <button key={c} onClick={() => { setQuery(c); handleAsk(c); }} style={{
+                  background: 'var(--s2)', border: '1px solid var(--b2)',
+                  color: 'var(--text2)', fontFamily: 'var(--mono)', fontSize: 12,
+                  padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.04em',
+                  borderRadius: 4, transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'var(--s3)'; e.currentTarget.style.color = 'var(--text)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'var(--s2)'; e.currentTarget.style.color = 'var(--text2)'; e.currentTarget.style.borderColor = 'var(--b2)'; }}
+                >{c}</button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Response area */}
@@ -2050,8 +2080,12 @@ function QuickGuide() {
 /* ══════════════════════════════════════════════════════════════
    ▼ MAIN OVERVIEW TAB — completely reorganized
    ══════════════════════════════════════════════════════════════ */
+/* ── Tier context for sub-modules ── */
+const TierContext = createContext<SubscriptionTier>('free');
+
 export default function OverviewTab() {
   const marketData = useMarketData();
+  const tier = useSubscription();
   const { isOpen, context, openInsight, closeInsight } = useInsightDrawer();
 
   const [showSkeleton, setShowSkeleton] = useState(true);
@@ -2068,6 +2102,7 @@ export default function OverviewTab() {
   return (
     <MarketDataContext.Provider value={marketData}>
     <InsightContext.Provider value={{ openInsight }}>
+    <TierContext.Provider value={tier}>
     <div style={{ position: 'relative' }}>
       {/* Loading skeleton overlay */}
       {showSkeleton && marketData.source === 'static-fallback' && (
@@ -2122,21 +2157,29 @@ export default function OverviewTab() {
         <MarketTable />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <ETFFlows />
-          <DerivativesPulse />
+          <ModuleGate requiredTier="enterprise" currentTier={tier} feature="derivatives intelligence" previewLines={2}>
+            <DerivativesPulse />
+          </ModuleGate>
         </div>
       </div>
 
       {/* ▬▬▬ SECTION 8: WHALE FEED + CHAINSCORE + NETWORK HEALTH ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <WhaleFeed />
-          <CapitalFlowMonitor />
+          <ModuleGate requiredTier="pro" currentTier={tier} feature="real-time whale alerts" previewLines={3}>
+            <WhaleFeed />
+          </ModuleGate>
+          <ModuleGate requiredTier="pro" currentTier={tier} feature="capital flow tracking" previewLines={2}>
+            <CapitalFlowMonitor />
+          </ModuleGate>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <div className="panel panel-hover">
-            <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>ChainIntel AI</div></div>
-            <AiMarketSynthesis />
-          </div>
+          <ModuleGate requiredTier="pro" currentTier={tier} feature="AI market synthesis" previewLines={2}>
+            <div className="panel panel-hover">
+              <div className="ph"><div className="pt">AI Market Synthesis</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>ChainIntel AI</div></div>
+              <AiMarketSynthesis />
+            </div>
+          </ModuleGate>
           <ChainScore />
           <TrendingMomentum />
         </div>
@@ -2145,7 +2188,9 @@ export default function OverviewTab() {
       {/* ▬▬▬ SECTION 9: NETWORK HEALTH + SMART ALERTS ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <NetworkHealthPulse />
-        <SmartAlerts compact />
+        <ModuleGate requiredTier="enterprise" currentTier={tier} feature="custom smart alerts" previewLines={2}>
+          <SmartAlerts compact />
+        </ModuleGate>
       </div>
 
       {/* ▬▬▬ SECTION 10: TOKEN UNLOCKS ▬▬▬ */}
@@ -2158,6 +2203,7 @@ export default function OverviewTab() {
       <QuickGuide />
     </div>
     <InsightDrawer isOpen={isOpen} onClose={closeInsight} context={context} />
+    </TierContext.Provider>
     </InsightContext.Provider>
     </MarketDataContext.Provider>
   );

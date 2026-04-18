@@ -56,6 +56,13 @@ const TAB_PREVIEWS: Record<string, string[]> = {
     'News sentiment aggregation (NLP)',
     'Crowd vs. smart money divergence',
   ],
+  'Portfolio': [
+    'Track holdings with live P&L across 50+ assets',
+    'Personalized AI Morning Brief for your portfolio',
+    'ISO 20022 exposure analysis',
+    'Asset allocation visualization',
+    'One-click portfolio insights',
+  ],
 };
 
 const TIER_META: Record<'pro' | 'enterprise', { label: string; price: string; color: string }> = {

@@ -38,7 +38,7 @@ const TAB_COMPONENTS: Record<TabId, React.ComponentType> = {
 };
 
 // Tabs that require Pro tier
-const PRO_TABS = new Set<TabId>(['onchain', 'defi', 'sentiment']);
+const PRO_TABS = new Set<TabId>(['onchain', 'defi', 'sentiment', 'portfolio']);
 
 // Tabs that require Enterprise tier
 const ENTERPRISE_TABS = new Set<TabId>(['derivatives', 'alerts']);

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TABS, VERSION, type TabId } from '@/lib/constants';
 import { useAuth } from '@/lib/auth-context';
+import { useSubscription } from '@/lib/use-subscription';
 import TickerTape from './TickerTape';
 import AlertPanel from './AlertPanel';
 import StatusBar from './StatusBar';
@@ -11,7 +12,7 @@ import CommandPalette from './CommandPalette';
 import { SourceStatusBadge } from './LevelUpModules';
 import Link from 'next/link';
 
-const PRO_TAB_IDS = new Set(['onchain', 'defi', 'sentiment']);
+const PRO_TAB_IDS = new Set(['onchain', 'defi', 'sentiment', 'portfolio']);
 const ENT_TAB_IDS = new Set(['derivatives', 'alerts']);
 
 interface TerminalLayoutProps {
@@ -22,6 +23,7 @@ interface TerminalLayoutProps {
 
 export default function TerminalLayout({ children, activeTab, onTabChange }: TerminalLayoutProps) {
   const { user, loading, signOut } = useAuth();
+  const tier = useSubscription();
   const [clock, setClock] = useState('');
   const [alertPanelOpen, setAlertPanelOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
@@ -100,6 +102,16 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
 
         {/* Right controls */}
         <div className="flex items-center gap-4">
+          {!loading && tier === 'free' && user && (
+            <button
+              onClick={() => onTabChange('pricing' as TabId)}
+              className="flex items-center gap-1.5 transition-colors"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+            >
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.1em', color: 'var(--muted)', padding: '2px 6px', border: '1px solid var(--b3)' }}>FREE PLAN</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 8, letterSpacing: '0.08em', color: 'var(--accent)' }}>UPGRADE</span>
+            </button>
+          )}
           {!loading && (
             user ? (
               <div className="flex items-center gap-3">
@@ -157,24 +169,30 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
         className="flex items-center gap-0 overflow-x-auto border-b scrollbar-hide"
         style={{ background: 'var(--s1)', borderColor: 'var(--b1)', zIndex: 10000, position: 'sticky', top: 42, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
       >
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            data-tour={`tab-${tab.id}`}
-            onClick={() => onTabChange(tab.id)}
-            title={tab.title}
-            className="font-mono text-[9.5px] tracking-wider px-3.5 py-2.5 whitespace-nowrap border-b-2 transition-colors duration-150 hover:bg-[var(--s2)]"
-            style={{
-              color: activeTab === tab.id ? 'var(--accent)' : 'var(--muted)',
-              borderBottomColor: activeTab === tab.id ? 'var(--accent)' : 'transparent',
-              background: activeTab === tab.id ? 'rgba(232,165,52,0.04)' : undefined,
-            }}
-          >
-            {tab.label}
-            {PRO_TAB_IDS.has(tab.id) && <span className="tab-pro-badge">PRO</span>}
-            {ENT_TAB_IDS.has(tab.id) && <span className="tab-pro-badge" style={{ background: 'rgba(167,139,250,0.12)', color: 'var(--purple)' }}>ENT</span>}
-          </button>
-        ))}
+        {TABS.map((tab) => {
+          const isPro = PRO_TAB_IDS.has(tab.id);
+          const isEnt = ENT_TAB_IDS.has(tab.id);
+          const locked = (isPro && tier === 'free') || (isEnt && (tier === 'free' || tier === 'pro'));
+          return (
+            <button
+              key={tab.id}
+              data-tour={`tab-${tab.id}`}
+              onClick={() => onTabChange(tab.id)}
+              title={tab.title}
+              className="font-mono text-[9.5px] tracking-wider px-3.5 py-2.5 whitespace-nowrap border-b-2 transition-colors duration-150 hover:bg-[var(--s2)]"
+              style={{
+                color: activeTab === tab.id ? 'var(--accent)' : 'var(--muted)',
+                borderBottomColor: activeTab === tab.id ? 'var(--accent)' : 'transparent',
+                background: activeTab === tab.id ? 'rgba(232,165,52,0.04)' : undefined,
+              }}
+            >
+              {locked && <span style={{ fontSize: 8, marginRight: 3, opacity: 0.7 }}>🔒</span>}
+              {tab.label}
+              {isPro && <span className="tab-pro-badge">PRO</span>}
+              {isEnt && <span className="tab-pro-badge" style={{ background: 'rgba(167,139,250,0.12)', color: 'var(--purple)' }}>ENT</span>}
+            </button>
+          );
+        })}
       </nav>
 
       {/* Main Content */}

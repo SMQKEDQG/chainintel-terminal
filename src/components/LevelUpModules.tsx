@@ -289,16 +289,23 @@ export function SmartAlerts({ compact = false }: { compact?: boolean }) {
   const sevIcon: Record<string, string> = { critical: '◈', warning: '◇', info: '○' };
   const displayed = compact ? alerts.slice(0, 3) : alerts;
 
-  if (displayed.length === 0 && compact) return null;
+  // Default sample alerts shown when no live alerts fire (demonstrates value to free users)
+  const defaultAlerts: AlertItem[] = [
+    { id: 'default-1', type: 'info', severity: 'info', title: 'Alert Engine Active', description: 'Monitoring BTC liquidations, funding rate flips, ETF streak breaks, and price anomalies across 6 sources.', value: '6 sources', timestamp: Date.now(), source: 'ChainIntel' },
+    { id: 'default-2', type: 'info', severity: 'info', title: 'Thresholds Configured', description: 'Liquidation >$1M · Price move >5% · Funding rate >0.1% · Fear & Greed extremes · ETF streak ≥5d', value: '5 rules', timestamp: Date.now(), source: 'Smart Alerts' },
+  ];
+
+  const effectiveAlerts = displayed.length > 0 ? displayed : (compact ? [] : defaultAlerts);
+  if (effectiveAlerts.length === 0 && compact) return null;
 
   return (
     <div className={compact ? '' : 'panel panel-hover'} style={compact ? {} : {}}>
-      {!compact && <div className="ph"><div className="pt">◈ Smart Alert Center</div><div className="tag" style={{ background: alerts.some(a => a.severity === 'critical') ? 'rgba(239,68,68,0.15)' : 'rgba(232,165,52,0.08)', color: alerts.some(a => a.severity === 'critical') ? 'var(--red)' : 'var(--accent)' }}>{alerts.length} Active</div></div>}
-      {displayed.length === 0 ? (
+      {!compact && <div className="ph"><div className="pt">◈ Smart Alert Center</div><div className="tag" style={{ background: alerts.some(a => a.severity === 'critical') ? 'rgba(239,68,68,0.15)' : 'rgba(232,165,52,0.08)', color: alerts.some(a => a.severity === 'critical') ? 'var(--red)' : 'var(--accent)' }}>{alerts.length > 0 ? `${alerts.length} Active` : 'Monitoring'}</div></div>}
+      {effectiveAlerts.length === 0 ? (
         <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: compact ? '4px 0' : '12px 0' }}>No active alerts — all systems nominal.</div>
       ) : (
         <div style={{ display: 'grid', gap: compact ? 2 : 4 }}>
-          {displayed.map((alert) => (
+          {effectiveAlerts.map((alert) => (
             <div key={alert.id} style={{ display: 'flex', gap: 8, padding: compact ? '4px 8px' : '6px 10px', background: `${sevColor[alert.severity]}06`, border: `1px solid ${sevColor[alert.severity]}20`, alignItems: 'flex-start' }}>
               <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: sevColor[alert.severity], flexShrink: 0, marginTop: 1 }}>{sevIcon[alert.severity]}</span>
               <div style={{ flex: 1, minWidth: 0 }}>

@@ -1389,7 +1389,7 @@ function ChainScore() {
   function bandColor(score: number): string {
     if (score >= 90) return 'var(--green)';
     if (score >= 75) return 'var(--accent)';
-    if (score >= 60) return 'var(--blue)';
+    if (score >= 60) return 'va(--blue)';
     return 'var(--muted)';
   }
 
@@ -1494,6 +1494,17 @@ function MarketTable() {
           })}
         </tbody>
       </table>
+      {/* View all link */}
+      <div style={{ padding: '8px 12px', borderTop: '1px solid var(--b1)', textAlign: 'center' }}>
+        <span
+          onClick={() => window.dispatchEvent(new CustomEvent('goPage', { detail: 'markets' }))}
+          style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--accent)', cursor: 'pointer', letterSpacing: '0.06em', transition: 'opacity 0.15s' }}
+          onMouseEnter={e => (e.currentTarget.style.opacity = '0.7')}
+          onMouseLeave={e => (e.currentTarget.style.opacity = '1')}
+        >
+          View all 500+ assets →
+        </span>
+      </div>
     </div>
   );
 }

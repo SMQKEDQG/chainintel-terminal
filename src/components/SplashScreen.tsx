@@ -211,6 +211,21 @@ export default function SplashScreen({ onComplete }: SplashScreenProps) {
             DIGITAL ASSET INTELLIGENCE
           </div>
 
+          {/* Value prop */}
+          <div style={{
+            fontFamily: "'JetBrains Mono', 'Courier New', monospace",
+            fontSize: 10,
+            fontWeight: 400,
+            letterSpacing: '0.12em',
+            color: '#A09D98',
+            textAlign: 'center' as const,
+            marginTop: 6,
+            opacity: 0,
+            animation: 'splash-subtitle-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards',
+          }}>
+            80+ LIVE DATA SOURCES · ONE TERMINAL
+          </div>
+
           {/* Amber line */}
           <div className="splash-line-container" aria-hidden="true">
             <div className="splash-line" />

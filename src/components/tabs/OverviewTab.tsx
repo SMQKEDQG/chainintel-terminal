@@ -1723,6 +1723,214 @@ function CapitalFlowMonitor() {
   );
 }
 
+/* ── Market Breadth Gauge (uses shared MarketData context) ── */
+function MarketBreadthGauge() {
+  const { coins, global } = useContext(MarketDataContext);
+  if (coins.length === 0) return null;
+
+  const nonStable = coins.filter(c => !['usdt','usdc','dai','busd','tusd','fdusd','susde'].includes(c.symbol.toLowerCase()));
+  const gainers = nonStable.filter(c => c.percent_change_24h > 0);
+  const losers = nonStable.filter(c => c.percent_change_24h <= 0);
+  const gPct = nonStable.length > 0 ? (gainers.length / nonStable.length) * 100 : 50;
+  const btcDom = global?.btc_dominance ?? 0;
+  const ethDom = global?.eth_dominance ?? 0;
+  const totalVol = global?.total_volume_24h ?? 0;
+  const totalMcap = global?.total_market_cap ?? 0;
+  const volMcapRatio = totalMcap > 0 ? ((totalVol / totalMcap) * 100) : 0;
+
+  const avgChange = nonStable.length > 0 ? nonStable.reduce((s, c) => s + c.percent_change_24h, 0) / nonStable.length : 0;
+  const top5Pct = nonStable.slice(0, 5).reduce((s, c) => s + c.percent_change_24h, 0) / Math.max(nonStable.slice(0, 5).length, 1);
+  const bottom5 = [...nonStable].sort((a, b) => a.percent_change_24h - b.percent_change_24h).slice(0, 5);
+  const bottom5Pct = bottom5.reduce((s, c) => s + c.percent_change_24h, 0) / Math.max(bottom5.length, 1);
+
+  const breadthLabel = gPct >= 65 ? 'BROAD RALLY' : gPct >= 50 ? 'MIXED' : gPct >= 35 ? 'LEANING BEARISH' : 'BROAD SELLOFF';
+  const breadthColor = gPct >= 65 ? 'var(--green)' : gPct >= 50 ? 'var(--accent)' : gPct >= 35 ? 'var(--gold)' : 'var(--red)';
+
+  return (
+    <div className="panel panel-hover">
+      <div className="ph">
+        <div className="pt">Market Breadth</div>
+        <div className="tag" style={{ background: `${breadthColor}15`, color: breadthColor }}>{breadthLabel}</div>
+      </div>
+      {/* Breadth bar */}
+      <div style={{ padding: '6px 12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', fontWeight: 600 }}>{gainers.length} UP</span>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--red)', fontWeight: 600 }}>{losers.length} DOWN</span>
+        </div>
+        <div style={{ display: 'flex', height: 8, borderRadius: 4, overflow: 'hidden', background: 'var(--b3)' }}>
+          <div style={{ width: `${gPct}%`, background: 'var(--green)', transition: 'width 0.5s' }} />
+          <div style={{ width: `${100 - gPct}%`, background: 'var(--red)', transition: 'width 0.5s' }} />
+        </div>
+      </div>
+      {/* Key metrics */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: '4px 12px 8px' }}>
+        <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>BTC DOMINANCE</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: btcDom > 55 ? 'var(--accent)' : 'var(--text)' }}>{btcDom.toFixed(1)}%</div>
+        </div>
+        <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>ETH DOMINANCE</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{ethDom.toFixed(1)}%</div>
+        </div>
+        <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>AVG 24H CHANGE</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: avgChange >= 0 ? 'var(--green)' : 'var(--red)' }}>{avgChange >= 0 ? '+' : ''}{avgChange.toFixed(2)}%</div>
+        </div>
+        <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>VOL / MCAP</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: volMcapRatio > 5 ? 'var(--accent)' : 'var(--text)' }}>{volMcapRatio.toFixed(1)}%</div>
+        </div>
+      </div>
+      <div style={{ padding: '4px 12px 6px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', borderTop: '1px solid var(--b1)' }}>
+        Top 5 avg: {top5Pct >= 0 ? '+' : ''}{top5Pct.toFixed(1)}% · Bottom 5 avg: {bottom5Pct >= 0 ? '+' : ''}{bottom5Pct.toFixed(1)}% · Spread: {(top5Pct - bottom5Pct).toFixed(1)}pp
+      </div>
+    </div>
+  );
+}
+
+/* ── Derivatives Pulse (LIVE from /api/derivatives) ── */
+function DerivativesPulse() {
+  const [data, setData] = useState<{ assets: any[]; summary: any } | null>(null);
+
+  useEffect(() => {
+    const load = () => fetch('/api/derivatives').then(r => r.json()).then(setData).catch(() => {});
+    load();
+    const iv = setInterval(load, 60_000);
+    return () => clearInterval(iv);
+  }, []);
+
+  if (!data?.assets?.length) return null;
+
+  const fmtOI = (n: number) => n >= 1e9 ? `$${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n/1e6).toFixed(0)}M` : `$${n.toFixed(0)}`;
+  const top5 = data.assets.slice(0, 5);
+
+  return (
+    <div className="panel panel-hover">
+      <div className="ph">
+        <div className="pt">Derivatives Pulse</div>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)' }}>● LIVE</span>
+          <div className="tag" style={{ background: 'rgba(167,139,250,0.08)', color: 'var(--purple)' }}>CoinGecko</div>
+        </div>
+      </div>
+      {/* Summary row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '4px 12px 8px' }}>
+        <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>TOTAL OI</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtOI(data.summary?.totalOI || 0)}</div>
+        </div>
+        <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>24H VOLUME</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtOI(data.summary?.totalVolume || 0)}</div>
+        </div>
+        <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>BTC FUNDING</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: (data.summary?.btcFunding || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>{((data.summary?.btcFunding || 0) * 100).toFixed(4)}%</div>
+        </div>
+      </div>
+      {/* Per-asset funding */}
+      <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 80px 80px', gap: 6, padding: '4px 12px', fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>
+        <span>ASSET</span><span>FUNDING RATE</span><span style={{ textAlign: 'right' }}>OPEN INT</span><span style={{ textAlign: 'right' }}>VOLUME</span>
+      </div>
+      {top5.map((a: any) => {
+        const fr = a.avgFundingRate || 0;
+        return (
+          <div key={a.asset} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 80px 80px', gap: 6, padding: '5px 12px', borderBottom: '1px solid var(--b1)', alignItems: 'center' }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 600 }}>{a.asset}</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <div style={{ flex: 1, height: 5, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden', position: 'relative' }}>
+                <div style={{ position: 'absolute', left: '50%', width: 1, height: '100%', background: 'var(--muted)' }} />
+                <div style={{
+                  position: 'absolute',
+                  ...(fr >= 0 ? { left: '50%', width: `${Math.min(Math.abs(fr) * 500, 50)}%` } : { right: '50%', width: `${Math.min(Math.abs(fr) * 500, 50)}%` }),
+                  height: '100%', background: fr >= 0 ? 'var(--green)' : 'var(--red)', borderRadius: 3,
+                }} />
+              </div>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: fr >= 0 ? 'var(--green)' : 'var(--red)', width: 55, textAlign: 'right' }}>{(fr * 100).toFixed(4)}%</span>
+            </div>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', textAlign: 'right' }}>{fmtOI(a.totalOI || 0)}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', textAlign: 'right' }}>{fmtOI(a.totalVolume || 0)}</span>
+          </div>
+        );
+      })}
+      <div style={{ padding: '6px 12px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', borderTop: '1px solid var(--b2)' }}>
+        Positive funding = longs paying · Negative = shorts paying · Updated every 60s
+      </div>
+    </div>
+  );
+}
+
+/* ── Trending Momentum (LIVE from CoinGecko) ── */
+function TrendingMomentum() {
+  const [trending, setTrending] = useState<{ name: string; symbol: string; rank: number; change24h: number | null; thumb: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await fetch('https://api.coingecko.com/api/v3/search/trending');
+        if (!res.ok) { setLoading(false); return; }
+        const data = await res.json();
+        if (data?.coins?.length) {
+          const mapped = data.coins.slice(0, 7).map((entry: any) => {
+            const item = entry.item || entry;
+            return {
+              name: item.name || '',
+              symbol: (item.symbol || '').toUpperCase(),
+              rank: item.market_cap_rank || 0,
+              change24h: item.data?.price_change_percentage_24h?.usd ?? null,
+              thumb: item.thumb || '',
+            };
+          });
+          setTrending(mapped);
+        }
+      } catch {}
+      setLoading(false);
+    };
+    load();
+    const iv = setInterval(load, 300_000);
+    return () => clearInterval(iv);
+  }, []);
+
+  if (loading || trending.length === 0) return null;
+
+  return (
+    <div className="panel panel-hover">
+      <div className="ph">
+        <div className="pt">Trending Now</div>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)' }}>● LIVE</span>
+          <div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>
+            <a className="src-link" href="https://www.coingecko.com/en/trending" target="_blank" rel="noopener noreferrer">CoinGecko</a>
+          </div>
+        </div>
+      </div>
+      {trending.map((t, i) => (
+        <div key={`trending-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 12px', borderBottom: '1px solid var(--b1)', transition: 'background 0.15s', cursor: 'pointer' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--s2)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+        >
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)', width: 16 }}>{i + 1}</span>
+          <div style={{ flex: 1 }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--text)', fontWeight: 600 }}>{t.symbol}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', marginLeft: 6 }}>{t.name}</span>
+          </div>
+          {t.rank > 0 && <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>#{t.rank}</span>}
+          {t.change24h !== null && (
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, fontWeight: 600, color: t.change24h >= 0 ? 'var(--green)' : 'var(--red)', width: 55, textAlign: 'right' }}>
+              {t.change24h >= 0 ? '+' : ''}{t.change24h.toFixed(1)}%
+            </span>
+          )}
+        </div>
+      ))}
+      <div style={{ padding: '6px 12px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', borderTop: '1px solid var(--b2)' }}>
+        Most searched assets on CoinGecko · Updated every 5m
+      </div>
+    </div>
+  );
+}
+
 /* ── AI MARKET SYNTHESIS (module-level cache) ── */
 let _synthCache: { text: string; ts: number } | null = null;
 const SYNTH_TTL = 5 * 60 * 1000;
@@ -1880,10 +2088,13 @@ export default function OverviewTab() {
         <IntelligenceBrief />
       </div>
 
-      {/* ▬▬▬ SECTION 5: DAILY BRIEF + CORRELATION ENGINE ▬▬▬ */}
+      {/* ▬▬▬ SECTION 5: DAILY BRIEF + CORRELATION ENGINE + MARKET BREADTH ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <DailyBriefCard />
-        <CorrelationEngine />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <CorrelationEngine />
+          <MarketBreadthGauge />
+        </div>
       </div>
 
       {/* ▬▬▬ SECTION 6: HEATMAP + CHARTS ▬▬▬ */}
@@ -1895,10 +2106,13 @@ export default function OverviewTab() {
         </div>
       </div>
 
-      {/* ▬▬▬ SECTION 7: MARKET TABLE + ETF FLOWS ▬▬▬ */}
+      {/* ▬▬▬ SECTION 7: MARKET TABLE + ETF FLOWS + DERIVATIVES ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <MarketTable />
-        <ETFFlows />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <ETFFlows />
+          <DerivativesPulse />
+        </div>
       </div>
 
       {/* ▬▬▬ SECTION 8: WHALE FEED + CHAINSCORE + NETWORK HEALTH ▬▬▬ */}
@@ -1913,6 +2127,7 @@ export default function OverviewTab() {
             <AiMarketSynthesis />
           </div>
           <ChainScore />
+          <TrendingMomentum />
         </div>
       </div>
 

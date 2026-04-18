@@ -11,7 +11,8 @@ import CommandPalette from './CommandPalette';
 import { SourceStatusBadge } from './LevelUpModules';
 import Link from 'next/link';
 
-const PRO_TAB_IDS = new Set(['onchain', 'defi', 'derivatives', 'alerts', 'sentiment']);
+const PRO_TAB_IDS = new Set(['onchain', 'defi', 'sentiment']);
+const ENT_TAB_IDS = new Set(['derivatives', 'alerts']);
 
 interface TerminalLayoutProps {
   children: React.ReactNode;
@@ -171,6 +172,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
           >
             {tab.label}
             {PRO_TAB_IDS.has(tab.id) && <span className="tab-pro-badge">PRO</span>}
+            {ENT_TAB_IDS.has(tab.id) && <span className="tab-pro-badge" style={{ background: 'rgba(167,139,250,0.12)', color: 'var(--purple)' }}>ENT</span>}
           </button>
         ))}
       </nav>

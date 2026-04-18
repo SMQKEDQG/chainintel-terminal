@@ -125,20 +125,20 @@ export default function PricingTab() {
       <div className="pricing-grid">
         {/* Free Tier */}
         <div className="price-tier">
-          <div className="tier-label">Free Tier</div>
+          <div className="tier-label">Free</div>
           <div className="tier-price"><sup>$</sup>0<sub>/forever free</sub></div>
           <div className="tier-tagline">The best free crypto intelligence terminal on the internet.</div>
           <div className="tier-features">
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Market dashboard · top 50 assets</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text"><span data-glossary="Fear &amp; Greed Index">Fear &amp; Greed Index</span></div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Live market dashboard · top 50 assets</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Fear & Greed Index</div></div>
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">ETF Flow Dashboard · daily</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Market Heatmap</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Basic <span data-glossary="TVL">DeFi TVL</span> view</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Market Heatmap · 24H</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">ISO 20022 compliance tracker</div></div>
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Regulatory news feed</div></div>
-            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked">On-Chain Analytics (locked)</div></div>
-            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked"><span data-glossary="ISO 20022">ISO 20022</span> Intel (locked)</div></div>
-            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked">AI Morning Brief (locked)</div></div>
-            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked">Ask CI AI Query (locked)</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">BTC/ETH price charts</div></div>
+            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked">On-Chain Analytics</div></div>
+            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked">DeFi Intelligence</div></div>
+            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked">Derivatives · Whale Tracking</div></div>
           </div>
           <div id="waitlistForm" style={{ margin: '8px 0' }}>
             {!waitlistSubmitted ? (
@@ -183,18 +183,18 @@ export default function PricingTab() {
         <div className="price-tier featured">
           <div className="tier-label">Pro — Most Popular</div>
           <div className="tier-price"><sup>$</sup>49<sub>/mo · cancel anytime</sub></div>
-          <div className="tier-tagline">Everything Bloomberg can't give you, at 1/40th the price.</div>
+          <div className="tier-tagline">Full analytical suite. What Bloomberg charges $24K/yr for.</div>
           <div className="tier-features">
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Everything in Free</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Full On-Chain Analytics Suite</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text"><span data-glossary="ISO 20022">ISO 20022</span> Intelligence Module</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">AI Morning Brief (daily)</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Everything in Free, plus:</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Full On-Chain Analytics — MVRV, NVT, exchange flows</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">DeFi Intelligence — TVL, yields, protocol P/E</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Sentiment Analysis — social, news, crowd vs smart money</div></div>
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Ask CI — Natural Language Queries</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text"><span data-glossary="ChainScore™">ChainScore™</span> ratings · 50 assets</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Whale &amp; Smart Money tracker</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Regulatory intelligence · structured</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">AI Morning Brief (daily)</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">ChainScore™ ratings · 50 assets</div></div>
             <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">500+ asset coverage</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Protocol Revenue P/E ratios</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Portfolio cloud sync</div></div>
+            <div className="tier-feat"><div className="tier-feat-check no">🔒</div><div className="tier-feat-text locked">Derivatives · Whale Tracking · API</div></div>
           </div>
           <button
             onClick={() => handleCheckout('pro')}
@@ -210,18 +210,19 @@ export default function PricingTab() {
         <div className="price-tier">
           <div className="tier-label">Enterprise</div>
           <div className="tier-price"><sup>$</sup>499<sub>/mo · annual billing available</sub></div>
-          <div className="tier-tagline">Institutional-grade. Fund-ready. AML-compliant.</div>
+          <div className="tier-tagline">Institutional-grade. Fund-ready. The full arsenal.</div>
           <div className="tier-features">
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Everything in Pro</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text"><span data-glossary="ChainScore™">ChainScore™</span> · 150 assets</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Custom alert engine</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Open REST API access</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">AML / Compliance layer</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Dedicated research reports</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">White-label option</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Priority support + onboarding</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Institutional tracker custom feeds</div></div>
-            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text"><span data-glossary="ISO 20022">ISO 20022</span> watchlist alerts</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text" style={{ fontWeight: 600, color: 'var(--text)' }}>Everything in Pro, plus:</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Derivatives Intelligence — funding, OI, liquidations</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Whale & Smart Money Tracker — real-time alerts</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Open REST API — programmatic data access</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Custom Alert Engine — webhook + email delivery</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">ChainScore™ · 150 assets + historical</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Team seats (up to 5 included)</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">AML / Compliance screening layer</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">CSV & PDF export on all modules</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">Priority support + dedicated onboarding</div></div>
+            <div className="tier-feat"><div className="tier-feat-check yes">✓</div><div className="tier-feat-text">White-label option available</div></div>
           </div>
           <button
             onClick={() => handleCheckout('ent')}
@@ -232,7 +233,7 @@ export default function PricingTab() {
             {checkoutLoading === 'ent' ? 'REDIRECTING...' : 'SUBSCRIBE — $499/MO'}
           </button>
           <a href="mailto:support@chainintelterminal.com" style={{ display: 'block', marginTop: '12px', fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--text2)', textDecoration: 'none', letterSpacing: '0.06em' }}>
-            Questions? support@chainintelterminal.com
+            Need custom terms? support@chainintelterminal.com
           </a>
         </div>
       </div>
@@ -249,7 +250,7 @@ export default function PricingTab() {
             </tr>
           </thead>
           <tbody>
-            <tr><td className="vs-dim">Annual Cost</td><td style={{ color: 'var(--red)' }}>$24,000–$31,980/seat · 2-yr lock-in</td><td style={{ color: 'var(--green)' }}>$0 Free · $588/yr Pro · $5,988/yr Enterprise</td></tr>
+            <tr><td className="vs-dim">Annual Cost</td><td style={{ color: 'var(--red)' }}>$24,000–$31,980/seat · 2-yr lock-in</td><td style={{ color: 'var(--green)' }}>Free $0 · Pro $588/yr · Enterprise $5,988/yr</td></tr>
             <tr><td className="vs-dim">Crypto Coverage</td><td style={{ color: 'var(--red)' }}>~50 assets · institutional custody required</td><td style={{ color: 'var(--green)' }}>Top 100 live · 500+ planned</td></tr>
             <tr><td className="vs-dim">On-Chain Analytics</td><td style={{ color: 'var(--red)' }}>❌ None — structural gap</td><td style={{ color: 'var(--green)' }}>✓ MVRV, NVT, exchange flows, whale tracking</td></tr>
             <tr><td className="vs-dim">DeFi / TVL Data</td><td style={{ color: 'var(--red)' }}>❌ None</td><td style={{ color: 'var(--green)' }}>✓ 6,400+ protocols · 469 chains · DefiLlama</td></tr>

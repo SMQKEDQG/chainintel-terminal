@@ -38,10 +38,10 @@ const TAB_COMPONENTS: Record<TabId, React.ComponentType> = {
 };
 
 // Tabs that require Pro tier
-const PRO_TABS = new Set<TabId>(['onchain', 'defi', 'derivatives', 'alerts', 'sentiment']);
+const PRO_TABS = new Set<TabId>(['onchain', 'defi', 'sentiment']);
 
 // Tabs that require Enterprise tier
-const ENTERPRISE_TABS = new Set<TabId>();
+const ENTERPRISE_TABS = new Set<TabId>(['derivatives', 'alerts']);
 
 // Human-readable tab names for the gate prompt
 const TAB_NAMES: Record<TabId, string> = {

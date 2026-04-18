@@ -93,6 +93,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ ratings: getFallbackRatings(asset, all) }, { status: 200, headers });
     }
 
+    // If all scores from Supabase are zero, use curated fallback instead
+    const allZero = data.every((r: Record<string, unknown>) => !r.total_score || Number(r.total_score) === 0);
+    if (allZero) {
+      const fallback = getFallbackRatings(asset, all);
+      if (asset && !all) {
+        return NextResponse.json(
+          fallback ? { ...fallback, source: 'curated' } : { error: `Asset ${asset} not found.` },
+          { status: fallback ? 200 : 404, headers }
+        );
+      }
+      return NextResponse.json(
+        { count: (fallback as any[]).length, ratings: fallback, source: 'curated' },
+        { status: 200, headers }
+      );
+    }
+
     // Map actual Supabase columns to public API format
     // Columns: asset_symbol, asset_name, total_score, score_band,
     //   regulatory_clarity, adoption_velocity, decentralization, liquidity_depth, network_fundamentals

@@ -123,7 +123,7 @@ export function CorrelationEngine() {
         {data.assets.map((a) => (
           <div key={a.symbol} style={{ display: 'grid', gridTemplateColumns: '80px 80px 60px 60px 1fr 60px', gap: 8, padding: '5px 8px', background: 'var(--s2)', alignItems: 'center' }}>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text)', fontWeight: 600 }}>{a.symbol}</span>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>${a.price?.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--text2)' }}>${a.price != null ? (a.price >= 1 ? a.price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : a.price < 0.01 ? a.price.toFixed(4) : a.price.toFixed(2)) : '—'}</span>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: a.change24h >= 0 ? 'var(--green)' : 'var(--red)' }}>{a.change24h >= 0 ? '+' : ''}{a.change24h?.toFixed(1)}%</span>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 8, color: a.change7d >= 0 ? 'var(--green)' : 'var(--red)' }}>{a.change7d >= 0 ? '+' : ''}{a.change7d?.toFixed(1)}%</span>
             <div style={{ display: 'flex', gap: 2, alignItems: 'center' }}>

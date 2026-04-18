@@ -46,7 +46,7 @@ export async function GET() {
     defiChains,
     stablecoins,
     mempoolData,
-    gasData,
+    gasDataRaw,
     cgTrending,
     paprikaGlobal,
   ] = await Promise.all([
@@ -56,7 +56,7 @@ export async function GET() {
     safeFetch('https://api.llama.fi/v2/chains'),
     safeFetch('https://stablecoins.llama.fi/stablecoins?includePrices=true'),
     safeFetch('https://mempool.space/api/mempool'),
-    safeFetch(`https://api.etherscan.io/api?module=gastracker&action=gasoracle${process.env.ETHERSCAN_API_KEY ? `&apikey=${process.env.ETHERSCAN_API_KEY}` : ''}`),
+    safeFetch('https://api.blocknative.com/gasprices/blockprices'),
     safeFetch('https://api.coingecko.com/api/v3/search/trending'),
     safeFetch('https://api.coinpaprika.com/v1/global'),
   ]);
@@ -149,11 +149,37 @@ export async function GET() {
   const mempoolVsize = mempoolData?.vsize ?? null;
   const mempoolTotalFee = mempoolData?.total_fee ?? null;
 
-  const gasResult = gasData?.result;
-  const gasLow = parseFloat(gasResult?.SafeGasPrice || '0');
-  const gasStandard = parseFloat(gasResult?.ProposeGasPrice || '0');
-  const gasFast = parseFloat(gasResult?.FastGasPrice || '0');
-  const gasBaseFee = parseFloat(gasResult?.suggestBaseFee || '0');
+  // Parse Blocknative gas data with ETH RPC fallback
+  let gasLow = 0, gasStandard = 0, gasFast = 0, gasBaseFee = 0;
+  const blockPrices = gasDataRaw?.blockPrices?.[0];
+  if (blockPrices?.estimatedPrices?.length) {
+    const prices = blockPrices.estimatedPrices;
+    gasBaseFee = Math.round(blockPrices.baseFeePerGas || 0);
+    // confidence 70 = low, 90 = standard, 99 = fast
+    const conf70 = prices.find((p: any) => p.confidence === 70) || prices[prices.length - 1];
+    const conf90 = prices.find((p: any) => p.confidence === 90) || prices[Math.floor(prices.length / 2)];
+    const conf99 = prices.find((p: any) => p.confidence === 99) || prices[0];
+    gasLow = Math.round(conf70?.price || conf70?.maxFeePerGas || 0);
+    gasStandard = Math.round(conf90?.price || conf90?.maxFeePerGas || 0);
+    gasFast = Math.round(conf99?.price || conf99?.maxFeePerGas || 0);
+  }
+  // If Blocknative failed, try ETH RPC as last resort
+  if (gasStandard === 0) {
+    try {
+      const rpcRes = await safeFetch('https://eth.llamarpc.com', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_gasPrice', params: [], id: 1 }),
+      });
+      if (rpcRes?.result) {
+        const gweiPrice = Math.round(parseInt(rpcRes.result, 16) / 1e9);
+        gasLow = Math.max(1, gweiPrice - 2);
+        gasStandard = gweiPrice;
+        gasFast = gweiPrice + 3;
+        gasBaseFee = gweiPrice;
+      }
+    } catch {}
+  }
 
   const networkHealth = {
     btcMempool: {

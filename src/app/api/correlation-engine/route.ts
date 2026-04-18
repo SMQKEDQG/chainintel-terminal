@@ -17,7 +17,7 @@ const TRACKED_ASSETS = [
   { id: 'xrp-xrp', symbol: 'XRP', name: 'XRP', fallbackPrice: 1.32, change24h: 1.9, change7d: -4.2, change30d: 15.8 },
   { id: 'sol-solana', symbol: 'SOL', name: 'Solana', fallbackPrice: 81, change24h: -0.4, change7d: -5.8, change30d: 12.1 },
   { id: 'ada-cardano', symbol: 'ADA', name: 'Cardano', fallbackPrice: 0.41, change24h: -2.1, change7d: -5.4, change30d: 6.7 },
-  { id: 'hbar-hedera', symbol: 'HBAR', name: 'Hedera', fallbackPrice: 0.17, change24h: 1.4, change7d: 2.1, change30d: 18.4 },
+  { id: 'hbar-hedera-hashgraph', symbol: 'HBAR', name: 'Hedera', fallbackPrice: 0.17, change24h: 1.4, change7d: 2.1, change30d: 18.4 },
   { id: 'qnt-quant', symbol: 'QNT', name: 'Quant', fallbackPrice: 88, change24h: 2.3, change7d: 1.8, change30d: 11.2 },
   { id: 'xlm-stellar', symbol: 'XLM', name: 'Stellar', fallbackPrice: 0.27, change24h: -0.6, change7d: -2.8, change30d: 9.6 },
 ];
@@ -99,14 +99,16 @@ export async function GET() {
   // Price momentum signal per asset
   const priceData = val(prices);
   const priceMap = new Map<string, any>();
+  const symbolMap = new Map<string, any>();
   if (Array.isArray(priceData)) {
     for (const asset of priceData) {
       if (asset?.id) priceMap.set(asset.id, asset);
+      if (asset?.symbol) symbolMap.set(asset.symbol.toUpperCase(), asset);
     }
   }
 
   const assets = TRACKED_ASSETS.map((tracked) => {
-    const liveAsset = priceMap.get(tracked.id);
+    const liveAsset = priceMap.get(tracked.id) || symbolMap.get(tracked.symbol);
     const usd = liveAsset?.quotes?.USD || {};
     return {
       symbol: tracked.symbol,

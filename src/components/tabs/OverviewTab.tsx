@@ -1355,12 +1355,23 @@ function ChainScore() {
   useEffect(() => {
     fetch('/api/chainscore?all=true').then(r => r.json()).then(d => {
       if (d.ratings && d.ratings.length > 0) {
-        const sorted = d.ratings
-          .map((r: any) => ({ sym: r.asset_symbol, name: r.asset_name || r.asset_symbol, score: r.total_score ?? 0, band: r.score_band || '' }))
+        // Use API format: asset/name/score/grade/signal
+        const mapped = d.ratings
+          .map((r: any) => ({
+            sym: r.asset_symbol || r.asset || r.sym || '',
+            name: r.asset_name || r.name || r.asset_symbol || r.asset || '',
+            score: Number(r.total_score ?? r.score ?? 0),
+            band: r.score_band || r.grade || ''
+          }))
           .sort((a: any, b: any) => b.score - a.score)
           .slice(0, 7);
-        setScores(sorted);
-        setLive(true);
+        // Only use live data if at least one score is non-zero
+        const hasRealScores = mapped.some((s: any) => s.score > 0);
+        if (hasRealScores) {
+          setScores(mapped);
+          setLive(true);
+        }
+        // If all scores are 0, fall through to fallback
       }
     }).catch(() => {});
   }, []);
@@ -1583,6 +1594,135 @@ function WhaleFeed() {
   );
 }
 
+/* ── Capital Flow Monitor (LIVE — stablecoin supply + chain TVL flows) ── */
+function CapitalFlowMonitor() {
+  const [data, setData] = useState<{
+    stablecoins: { name: string; supply: number; change7d: number }[];
+    totalStable: number;
+    stableChange7d: number;
+    chainFlows: { name: string; tvl: number }[];
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const [stableRes, chainRes] = await Promise.all([
+          fetch('https://stablecoins.llama.fi/stablecoins?includePrices=true').then(r => r.ok ? r.json() : null).catch(() => null),
+          fetch('https://api.llama.fi/v2/chains').then(r => r.ok ? r.json() : null).catch(() => null),
+        ]);
+
+        const stableList = stableRes?.peggedAssets || [];
+        const topStables = stableList
+          .filter((s: any) => s.circulating?.peggedUSD > 100_000_000)
+          .sort((a: any, b: any) => (b.circulating?.peggedUSD || 0) - (a.circulating?.peggedUSD || 0))
+          .slice(0, 5)
+          .map((s: any) => {
+            const current = s.circulating?.peggedUSD || 0;
+            const prev = current - (s.circulatingPrevDay?.peggedUSD ? current - s.circulatingPrevDay.peggedUSD : 0);
+            const change7d = prev > 0 ? ((current - prev) / prev) * 100 : 0;
+            return { name: s.name || s.symbol || '', supply: current, change7d };
+          });
+
+        const totalStable = stableList.reduce((s: number, c: any) => s + (c.circulating?.peggedUSD || 0), 0);
+
+        const chains = Array.isArray(chainRes) ? chainRes
+          .filter((c: any) => c.tvl > 0)
+          .sort((a: any, b: any) => (b.tvl || 0) - (a.tvl || 0))
+          .slice(0, 5)
+          .map((c: any) => ({
+            name: c.name || '',
+            tvl: c.tvl || 0,
+          })) : [];
+
+        const stableChange7d = topStables.length > 0 ? topStables.reduce((s: number, c: any) => s + c.change7d, 0) / topStables.length : 0;
+
+        setData({ stablecoins: topStables, totalStable, stableChange7d, chainFlows: chains });
+      } catch { /* keep null */ }
+      setLoading(false);
+    };
+    load();
+    const iv = setInterval(load, 300_000);
+    return () => clearInterval(iv);
+  }, []);
+
+  const fmt = (n: number) => n >= 1e12 ? `$${(n/1e12).toFixed(2)}T` : n >= 1e9 ? `$${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n/1e6).toFixed(0)}M` : `$${n.toFixed(0)}`;
+
+  if (loading) return (
+    <div className="panel" style={{ padding: 16 }}>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)' }}>Loading Capital Flows...</div>
+    </div>
+  );
+  if (!data) return null;
+
+  return (
+    <div className="panel panel-hover">
+      <div className="ph">
+        <div className="pt">Capital Flow Monitor</div>
+        <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+          <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--green)' }}>● LIVE</span>
+          <div className="tag" style={{ background: 'rgba(107,138,255,0.08)', color: 'var(--blue)' }}>
+            <a className="src-link" href="https://defillama.com" target="_blank" rel="noopener noreferrer">DefiLlama</a>
+          </div>
+        </div>
+      </div>
+
+      {/* Stablecoin supply header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', background: 'var(--s2)', border: '1px solid var(--b2)', marginBottom: 4 }}>
+        <div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>TOTAL STABLECOIN SUPPLY</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 16, fontWeight: 700, color: 'var(--text)' }}>{fmt(data.totalStable)}</div>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em', marginBottom: 2 }}>CAPITAL FLOW</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: data.stableChange7d >= 0 ? 'var(--green)' : 'var(--red)' }}>
+            {data.stableChange7d >= 0 ? '▲' : '▼'} {data.stableChange7d >= 0 ? 'INFLOW' : 'OUTFLOW'}
+          </div>
+        </div>
+      </div>
+
+      {/* Stablecoin breakdown */}
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: '4px 10px', letterSpacing: '0.1em' }}>STABLECOIN SUPPLY DISTRIBUTION</div>
+      {data.stablecoins.map((s, i) => {
+        const pct = data.totalStable > 0 ? (s.supply / data.totalStable) * 100 : 0;
+        return (
+          <div key={`stable-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px' }}>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 600, width: 60 }}>{s.name}</span>
+            <div style={{ flex: 1, height: 5, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ width: `${Math.min(pct, 100)}%`, height: '100%', background: 'linear-gradient(90deg, var(--blue), var(--accent))', borderRadius: 3, transition: 'width 0.6s ease' }} />
+            </div>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', width: 55, textAlign: 'right' }}>{fmt(s.supply)}</span>
+            <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', width: 35, textAlign: 'right' }}>{pct.toFixed(0)}%</span>
+          </div>
+        );
+      })}
+
+      {/* Chain TVL distribution */}
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: '8px 10px 4px', letterSpacing: '0.1em', borderTop: '1px solid var(--b1)', marginTop: 6 }}>CHAIN TVL DISTRIBUTION</div>
+      {(() => {
+        const totalChainTvl = data.chainFlows.reduce((s, c) => s + c.tvl, 0);
+        return data.chainFlows.map((c, i) => {
+          const share = totalChainTvl > 0 ? (c.tvl / totalChainTvl) * 100 : 0;
+          return (
+            <div key={`chain-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 10px' }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 600, width: 70 }}>{c.name}</span>
+              <div style={{ flex: 1, height: 5, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
+                <div style={{ width: `${Math.min(share, 100)}%`, height: '100%', background: 'linear-gradient(90deg, var(--green), var(--accent))', borderRadius: 3, transition: 'width 0.6s ease' }} />
+              </div>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--text2)', width: 55, textAlign: 'right' }}>{fmt(c.tvl)}</span>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', width: 35, textAlign: 'right' }}>{share.toFixed(0)}%</span>
+            </div>
+          );
+        });
+      })()}
+
+      <div style={{ padding: '6px 10px', fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', borderTop: '1px solid var(--b2)', marginTop: 4 }}>
+        Stablecoin inflows signal new capital entering crypto · Updated every 5m
+      </div>
+    </div>
+  );
+}
+
 /* ── AI MARKET SYNTHESIS (module-level cache) ── */
 let _synthCache: { text: string; ts: number } | null = null;
 const SYNTH_TTL = 5 * 60 * 1000;
@@ -1765,6 +1905,7 @@ export default function OverviewTab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <WhaleFeed />
+          <CapitalFlowMonitor />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <div className="panel panel-hover">

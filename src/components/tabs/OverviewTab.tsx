@@ -1526,7 +1526,17 @@ function MarketTable() {
           {sourceLabel(source)} · <a className="src-link" href="https://coinpaprika.com" target="_blank" rel="noopener noreferrer">CoinPaprika</a>
         </div>
       </div>
-      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 13 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--mono)', fontSize: 13, tableLayout: 'fixed' }}>
+        <colgroup>
+          <col style={{ width: '5%' }} />
+          <col style={{ width: '22%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '10%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '13%' }} />
+          <col style={{ width: '14%' }} />
+        </colgroup>
         <thead>
           <tr style={{ borderBottom: '1px solid var(--b2)' }}>
             <th style={{ textAlign: 'left', padding: '8px 10px', color: 'var(--text2)', fontSize: 10, letterSpacing: '0.1em', fontWeight: 600 }}>#</th>
@@ -1553,10 +1563,12 @@ function MarketTable() {
                     if (ctx) ctx.openInsight({ type: 'asset', title: a.name, subtitle: a.symbol, data: { price: fmtPrice(a.price), '24h': `${a.percent_change_24h >= 0 ? '+' : ''}${a.percent_change_24h.toFixed(2)}%`, '7d': `${a.percent_change_7d >= 0 ? '+' : ''}${a.percent_change_7d.toFixed(2)}%`, mcap: fmtUsd(a.market_cap, 1), volume: fmtUsd(a.volume_24h, 1), signal: sig.label } });
                   }}>
                 <td style={{ padding: '6px 10px', color: 'var(--muted)', fontSize: 11 }}>{a.rank}</td>
-                <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                  {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
-                  <span style={{ color: 'var(--text)', fontWeight: 500 }}>{a.name}</span>
-                  <span style={{ fontSize: 12, color: 'var(--muted)' }}>{a.symbol}</span>
+                <td style={{ padding: '5px 8px', overflow: 'hidden' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                    {a.image && <img src={a.image} alt={a.symbol} width={16} height={16} style={{ borderRadius: 2, flexShrink: 0 }} onError={e => { (e.target as HTMLImageElement).style.display = 'none'; }} />}
+                    <span style={{ color: 'var(--text)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={a.name}>{a.name}</span>
+                    <span style={{ fontSize: 12, color: 'var(--muted)', flexShrink: 0 }}>{a.symbol}</span>
+                  </div>
                 </td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{fmtPrice(a.price)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: d1 >= 0 ? 'var(--green)' : 'var(--red)' }}>{d1 >= 0 ? '+' : ''}{d1.toFixed(2)}%</td>

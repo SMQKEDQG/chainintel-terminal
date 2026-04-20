@@ -2137,7 +2137,9 @@ export default function OverviewTab() {
       {/* MarketPulse removed — consolidated into scrolling ticker above */}
 
       {/* ▬▬▬ SECTION 3: SIGNALS BAR (7 columns) ▬▬▬ */}
-      <SignalsBar />
+      <div data-tour="signals-bar">
+        <SignalsBar />
+      </div>
 
       {/* ▬▬▬ SECTION 4: INTELLIGENCE BRIEF ▬▬▬ */}
       <div style={{ padding: '1px 0' }}>
@@ -2155,7 +2157,7 @@ export default function OverviewTab() {
 
       {/* ▬▬▬ SECTION 6: HEATMAP + CHARTS ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
-        <Heatmap />
+        <div data-tour="heatmap"><Heatmap /></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <BtcChart />
           <EthChart />

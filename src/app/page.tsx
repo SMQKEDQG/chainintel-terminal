@@ -206,10 +206,9 @@ export default function Home() {
   const handleSplashComplete = useCallback(() => {
     markSplashShown();
     setShowSplash(false);
-    // Auto-launch tour after splash if not previously dismissed
+    // Auto-launch tour immediately after splash (no gap)
     if (!wasTourDismissed()) {
-      // Small delay so the layout is fully painted before tour measures elements
-      setTimeout(() => setStartTourAfterSplash(true), 600);
+      setStartTourAfterSplash(true);
     }
   }, []);
 

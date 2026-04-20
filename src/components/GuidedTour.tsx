@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-/* ── GuidedTour — smooth, friendly product walkthrough (3 steps) ── */
+/* ── GuidedTour — smooth, friendly product walkthrough (6 steps) ── */
 interface TourStep {
   target: string;
   title: string;
@@ -20,11 +20,19 @@ interface GuidedTourProps {
 
 const TOUR_STEPS: TourStep[] = [
   {
+    target: 'ticker-tape',
+    title: 'Live Ticker Tape',
+    emoji: '📡',
+    description:
+      'Real-time prices streaming for the top assets. Prices refresh every 60 seconds from CoinMarketCap — no stale data.',
+    position: 'bottom',
+  },
+  {
     target: 'ask-ci',
     title: 'Ask CI — Your AI Analyst',
     emoji: '🧠',
     description:
-      'Ask any crypto question. Try "Is now a good time to buy BTC?" — CI synthesizes data from 15+ live sources instantly.',
+      'Ask any crypto question in plain English. Try "Is now a good time to buy BTC?" — CI synthesizes data from 15+ live sources instantly.',
     position: 'bottom',
     tabSwitch: 'mktovr',
   },
@@ -33,8 +41,26 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Daily Intelligence Brief',
     emoji: '📊',
     description:
-      'Your daily market digest — updated every 3 minutes with live prices, sentiment, DeFi, and network health all in one card.',
+      'Your market digest — updated every 3 minutes with live prices, sentiment, DeFi stats, and network health in one glanceable card.',
     position: 'bottom',
+    tabSwitch: 'mktovr',
+  },
+  {
+    target: 'signals-bar',
+    title: 'Signal Engine',
+    emoji: '🎯',
+    description:
+      'Aggregated market signals — fear & greed, trend momentum, and volatility indicators in one bar. Green means bullish, red means caution.',
+    position: 'bottom',
+    tabSwitch: 'mktovr',
+  },
+  {
+    target: 'heatmap',
+    title: 'Market Heatmap',
+    emoji: '🔥',
+    description:
+      'Visualize 24h performance across the entire market at a glance. Size = market cap, color = price change. Spot trends in seconds.',
+    position: 'top',
     tabSwitch: 'mktovr',
   },
   {
@@ -42,7 +68,7 @@ const TOUR_STEPS: TourStep[] = [
     title: 'Intelligence Modules',
     emoji: '⚡',
     description:
-      '11 specialized modules. Start with Overview, explore Markets, then unlock Pro for deeper on-chain, DeFi, and derivatives analysis.',
+      '11 specialized modules covering markets, on-chain, DeFi, derivatives, and more. Start with Overview, then explore deeper.',
     position: 'bottom',
   },
 ];
@@ -472,7 +498,7 @@ export function IdleTourPrompt({ onStartTour }: { onStartTour: () => void }) {
           Want a quick tour?
         </div>
         <div style={{ fontFamily: 'var(--sans)', fontSize: 11, color: 'var(--muted)' }}>
-          3 quick steps to get oriented
+          6 quick tips to master the terminal
         </div>
       </div>
       <button

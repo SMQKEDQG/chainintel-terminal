@@ -34,7 +34,18 @@ export function CorrelationEngine() {
     return () => clearInterval(iv);
   }, []);
 
-  if (loading) return <div className="panel" style={{ padding: 16 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Loading Correlation Engine...</div></div>;
+  if (loading) return (
+    <div className="panel" style={{ padding: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: 12, width: '60%', background: 'var(--s3)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: 8, width: '80%', background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: 6, width: '40%', background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginTop: 4 }}>
+          {[1,2,3].map(i => <div key={i} style={{ height: 32, background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />)}
+        </div>
+      </div>
+    </div>
+  );
   if (!data) {
     return (
       <div className="panel panel-hover" style={{ padding: 16 }}>
@@ -183,7 +194,15 @@ export function PortfolioModels() {
     fetch('/api/portfolio-models').then(r => r.json()).then(d => { setData(d); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  if (loading) return <div className="panel" style={{ padding: 16 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Loading Portfolio Models...</div></div>;
+  if (loading) return (
+    <div className="panel" style={{ padding: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: 12, width: '50%', background: 'var(--s3)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: 8, width: '70%', background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: 40, background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+      </div>
+    </div>
+  );
   if (!data?.models) return null;
 
   const model = data.models[selectedModel];
@@ -338,7 +357,16 @@ export function MicrostructurePanel() {
     return () => clearInterval(iv);
   }, []);
 
-  if (loading) return <div className="panel" style={{ padding: 16 }}><div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>Loading Microstructure...</div></div>;
+  if (loading) return (
+    <div className="panel" style={{ padding: 16 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: 12, width: '55%', background: 'var(--s3)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {[1,2].map(i => <div key={i} style={{ height: 60, background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />)}
+        </div>
+      </div>
+    </div>
+  );
   if (!data) return null;
 
   const ob = data.orderBook?.btc;
@@ -375,7 +403,7 @@ export function MicrostructurePanel() {
               {ob.bidWall && <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--green)', marginTop: 2 }}>Bid Wall: ${ob.bidWall.price?.toLocaleString()} (${(ob.bidWall.usd / 1e6).toFixed(2)}M)</div>}
               {ob.askWall && <div style={{ fontFamily: 'var(--mono)', fontSize: 7, color: 'var(--red)' }}>Ask Wall: ${ob.askWall.price?.toLocaleString()} (${(ob.askWall.usd / 1e6).toFixed(2)}M)</div>}
             </>
-          ) : <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>Loading...</div>}
+          ) : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><div style={{ height: 8, width: '60%', background: 'var(--s3)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} /><div style={{ height: 6, width: '40%', background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} /></div>}
         </div>
 
         {/* Liquidation Cascade */}
@@ -397,7 +425,7 @@ export function MicrostructurePanel() {
                 </div>
               ))}
             </>
-          ) : <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)' }}>Loading...</div>}
+          ) : <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}><div style={{ height: 8, width: '60%', background: 'var(--s3)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} /><div style={{ height: 6, width: '40%', background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} /></div>}
         </div>
       </div>
 
@@ -485,7 +513,7 @@ function SignalBadge({ signal, confidence }: { signal: string; confidence: numbe
   );
 }
 
-export function DailyBriefCard() {
+export function DailyBriefCard({ marketDataFallback }: { marketDataFallback?: { coins: { symbol: string; price: number; percent_change_24h: number }[] } } = {}) {
   const [data, setData] = useState<any>(null);
   const [expanded, setExpanded] = useState(true);
   const [loading, setLoading] = useState(true);
@@ -521,12 +549,27 @@ export function DailyBriefCard() {
   const trending = b.trending || [];
 
   const fmt = (n: number, d = 0) => {
-    if (!n) return '—';
+    if (n === null || n === undefined) return '—';
     if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
     if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
+    if (n === 0) return '$0';
     return `$${n.toLocaleString('en-US', { maximumFractionDigits: d })}`;
   };
+
+  // Patch zero-priced assets with MarketDataContext fallback
+  if (data?.brief?.marketSnapshot?.assets && marketDataFallback?.coins) {
+    const symbolMap: Record<string, { price: number; change24h: number }> = {};
+    for (const c of marketDataFallback.coins) {
+      symbolMap[c.symbol.toUpperCase()] = { price: c.price, change24h: c.percent_change_24h };
+    }
+    for (const a of data.brief.marketSnapshot.assets) {
+      if ((!a.price || a.price === 0) && symbolMap[a.symbol]) {
+        a.price = symbolMap[a.symbol].price;
+        if (a.change24h === 0 || !a.change24h) a.change24h = symbolMap[a.symbol].change24h;
+      }
+    }
+  }
 
 
   return (

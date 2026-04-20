@@ -7,7 +7,7 @@ import { useSubscription } from '@/lib/use-subscription';
 import TickerTape from './TickerTape';
 import AlertPanel from './AlertPanel';
 import StatusBar from './StatusBar';
-import GuidedTour from './GuidedTour';
+import GuidedTour, { IdleTourPrompt } from './GuidedTour';
 import CommandPalette from './CommandPalette';
 import { SourceStatusBadge } from './LevelUpModules';
 import Link from 'next/link';
@@ -208,6 +208,14 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
         <div className="flex items-center gap-4">
           <span>CHAININTEL {VERSION}</span>
           <SourceStatusBadge />
+          <span
+            onClick={() => setCmdPaletteOpen(true)}
+            style={{ cursor: 'pointer', padding: '1px 6px', background: 'var(--s2)', border: '1px solid var(--b3)', borderRadius: 3, color: 'var(--muted)', transition: 'color 0.15s, border-color 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--muted)'; e.currentTarget.style.borderColor = 'var(--b3)'; }}
+          >
+            &#8984;K
+          </span>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <a href="mailto:support@chainintelterminal.com" className="hover:text-[var(--accent)] transition-colors">SUPPORT@CHAININTELTERMINAL.COM</a>
@@ -233,6 +241,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
         onClose={() => setTourOpen(false)}
         onSwitchTab={(tabId) => onTabChange(tabId as TabId)}
       />
+      {!tourOpen && <IdleTourPrompt onStartTour={() => setTourOpen(true)} />}
 
       {/* Command Palette */}
       <CommandPalette

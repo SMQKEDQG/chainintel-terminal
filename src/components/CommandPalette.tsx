@@ -49,11 +49,10 @@ export default function CommandPalette({ isOpen, onClose, onNavigate }: CommandP
   const filtered = query.trim()
     ? commands.filter(c => {
         const q = query.toLowerCase();
-        return (
-          c.label.toLowerCase().includes(q) ||
-          c.description.toLowerCase().includes(q) ||
-          c.keywords?.some(k => k.includes(q))
-        );
+        const words = q.split(/\s+/).filter(Boolean);
+        const searchable = `${c.label} ${c.description} ${(c.keywords || []).join(' ')}`.toLowerCase();
+        // Every query word must match somewhere in the combined searchable text
+        return words.every(w => searchable.includes(w));
       })
     : commands;
 

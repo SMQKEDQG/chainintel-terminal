@@ -350,14 +350,18 @@ function ChartSkeleton() {
     <div style={{
       height: '145px',
       display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: 'var(--mono)',
-      fontSize: 13,
-      color: 'var(--muted)',
+      flexDirection: 'column',
+      justifyContent: 'flex-end',
+      padding: '12px 16px',
+      gap: 4,
       background: 'repeating-linear-gradient(90deg,rgba(255,255,255,0.03) 0,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(0deg,rgba(255,255,255,0.03) 0,rgba(255,255,255,0.03) 1px,transparent 1px,transparent 30px)',
     }}>
-      <span style={{ animation: 'pulse 1.5s ease-in-out infinite', opacity: 0.7 }}>Loading live data...</span>
+      <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', flex: 1 }}>
+        {[40, 55, 35, 60, 45, 70, 50, 65, 38, 58, 42, 52, 48].map((h, i) => (
+          <div key={i} style={{ flex: 1, height: `${h}%`, background: 'var(--s3)', borderRadius: 1, animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${i * 80}ms` }} />
+        ))}
+      </div>
+      <div style={{ height: 2, background: 'var(--s3)', borderRadius: 1, animation: 'pulse 1.5s ease-in-out infinite' }} />
     </div>
   );
 }
@@ -1180,7 +1184,7 @@ function Heatmap() {
                       justifyContent: 'center',
                       cursor: 'pointer',
                       transition: 'all 0.2s ease',
-                      transform: isHovered ? 'scale(1.03)' : 'scale(1)',
+                      transform: isHovered ? 'scale(1.05)' : 'scale(1)',
                       zIndex: isHovered ? 2 : 1,
                       boxShadow: isHovered
                         ? `0 0 16px ${chg >= 0 ? 'rgba(52,211,153,0.25)' : 'rgba(248,113,113,0.25)'}` : 'none',
@@ -1446,7 +1450,7 @@ function ChainScore() {
             <div style={{ fontFamily: 'var(--mono)', fontSize: 14, color: 'var(--text)' }}>{s.name}</div>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--muted)' }}>{s.sym}</span>
           </div>
-          <div style={{ flex: 1, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden' }}>
+          <div title="ChainScore measures fundamental strength across network activity, developer engagement, market liquidity, and growth velocity" style={{ flex: 1, height: 6, background: 'var(--b3)', borderRadius: 3, overflow: 'hidden', cursor: 'help' }}>
             <div style={{ width: `${s.score}%`, height: '100%', background: `linear-gradient(90deg, ${bandColor(s.score)}, var(--accent))`, borderRadius: 3, transition: 'width 0.8s ease' }} />
           </div>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: bandColor(s.score), width: 30, textAlign: 'right' }}>{s.score}</span>
@@ -1461,11 +1465,11 @@ function MarketTable() {
   const { coins, source } = useContext(MarketDataContext);
   const topAssets = coins.slice(0, 12);
 
-  function getSignal(c: MarketCoin): { label: string; color: string } {
+  function getSignal(c: MarketCoin): { label: string; color: string; tooltip: string } {
     const d7 = c.percent_change_7d;
-    if (d7 > 2) return { label: 'ACCUMULATE', color: 'var(--green)' };
-    if (d7 > -3) return { label: 'HOLD', color: 'var(--gold)' };
-    return { label: 'WATCH', color: 'var(--muted)' };
+    if (d7 > 2) return { label: 'ACCUMULATE', color: 'var(--green)', tooltip: 'Strong buy signal — positive momentum across multiple indicators' };
+    if (d7 > -3) return { label: 'HOLD', color: 'var(--gold)', tooltip: 'Neutral — no strong directional signal' };
+    return { label: 'WATCH', color: 'var(--muted)', tooltip: 'Caution — negative momentum detected' };
   }
 
   return (
@@ -1496,8 +1500,8 @@ function MarketTable() {
             const d1 = a.percent_change_24h;
             const d7 = a.percent_change_7d;
             return (
-              <tr key={a.symbol} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(232,165,52,0.04)')}
+              <tr key={a.symbol} style={{ borderBottom: '1px solid var(--b1)', cursor: 'pointer', transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--s3)')}
                   onMouseLeave={e => (e.currentTarget.style.background = '')}
                   onClick={() => {
                     const ctx = (window as any).__ciInsightCtx;
@@ -1515,7 +1519,7 @@ function MarketTable() {
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.market_cap, 1)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{fmtUsd(a.volume_24h, 1)}</td>
                 <td style={{ textAlign: 'right', padding: '5px 8px' }}>
-                  <span style={{ fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em', borderRadius: 2 }}>
+                  <span title={sig.tooltip} style={{ fontFamily: 'var(--mono)', fontSize: 12, padding: '2px 6px', border: `1px solid ${sig.color}`, color: sig.color, letterSpacing: '0.06em', borderRadius: 2, cursor: 'help' }}>
                     {sig.label}
                   </span>
                 </td>
@@ -1691,7 +1695,11 @@ function CapitalFlowMonitor() {
 
   if (loading) return (
     <div className="panel" style={{ padding: 16 }}>
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)' }}>Loading Capital Flows...</div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ height: 12, width: '50%', background: 'var(--s3)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: 40, background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: 8, width: '70%', background: 'var(--s2)', borderRadius: 2, animation: 'pulse 1.5s ease-in-out infinite' }} />
+      </div>
     </div>
   );
   if (!data) return null;
@@ -2122,7 +2130,9 @@ export default function OverviewTab() {
       )}
 
       {/* ▬▬▬ SECTION 1: AI COMMAND CENTER (top of page) ▬▬▬ */}
-      <HeroCommandBar />
+      <div data-tour="ask-ci">
+        <HeroCommandBar />
+      </div>
 
       {/* MarketPulse removed — consolidated into scrolling ticker above */}
 
@@ -2136,7 +2146,7 @@ export default function OverviewTab() {
 
       {/* ▬▬▬ SECTION 5: DAILY BRIEF + CORRELATION ENGINE + MARKET BREADTH ▬▬▬ */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
-        <DailyBriefCard />
+        <div data-tour="daily-brief"><DailyBriefCard marketDataFallback={marketData} /></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <CorrelationEngine />
           <MarketBreadthGauge />

@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-/* ── GuidedTour — interactive product tour overlay ── */
+/* ── GuidedTour — interactive product tour overlay (3 steps) ── */
 interface TourStep {
-  target: string; // data-tour attribute
+  target: string;
   title: string;
   description: string;
   position: 'top' | 'bottom' | 'left' | 'right';
-  tabSwitch?: string; // switch to this tab before highlighting
+  tabSwitch?: string;
 }
 
 interface GuidedTourProps {
@@ -19,43 +19,29 @@ interface GuidedTourProps {
 
 const TOUR_STEPS: TourStep[] = [
   {
-    target: 'ticker-tape',
-    title: 'Live Ticker Tape',
-    description: 'Real-time price feed powered by ChainIntel’s free market-data stack, with CoinPaprika as the primary source and CoinGecko as fallback. Prices refresh automatically.',
-    position: 'bottom',
-  },
-  {
-    target: 'tab-nav',
-    title: 'Intelligence Modules',
-    description: '11 specialized tabs covering markets, on-chain analytics, DeFi, derivatives, sentiment, regulatory intelligence, and more. PRO tabs require a subscription.',
-    position: 'bottom',
-  },
-  {
-    target: 'tab-overview',
-    title: 'Overview Dashboard',
-    description: 'Your command center — market snapshot, correlation engine, daily AI brief, smart alerts, and portfolio allocation intelligence all in one view.',
+    target: 'ask-ci',
+    title: 'Ask CI — Your AI Analyst',
+    description: 'Ask any crypto question. Try: "Is now a good time to buy BTC?" — CI synthesizes data from 15+ live sources instantly.',
     position: 'bottom',
     tabSwitch: 'mktovr',
   },
   {
-    target: 'alert-btn',
-    title: 'Smart Alert Engine',
-    description: 'Configurable alerts for whale moves >$10M, funding rate flips, ETF flow streak breaks, and regulatory actions on assets you track.',
+    target: 'daily-brief',
+    title: 'Daily Intelligence Brief',
+    description: 'Your daily market digest, updated every 3 minutes with live data from 7+ sources. Prices, sentiment, DeFi, network health — all in one card.',
     position: 'bottom',
+    tabSwitch: 'mktovr',
   },
   {
-    target: 'live-indicator',
-    title: 'Live Data Connection',
-    description: '80+ data sources feeding the terminal in real-time. The pulse indicates active connections to exchanges, on-chain explorers, and intelligence feeds.',
+    target: 'tab-nav',
+    title: 'Intelligence Modules',
+    description: '11 specialized modules. Start with Overview, explore Markets, and unlock Pro tabs for deeper on-chain, DeFi, and derivatives analysis.',
     position: 'bottom',
-  },
-  {
-    target: 'status-bar',
-    title: 'System Status',
-    description: 'Monitor API health, data latency, active feed count, and last sync time. Everything transparent.',
-    position: 'top',
   },
 ];
+
+const IDLE_TIMEOUT_MS = 90_000;
+const DISMISSAL_KEY = 'chainintel_tour_dismissed';
 
 export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourProps) {
   const [step, setStep] = useState(0);
@@ -67,16 +53,14 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
 
   const updateHighlight = useCallback(() => {
     if (!isOpen || !currentStep) return;
-    
+
     try {
       const el = document.querySelector(`[data-tour="${currentStep.target}"]`);
       if (el) {
-        // Scroll element into view if it's off-screen
         const rect = el.getBoundingClientRect();
         const isInView = rect.top >= 0 && rect.bottom <= window.innerHeight;
         if (!isInView) {
           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          // Re-read rect after scroll settles
           setTimeout(() => {
             const newRect = el.getBoundingClientRect();
             setHighlight(newRect);
@@ -98,23 +82,21 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
       setIsClosing(false);
       return;
     }
-    
-    // Switch tab if needed
+
     if (currentStep?.tabSwitch && onSwitchTab) {
       onSwitchTab(currentStep.tabSwitch);
     }
-    
-    // Small delay to let tab switch render, then update highlight
+
     const t = setTimeout(updateHighlight, 300);
     return () => clearTimeout(t);
   }, [isOpen, step, currentStep, onSwitchTab, updateHighlight]);
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const handler = () => updateHighlight();
     window.addEventListener('resize', handler);
-    window.addEventListener('scroll', handler, true); // capture phase for nested scrolls
+    window.addEventListener('scroll', handler, true);
     return () => {
       window.removeEventListener('resize', handler);
       window.removeEventListener('scroll', handler, true);
@@ -133,20 +115,19 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
   }, [isOpen]);
 
   const handleClose = useCallback(() => {
-    // Prevent double-close
     if (isClosing) return;
     setIsClosing(true);
 
-    // Always return to Overview tab when tour ends
+    // Mark dismissed in sessionStorage
+    try { sessionStorage.setItem(DISMISSAL_KEY, '1'); } catch {}
+
     if (onSwitchTab) {
       onSwitchTab('mktovr');
     }
 
-    // Reset step and close with a tiny delay to ensure tab switch processes
     setStep(0);
     setHighlight(null);
 
-    // Use requestAnimationFrame to ensure state is clean before closing
     requestAnimationFrame(() => {
       onClose();
     });
@@ -161,7 +142,6 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
     if (step > 0) setStep(step - 1);
   };
 
-  // Don't render if not open or currently closing
   if (!isOpen || isClosing) return null;
 
   const tooltipStyle: React.CSSProperties = {
@@ -169,7 +149,6 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
     zIndex: 100002,
     background: 'var(--s1)',
     border: '1px solid var(--accent)',
-    borderRadius: 8,
     padding: '20px 24px',
     width: 360,
     boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 12px rgba(232,165,52,0.15)',
@@ -206,19 +185,18 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
         onClick={handleClose}
       />
 
-      {/* Highlight cutout */}
+      {/* Highlight cutout with amber spotlight glow */}
       {highlight && (
         <div
-          className="fixed"
+          className="fixed tour-spotlight"
           style={{
             top: highlight.top - 4,
             left: highlight.left - 4,
             width: highlight.width + 8,
             height: highlight.height + 8,
             border: '2px solid var(--accent)',
-            borderRadius: 6,
             zIndex: 100001,
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(232,165,52,0.2)',
+            boxShadow: '0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(232,165,52,0.3), 0 0 40px rgba(232,165,52,0.15)',
             pointerEvents: 'none',
           }}
         />
@@ -226,54 +204,183 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
 
       {/* Tooltip */}
       <div style={tooltipStyle} onClick={(e) => e.stopPropagation()}>
-        {/* Progress */}
-        <div className="flex items-center justify-between mb-3">
-          <span className="font-mono text-[11px] tracking-wider" style={{ color: 'var(--muted)' }}>
-            STEP {step + 1} OF {TOUR_STEPS.length}
-          </span>
+        {/* Header with close button */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          {/* Progress dots */}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+            {TOUR_STEPS.map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: i === step ? 'var(--accent)' : i < step ? 'rgba(232,165,52,0.5)' : 'var(--b3)',
+                  transition: 'background 0.3s, box-shadow 0.3s',
+                  boxShadow: i === step ? '0 0 6px rgba(232,165,52,0.4)' : 'none',
+                }}
+              />
+            ))}
+          </div>
           <button
             onClick={handleClose}
-            className="font-mono text-[16px] hover:text-[var(--red)] transition-colors leading-none"
-            style={{ color: 'var(--muted)', padding: '0 2px' }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--muted)',
+              fontSize: 16,
+              cursor: 'pointer',
+              padding: '0 2px',
+              lineHeight: 1,
+              transition: 'color 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.color = 'var(--red)'}
+            onMouseLeave={e => e.currentTarget.style.color = 'var(--muted)'}
           >
             ×
           </button>
         </div>
 
-        {/* Progress bar */}
-        <div className="w-full h-1 rounded mb-4" style={{ background: 'var(--b2)' }}>
-          <div
-            className="h-full rounded transition-all duration-300"
-            style={{ background: 'var(--accent)', width: `${((step + 1) / TOUR_STEPS.length) * 100}%` }}
-          />
-        </div>
-
-        <h3 className="font-mono text-[14px] font-bold mb-2" style={{ color: 'var(--accent)' }}>
+        <h3 style={{
+          fontFamily: 'var(--mono)',
+          fontSize: 14,
+          fontWeight: 700,
+          color: 'var(--accent)',
+          marginBottom: 8,
+        }}>
           {currentStep.title}
         </h3>
-        <p className="font-mono text-[12px] leading-relaxed mb-5" style={{ color: 'var(--text2)' }}>
+        <p style={{
+          fontFamily: 'var(--mono)',
+          fontSize: 12,
+          lineHeight: 1.6,
+          color: 'var(--text2)',
+          marginBottom: 20,
+        }}>
           {currentStep.description}
         </p>
 
         {/* Navigation */}
-        <div className="flex items-center justify-between">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button
             onClick={prev}
             disabled={step === 0}
-            className="font-mono text-[11px] tracking-wider px-4 py-2 border transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-30"
-            style={{ color: 'var(--muted)', borderColor: 'var(--b3)', background: 'transparent' }}
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 11,
+              letterSpacing: '0.08em',
+              padding: '8px 16px',
+              border: '1px solid var(--b3)',
+              color: step === 0 ? 'var(--b3)' : 'var(--muted)',
+              background: 'transparent',
+              cursor: step === 0 ? 'default' : 'pointer',
+              transition: 'border-color 0.15s, color 0.15s',
+            }}
+            onMouseEnter={e => { if (step > 0) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b3)'; e.currentTarget.style.color = step === 0 ? 'var(--b3)' : 'var(--muted)'; }}
           >
-            ← PREV
+            PREV
           </button>
           <button
             onClick={next}
-            className="font-mono text-[11px] tracking-wider px-4 py-2 transition-opacity hover:opacity-80"
-            style={{ background: 'var(--accent)', color: '#000', fontWeight: 700 }}
+            style={{
+              fontFamily: 'var(--mono)',
+              fontSize: 11,
+              letterSpacing: '0.08em',
+              padding: '8px 16px',
+              background: 'var(--accent)',
+              color: '#000',
+              fontWeight: 700,
+              border: 'none',
+              cursor: 'pointer',
+              transition: 'opacity 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            {step === TOUR_STEPS.length - 1 ? 'FINISH ✓' : 'NEXT →'}
+            {step === TOUR_STEPS.length - 1 ? 'FINISH' : 'NEXT'}
           </button>
         </div>
       </div>
     </>
+  );
+}
+
+/* ── Idle Tour Prompt — shows after 90s of no interaction ── */
+export function IdleTourPrompt({ onStartTour }: { onStartTour: () => void }) {
+  const [visible, setVisible] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    // Don't show if already dismissed this session
+    try {
+      if (sessionStorage.getItem(DISMISSAL_KEY)) return;
+    } catch {}
+
+    const resetTimer = () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setVisible(true), IDLE_TIMEOUT_MS);
+    };
+
+    resetTimer();
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(ev => window.addEventListener(ev, resetTimer, { passive: true }));
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      events.forEach(ev => window.removeEventListener(ev, resetTimer));
+    };
+  }, []);
+
+  const dismiss = () => {
+    setVisible(false);
+    try { sessionStorage.setItem(DISMISSAL_KEY, '1'); } catch {}
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: 24,
+        right: 24,
+        zIndex: 99999,
+        background: 'var(--s1)',
+        border: '1px solid rgba(232,165,52,0.3)',
+        padding: '12px 16px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 12px rgba(232,165,52,0.1)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 12,
+        animation: 'tourPromptSlide 300ms ease-out',
+        maxWidth: 320,
+      }}
+    >
+      <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
+      <div style={{ flex: 1 }}>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 600, marginBottom: 2 }}>Want a quick tour?</div>
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>3 steps to get oriented</div>
+      </div>
+      <button
+        onClick={() => { dismiss(); onStartTour(); }}
+        style={{
+          fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.08em',
+          padding: '6px 12px', background: 'var(--accent)', color: '#000',
+          border: 'none', cursor: 'pointer', fontWeight: 700, flexShrink: 0,
+        }}
+      >
+        START
+      </button>
+      <button
+        onClick={dismiss}
+        style={{
+          background: 'none', border: 'none', color: 'var(--muted)',
+          cursor: 'pointer', fontSize: 14, padding: '0 2px', flexShrink: 0,
+        }}
+      >
+        ×
+      </button>
+    </div>
   );
 }

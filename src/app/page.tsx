@@ -173,23 +173,32 @@ export default function Home() {
       </Suspense>
     );
 
+    let gatedContent = tabContent;
+
     if (ENTERPRISE_TABS.has(activeTab)) {
-      return (
+      gatedContent = (
         <UpgradeGate requiredTier="enterprise" currentTier={tier} tabName={TAB_NAMES[activeTab]}>
           {tabContent}
         </UpgradeGate>
       );
-    }
-
-    if (PRO_TABS.has(activeTab)) {
-      return (
+    } else if (PRO_TABS.has(activeTab)) {
+      gatedContent = (
         <UpgradeGate requiredTier="pro" currentTier={tier} tabName={TAB_NAMES[activeTab]}>
           {tabContent}
         </UpgradeGate>
       );
     }
 
-    return tabContent;
+    return (
+      <div
+        key={activeTab}
+        style={{
+          animation: 'tabFadeIn 200ms ease-out',
+        }}
+      >
+        {gatedContent}
+      </div>
+    );
   };
 
   const handleSplashComplete = useCallback(() => {

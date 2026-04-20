@@ -39,12 +39,30 @@ export default function TokenUnlocks() {
         const events: UnlockEvent[] = [];
         const now = new Date();
 
+        // Deterministic vesting schedule: each asset unlocks on a fixed
+        // day-of-month cadence. We compute the next two upcoming dates
+        // and pick whichever falls within the next 14 days.
+        const vestingDay: Record<string, number> = {
+          SOL: 4, AVAX: 3, DOT: 8, ADA: 23,
+          MATIC: 15, LINK: 21, UNI: 25, AAVE: 2,
+        };
+
         for (const coin of rawCoins) {
           const vesting = vestingAssets[coin.symbol];
           if (!vesting) continue;
 
           const price = coin.price || 0;
-          const unlockDate = new Date(now.getTime() + Math.random() * 14 * 86400000);
+          const day = vestingDay[coin.symbol] ?? 1;
+
+          // Build next unlock date deterministically
+          let unlockDate = new Date(now.getFullYear(), now.getMonth(), day);
+          if (unlockDate.getTime() <= now.getTime()) {
+            // Already passed this month — use next month
+            unlockDate = new Date(now.getFullYear(), now.getMonth() + 1, day);
+          }
+          // Skip if more than 14 days away
+          if (unlockDate.getTime() - now.getTime() > 14 * 86400000) continue;
+
           const amount = Math.floor(vesting.totalLocked * vesting.pctMonthly / 100);
           const value = amount * price;
           

@@ -1849,7 +1849,12 @@ function DerivativesPulse() {
     return () => clearInterval(iv);
   }, []);
 
-  if (!data?.assets?.length) return null;
+  if (!data?.assets?.length) return (
+    <div className="panel panel-hover">
+      <div className="ph"><div className="pt">Derivatives Pulse</div><div className="tag" style={{ background: 'rgba(107,138,255,0.08)', color: 'var(--blue)' }}>Loading</div></div>
+      {[1,2,3].map(i => (<div key={i} style={{ display: 'flex', gap: 8, padding: '6px 0', borderTop: i > 1 ? '1px solid var(--b1)' : undefined }}><div style={{ background: 'var(--s3)', height: 10, width: 50, borderRadius: 3, animation: 'shimmer 1.5s ease-in-out infinite' }} /><div style={{ background: 'var(--s3)', height: 10, flex: 1, borderRadius: 3, animation: 'shimmer 1.5s ease-in-out infinite' }} /></div>))}
+    </div>
+  );
 
   const fmtOI = (n: number) => n >= 1e9 ? `$${(n/1e9).toFixed(1)}B` : n >= 1e6 ? `$${(n/1e6).toFixed(0)}M` : `$${n.toFixed(0)}`;
   const top5 = data.assets.slice(0, 5);
@@ -1942,7 +1947,13 @@ function TrendingMomentum() {
     return () => clearInterval(iv);
   }, []);
 
-  if (loading || trending.length === 0) return null;
+  if (loading) return (
+    <div className="panel panel-hover">
+      <div className="ph"><div className="pt">Trending Now</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>Loading</div></div>
+      {[1,2,3,4].map(i => (<div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderTop: i > 1 ? '1px solid var(--b1)' : undefined }}><div style={{ background: 'var(--s3)', height: 10, width: 40, borderRadius: 3, animation: 'shimmer 1.5s ease-in-out infinite' }} /><div style={{ background: 'var(--s3)', height: 10, flex: 1, borderRadius: 3, animation: 'shimmer 1.5s ease-in-out infinite' }} /><div style={{ background: 'var(--s3)', height: 10, width: 50, borderRadius: 3, animation: 'shimmer 1.5s ease-in-out infinite' }} /></div>))}
+    </div>
+  );
+  if (trending.length === 0) return null;
 
   return (
     <div className="panel panel-hover">

@@ -9,13 +9,19 @@ let cache: { data: Record<string, IsoUpdate>; ts: number } | null = null;
 function decodeHtml(text: string): string {
   return text
     .replace(/<!\[CDATA\[|\]\]>/g, '')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
     .replace(/&amp;/g, '&')
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&nbsp;/g, ' ')
     .replace(/&#8211;/g, '–')
     .replace(/&#8217;/g, "'")
-    .replace(/&#8230;/g, '...');
+    .replace(/&#8216;/g, "'")
+    .replace(/&#8220;/g, '"')
+    .replace(/&#8221;/g, '"')
+    .replace(/&#8230;/g, '...')
+    .replace(/&#\d+;/g, ' ');
 }
 
 function stripHtml(text: string): string {

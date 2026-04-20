@@ -302,7 +302,12 @@ export function SmartAlerts({ compact = false }: { compact?: boolean }) {
     return () => clearInterval(iv);
   }, []);
 
-  if (loading) return null;
+  if (loading) return (
+    <div className="panel panel-hover">
+      <div className="ph"><div className="pt">◈ Smart Alert Center</div><div className="tag" style={{ background: 'rgba(232,165,52,0.08)', color: 'var(--accent)' }}>Loading</div></div>
+      {[1,2].map(i => (<div key={i} style={{ padding: '8px 0', borderTop: i > 1 ? '1px solid var(--b1)' : undefined }}><div style={{ background: 'var(--s3)', height: 10, width: `${60 + i * 15}%`, borderRadius: 3, animation: 'shimmer 1.5s ease-in-out infinite' }} /><div style={{ background: 'var(--s3)', height: 8, width: `${40 + i * 10}%`, borderRadius: 3, marginTop: 6, animation: 'shimmer 1.5s ease-in-out infinite' }} /></div>))}
+    </div>
+  );
 
   const sevColor: Record<string, string> = { critical: 'var(--red)', warning: 'var(--gold)', info: 'var(--accent)' };
   const sevIcon: Record<string, string> = { critical: '◈', warning: '◇', info: '○' };

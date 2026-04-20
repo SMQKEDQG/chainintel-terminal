@@ -29,6 +29,12 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
   const [clock, setClock] = useState('');
   const [alertPanelOpen, setAlertPanelOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+  const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
+
+  // Stable tour callbacks (never change between renders)
+  const closeTour = useCallback(() => setTourOpen(false), []);
+  const openTour = useCallback(() => setTourOpen(true), []);
+  const tourSwitchTab = useCallback((tabId: string) => onTabChange(tabId as TabId), [onTabChange]);
 
   // Auto-start tour after splash screen
   useEffect(() => {
@@ -37,7 +43,6 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
       onTourAutoStarted?.();
     }
   }, [autoStartTour, tourOpen, onTourAutoStarted]);
-  const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
 
   useEffect(() => {
     const tick = () => {
@@ -248,10 +253,10 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
       {/* Guided Tour */}
       <GuidedTour
         isOpen={tourOpen}
-        onClose={() => setTourOpen(false)}
-        onSwitchTab={(tabId) => onTabChange(tabId as TabId)}
+        onClose={closeTour}
+        onSwitchTab={tourSwitchTab}
       />
-      {!tourOpen && <IdleTourPrompt onStartTour={() => setTourOpen(true)} />}
+      {!tourOpen && <IdleTourPrompt onStartTour={openTour} />}
 
       {/* Command Palette */}
       <CommandPalette

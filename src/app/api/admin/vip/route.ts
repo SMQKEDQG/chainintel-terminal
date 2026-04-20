@@ -9,10 +9,10 @@ import { createClient } from '@supabase/supabase-js';
 // Headers: { "x-admin-secret": "<ADMIN_SECRET env var>" }
 // Body: { "email": "user@example.com", "action": "grant" | "revoke", "tier": "pro" | "enterprise" }
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'chainintel-admin-2026';
+const ADMIN_SECRET = process.env.ADMIN_SECRET || '';
 
 function getSupabaseAdmin() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://xrcszfaqxgiodewznpwk.supabase.co';
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   return createClient(url, serviceKey);
 }

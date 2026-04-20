@@ -19,14 +19,24 @@ interface TerminalLayoutProps {
   children: React.ReactNode;
   activeTab: TabId;
   onTabChange: (tab: TabId) => void;
+  autoStartTour?: boolean;
+  onTourAutoStarted?: () => void;
 }
 
-export default function TerminalLayout({ children, activeTab, onTabChange }: TerminalLayoutProps) {
+export default function TerminalLayout({ children, activeTab, onTabChange, autoStartTour, onTourAutoStarted }: TerminalLayoutProps) {
   const { user, loading, signOut } = useAuth();
   const tier = useSubscription();
   const [clock, setClock] = useState('');
   const [alertPanelOpen, setAlertPanelOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
+
+  // Auto-start tour after splash screen
+  useEffect(() => {
+    if (autoStartTour && !tourOpen) {
+      setTourOpen(true);
+      onTourAutoStarted?.();
+    }
+  }, [autoStartTour, tourOpen, onTourAutoStarted]);
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
 
   useEffect(() => {

@@ -62,16 +62,17 @@ button, [style*="cursor: pointer"] {
   50% { opacity: 0.2; }
 }
 
-/* Tour spotlight glow */
+/* Tour spotlight glow — soft, not oppressive */
 .tour-spotlight {
-  box-shadow: 0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(232,165,52,0.3), 0 0 40px rgba(232,165,52,0.15) !important;
-  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 9999px rgba(10,10,10,0.4), 0 0 24px rgba(232,165,52,0.15), 0 0 48px rgba(232,165,52,0.06) !important;
+  border-color: rgba(232,165,52,0.5) !important;
+  border-radius: 8px;
 }
 
-/* Tour idle prompt animation */
+/* Tour idle prompt slide-up */
 @keyframes tourPromptSlide {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ═══════════════════════════════════════════════════════════

@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
-/* ── GuidedTour — interactive product tour overlay (3 steps) ── */
+/* ── GuidedTour — smooth, friendly product walkthrough (3 steps) ── */
 interface TourStep {
   target: string;
   title: string;
   description: string;
+  emoji: string;
   position: 'top' | 'bottom' | 'left' | 'right';
   tabSwitch?: string;
 }
@@ -21,284 +22,440 @@ const TOUR_STEPS: TourStep[] = [
   {
     target: 'ask-ci',
     title: 'Ask CI — Your AI Analyst',
-    description: 'Ask any crypto question. Try: "Is now a good time to buy BTC?" — CI synthesizes data from 15+ live sources instantly.',
+    emoji: '🧠',
+    description:
+      'Ask any crypto question. Try "Is now a good time to buy BTC?" — CI synthesizes data from 15+ live sources instantly.',
     position: 'bottom',
     tabSwitch: 'mktovr',
   },
   {
     target: 'daily-brief',
     title: 'Daily Intelligence Brief',
-    description: 'Your daily market digest, updated every 3 minutes with live data from 7+ sources. Prices, sentiment, DeFi, network health — all in one card.',
+    emoji: '📊',
+    description:
+      'Your daily market digest — updated every 3 minutes with live prices, sentiment, DeFi, and network health all in one card.',
     position: 'bottom',
     tabSwitch: 'mktovr',
   },
   {
     target: 'tab-nav',
     title: 'Intelligence Modules',
-    description: '11 specialized modules. Start with Overview, explore Markets, and unlock Pro tabs for deeper on-chain, DeFi, and derivatives analysis.',
+    emoji: '⚡',
+    description:
+      '11 specialized modules. Start with Overview, explore Markets, then unlock Pro for deeper on-chain, DeFi, and derivatives analysis.',
     position: 'bottom',
   },
 ];
 
+const TOUR_DISMISSED_KEY = 'chainintel_tour_done';
 const IDLE_TIMEOUT_MS = 90_000;
-const DISMISSAL_KEY = 'chainintel_tour_dismissed';
 
+/* ── helpers ── */
+function wasTourDismissed(): boolean {
+  try {
+    return sessionStorage.getItem(TOUR_DISMISSED_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function markTourDismissed(): void {
+  try {
+    sessionStorage.setItem(TOUR_DISMISSED_KEY, '1');
+  } catch {}
+}
+
+/* ── clamp a rect to at most viewport-sized (for large targets) ── */
+function clampRect(r: DOMRect): DOMRect {
+  const vh = window.innerHeight;
+  const vw = window.innerWidth;
+  // If element is taller than 60% of viewport, shrink to just the visible top portion
+  if (r.height > vh * 0.6) {
+    const visTop = Math.max(0, r.top);
+    const visH = Math.min(200, vh * 0.25); // highlight a manageable top slice
+    return new DOMRect(r.left, visTop, Math.min(r.width, vw), visH);
+  }
+  return r;
+}
+
+/* ── wait until a `data-tour` element is visible ── */
+function waitForTarget(target: string, timeoutMs = 4000): Promise<DOMRect | null> {
+  return new Promise((resolve) => {
+    const deadline = Date.now() + timeoutMs;
+    function poll() {
+      const el = document.querySelector(`[data-tour="${target}"]`);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          // For large elements, don't scroll — just clamp the highlight
+          if (rect.height > window.innerHeight * 0.6) {
+            resolve(clampRect(rect));
+            return;
+          }
+          const inView = rect.top >= -20 && rect.bottom <= window.innerHeight + 80;
+          if (!inView) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => {
+              resolve(clampRect(el.getBoundingClientRect()));
+            }, 420);
+            return;
+          }
+          resolve(clampRect(rect));
+          return;
+        }
+      }
+      if (Date.now() < deadline) requestAnimationFrame(poll);
+      else resolve(null);
+    }
+    poll();
+  });
+}
+
+/* ── measure element position ── */
+function getRect(target: string): DOMRect | null {
+  const el = document.querySelector(`[data-tour="${target}"]`);
+  if (!el) return null;
+  const r = el.getBoundingClientRect();
+  if (r.width <= 0 || r.height <= 0) return null;
+  return clampRect(r);
+}
+
+/* ═══════════════════════════════════════════════
+   GuidedTour component
+   ═══════════════════════════════════════════════ */
 export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourProps) {
   const [step, setStep] = useState(0);
   const [highlight, setHighlight] = useState<DOMRect | null>(null);
-  const [isClosing, setIsClosing] = useState(false);
-  const overlayRef = useRef<HTMLDivElement>(null);
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const closedRef = useRef(false);
 
   const currentStep = TOUR_STEPS[step];
 
-  const updateHighlight = useCallback(() => {
-    if (!isOpen || !currentStep) return;
-
-    try {
-      const el = document.querySelector(`[data-tour="${currentStep.target}"]`);
-      if (el) {
-        const rect = el.getBoundingClientRect();
-        const isInView = rect.top >= 0 && rect.bottom <= window.innerHeight;
-        if (!isInView) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          setTimeout(() => {
-            const newRect = el.getBoundingClientRect();
-            setHighlight(newRect);
-          }, 350);
-          return;
-        }
-        setHighlight(rect);
-      } else {
-        setHighlight(null);
-      }
-    } catch {
-      setHighlight(null);
-    }
-  }, [isOpen, currentStep]);
-
+  /* ── Locate target when step changes ── */
   useEffect(() => {
     if (!isOpen) {
       setStep(0);
-      setIsClosing(false);
+      setHighlight(null);
+      setTooltipVisible(false);
+      closedRef.current = false;
       return;
     }
+
+    let cancelled = false;
+    setTooltipVisible(false);
 
     if (currentStep?.tabSwitch && onSwitchTab) {
       onSwitchTab(currentStep.tabSwitch);
     }
 
-    const t = setTimeout(updateHighlight, 300);
-    return () => clearTimeout(t);
-  }, [isOpen, step, currentStep, onSwitchTab, updateHighlight]);
+    const timer = setTimeout(async () => {
+      if (cancelled) return;
+      const rect = await waitForTarget(currentStep.target);
+      if (!cancelled) {
+        setHighlight(rect);
+        // Stagger tooltip entrance for smooth feel
+        setTimeout(() => {
+          if (!cancelled) setTooltipVisible(true);
+        }, 150);
+      }
+    }, 200);
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handler = () => updateHighlight();
-    window.addEventListener('resize', handler);
-    window.addEventListener('scroll', handler, true);
     return () => {
-      window.removeEventListener('resize', handler);
-      window.removeEventListener('scroll', handler, true);
+      cancelled = true;
+      clearTimeout(timer);
     };
-  }, [isOpen, updateHighlight]);
+  }, [isOpen, step, currentStep, onSwitchTab]);
 
-  // Close on Escape
+  /* ── Re-sync position only on scroll/resize (not continuous polling) ── */
+  useEffect(() => {
+    if (!isOpen || !tooltipVisible) return;
+
+    let ticking = false;
+    const sync = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => {
+          const r = getRect(currentStep?.target ?? '');
+          if (r) setHighlight(r);
+          ticking = false;
+        });
+      }
+    };
+
+    window.addEventListener('scroll', sync, true);
+    window.addEventListener('resize', sync);
+
+    return () => {
+      window.removeEventListener('scroll', sync, true);
+      window.removeEventListener('resize', sync);
+    };
+  }, [isOpen, tooltipVisible, currentStep]);
+
+  /* ── Escape key ── */
   useEffect(() => {
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') handleClose();
+      if (e.key === 'Escape') doClose();
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
-  const handleClose = useCallback(() => {
-    if (isClosing) return;
-    setIsClosing(true);
-
-    // Mark dismissed in sessionStorage
-    try { sessionStorage.setItem(DISMISSAL_KEY, '1'); } catch {}
-
-    if (onSwitchTab) {
-      onSwitchTab('mktovr');
-    }
-
-    setStep(0);
-    setHighlight(null);
-
-    requestAnimationFrame(() => {
+  /* ── Close helper ── */
+  const doClose = useCallback(() => {
+    if (closedRef.current) return;
+    closedRef.current = true;
+    markTourDismissed();
+    if (onSwitchTab) onSwitchTab('mktovr');
+    setTooltipVisible(false);
+    // Let fade-out play before unmounting
+    setTimeout(() => {
+      setStep(0);
+      setHighlight(null);
       onClose();
-    });
-  }, [isClosing, onSwitchTab, onClose]);
+    }, 200);
+  }, [onClose, onSwitchTab]);
 
-  const next = () => {
-    if (step < TOUR_STEPS.length - 1) setStep(step + 1);
-    else handleClose();
-  };
+  /* ── Navigation ── */
+  const next = useCallback(() => {
+    if (step < TOUR_STEPS.length - 1) {
+      setTooltipVisible(false);
+      setHighlight(null);
+      setTimeout(() => setStep((s) => s + 1), 120);
+    } else {
+      doClose();
+    }
+  }, [step, doClose]);
 
-  const prev = () => {
-    if (step > 0) setStep(step - 1);
-  };
+  const prev = useCallback(() => {
+    if (step > 0) {
+      setTooltipVisible(false);
+      setHighlight(null);
+      setTimeout(() => setStep((s) => s - 1), 120);
+    }
+  }, [step]);
 
-  if (!isOpen || isClosing) return null;
+  if (!isOpen) return null;
 
+  /* ── Tooltip position ── */
   const tooltipStyle: React.CSSProperties = {
     position: 'fixed',
     zIndex: 100002,
-    background: 'var(--s1)',
-    border: '1px solid var(--accent)',
-    padding: '20px 24px',
-    width: 360,
-    boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 12px rgba(232,165,52,0.15)',
+    background: 'linear-gradient(145deg, #1A1A1A 0%, #141414 100%)',
+    border: '1px solid rgba(232,165,52,0.35)',
+    borderRadius: 12,
+    padding: '22px 24px 20px',
+    width: 370,
+    maxWidth: 'calc(100vw - 32px)',
+    boxShadow: '0 20px 60px rgba(0,0,0,0.4), 0 0 20px rgba(232,165,52,0.08)',
+    opacity: tooltipVisible ? 1 : 0,
+    transform: tooltipVisible ? 'translateY(0)' : 'translateY(8px)',
+    transition: 'opacity 0.35s cubic-bezier(0.16,1,0.3,1), transform 0.35s cubic-bezier(0.16,1,0.3,1)',
   };
 
   if (highlight) {
-    const pad = 14;
+    const pad = 16;
+    const tooltipH = 220; // approximate height of the tooltip card
+    const tooltipW = 370;
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1400;
+    const vh = typeof window !== 'undefined' ? window.innerHeight : 900;
+
+    let top: number | undefined;
+    let left: number | undefined;
+    let bottom: number | undefined;
+
     if (currentStep.position === 'bottom') {
-      tooltipStyle.top = highlight.bottom + pad;
-      tooltipStyle.left = Math.max(16, Math.min(highlight.left, window.innerWidth - 380));
+      top = highlight.bottom + pad;
+      left = Math.max(16, Math.min(highlight.left, vw - tooltipW - 16));
+      // If tooltip would overflow below viewport, flip to top
+      if (top + tooltipH > vh - 16) {
+        top = undefined;
+        bottom = vh - highlight.top + pad;
+      }
     } else if (currentStep.position === 'top') {
-      tooltipStyle.bottom = window.innerHeight - highlight.top + pad;
-      tooltipStyle.left = Math.max(16, Math.min(highlight.left, window.innerWidth - 380));
+      bottom = vh - highlight.top + pad;
+      left = Math.max(16, Math.min(highlight.left, vw - tooltipW - 16));
+      // If would overflow above, flip to bottom
+      if (vh - bottom + tooltipH > vh) {
+        bottom = undefined;
+        top = highlight.bottom + pad;
+      }
     } else if (currentStep.position === 'right') {
-      tooltipStyle.top = highlight.top;
-      tooltipStyle.left = highlight.right + pad;
+      top = Math.max(16, Math.min(highlight.top, vh - tooltipH - 16));
+      left = highlight.right + pad;
     } else {
-      tooltipStyle.top = highlight.top;
-      tooltipStyle.right = window.innerWidth - highlight.left + pad;
+      top = Math.max(16, Math.min(highlight.top, vh - tooltipH - 16));
+      left = Math.max(16, highlight.left - tooltipW - pad);
     }
+
+    // Final viewport clamp
+    if (top !== undefined) tooltipStyle.top = Math.max(16, Math.min(top, vh - tooltipH - 16));
+    if (bottom !== undefined) tooltipStyle.bottom = Math.max(16, bottom);
+    if (left !== undefined) tooltipStyle.left = Math.max(16, Math.min(left, vw - tooltipW - 16));
   } else {
     tooltipStyle.top = '50%';
     tooltipStyle.left = '50%';
-    tooltipStyle.transform = 'translate(-50%, -50%)';
+    tooltipStyle.transform = tooltipVisible ? 'translate(-50%, -50%)' : 'translate(-50%, -46%)';
   }
 
   return (
     <>
-      {/* Overlay backdrop */}
+      {/* Soft overlay — NOT pitch-black */}
       <div
-        ref={overlayRef}
         className="fixed inset-0"
-        style={{ background: 'rgba(0,0,0,0.7)', zIndex: 100000 }}
-        onClick={handleClose}
+        style={{
+          background: 'rgba(10, 10, 10, 0.45)',
+          backdropFilter: 'blur(2px)',
+          WebkitBackdropFilter: 'blur(2px)',
+          zIndex: 100000,
+          opacity: tooltipVisible ? 1 : 0,
+          transition: 'opacity 0.4s ease',
+        }}
+        onClick={doClose}
       />
 
-      {/* Highlight cutout with amber spotlight glow */}
+      {/* Spotlight cutout — soft glow, lighter mask */}
       {highlight && (
         <div
-          className="fixed tour-spotlight"
+          className="fixed"
           style={{
-            top: highlight.top - 4,
-            left: highlight.left - 4,
-            width: highlight.width + 8,
-            height: highlight.height + 8,
-            border: '2px solid var(--accent)',
+            top: highlight.top - 6,
+            left: highlight.left - 6,
+            width: highlight.width + 12,
+            height: highlight.height + 12,
+            borderRadius: 8,
+            border: '1.5px solid rgba(232,165,52,0.5)',
             zIndex: 100001,
-            boxShadow: '0 0 0 9999px rgba(0,0,0,0.65), 0 0 20px rgba(232,165,52,0.3), 0 0 40px rgba(232,165,52,0.15)',
+            boxShadow: '0 0 0 9999px rgba(10,10,10,0.4), 0 0 24px rgba(232,165,52,0.15), 0 0 48px rgba(232,165,52,0.06)',
             pointerEvents: 'none',
+            opacity: tooltipVisible ? 1 : 0,
+            transition: 'opacity 0.35s cubic-bezier(0.16,1,0.3,1)',
           }}
         />
       )}
 
-      {/* Tooltip */}
+      {/* Tooltip card */}
       <div style={tooltipStyle} onClick={(e) => e.stopPropagation()}>
-        {/* Header with close button */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-          {/* Progress dots */}
+        {/* Step counter + close */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
           <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             {TOUR_STEPS.map((_, i) => (
               <div
                 key={i}
                 style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: i === step ? 'var(--accent)' : i < step ? 'rgba(232,165,52,0.5)' : 'var(--b3)',
-                  transition: 'background 0.3s, box-shadow 0.3s',
-                  boxShadow: i === step ? '0 0 6px rgba(232,165,52,0.4)' : 'none',
+                  width: i === step ? 20 : 8,
+                  height: 4,
+                  borderRadius: 2,
+                  background: i === step ? 'var(--accent)' : i < step ? 'rgba(232,165,52,0.4)' : 'var(--b3)',
+                  transition: 'all 0.35s cubic-bezier(0.16,1,0.3,1)',
                 }}
               />
             ))}
+            <span style={{
+              fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--muted)',
+              marginLeft: 6, letterSpacing: '0.06em',
+            }}>
+              {step + 1} of {TOUR_STEPS.length}
+            </span>
           </div>
           <button
-            onClick={handleClose}
+            onClick={doClose}
+            aria-label="Close tour"
             style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--muted)',
-              fontSize: 16,
-              cursor: 'pointer',
-              padding: '0 2px',
-              lineHeight: 1,
-              transition: 'color 0.15s',
+              background: 'rgba(255,255,255,0.05)', border: 'none', color: 'var(--muted)',
+              fontSize: 14, cursor: 'pointer', padding: '4px 8px', lineHeight: 1,
+              borderRadius: 6, transition: 'all 0.15s',
             }}
-            onMouseEnter={e => e.currentTarget.style.color = 'var(--red)'}
-            onMouseLeave={e => e.currentTarget.style.color = 'var(--muted)'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(248,113,113,0.12)';
+              e.currentTarget.style.color = 'var(--red)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+              e.currentTarget.style.color = 'var(--muted)';
+            }}
           >
-            ×
+            ✕
           </button>
         </div>
 
-        <h3 style={{
-          fontFamily: 'var(--mono)',
-          fontSize: 14,
-          fontWeight: 700,
-          color: 'var(--accent)',
-          marginBottom: 8,
-        }}>
-          {currentStep.title}
-        </h3>
+        {/* Emoji + Title */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+          <span style={{ fontSize: 20 }}>{currentStep.emoji}</span>
+          <h3 style={{
+            fontFamily: 'var(--sans)', fontSize: 15, fontWeight: 700,
+            color: 'var(--text)', margin: 0, letterSpacing: '0.01em',
+          }}>
+            {currentStep.title}
+          </h3>
+        </div>
+
+        {/* Description */}
         <p style={{
-          fontFamily: 'var(--mono)',
-          fontSize: 12,
-          lineHeight: 1.6,
-          color: 'var(--text2)',
-          marginBottom: 20,
+          fontFamily: 'var(--sans)', fontSize: 13, lineHeight: 1.65,
+          color: 'var(--text2)', margin: '0 0 22px 0',
         }}>
           {currentStep.description}
         </p>
 
         {/* Navigation */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button
-            onClick={prev}
-            disabled={step === 0}
-            style={{
-              fontFamily: 'var(--mono)',
-              fontSize: 11,
-              letterSpacing: '0.08em',
-              padding: '8px 16px',
-              border: '1px solid var(--b3)',
-              color: step === 0 ? 'var(--b3)' : 'var(--muted)',
-              background: 'transparent',
-              cursor: step === 0 ? 'default' : 'pointer',
-              transition: 'border-color 0.15s, color 0.15s',
-            }}
-            onMouseEnter={e => { if (step > 0) { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.color = 'var(--accent)'; }}}
-            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--b3)'; e.currentTarget.style.color = step === 0 ? 'var(--b3)' : 'var(--muted)'; }}
-          >
-            PREV
-          </button>
+          {step > 0 ? (
+            <button
+              onClick={prev}
+              style={{
+                fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 500,
+                padding: '8px 18px', border: '1px solid var(--b3)', borderRadius: 8,
+                color: 'var(--text2)', background: 'transparent', cursor: 'pointer',
+                transition: 'all 0.15s',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.borderColor = 'var(--accent)';
+                e.currentTarget.style.color = 'var(--accent)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.borderColor = 'var(--b3)';
+                e.currentTarget.style.color = 'var(--text2)';
+              }}
+            >
+              ← Back
+            </button>
+          ) : (
+            <button
+              onClick={doClose}
+              style={{
+                fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 500,
+                padding: '8px 18px', border: 'none', borderRadius: 8,
+                color: 'var(--muted)', background: 'transparent', cursor: 'pointer',
+                transition: 'color 0.15s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text2)')}
+              onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}
+            >
+              Skip tour
+            </button>
+          )}
           <button
             onClick={next}
             style={{
-              fontFamily: 'var(--mono)',
-              fontSize: 11,
-              letterSpacing: '0.08em',
-              padding: '8px 16px',
-              background: 'var(--accent)',
-              color: '#000',
-              fontWeight: 700,
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'opacity 0.15s',
+              fontFamily: 'var(--sans)', fontSize: 12, fontWeight: 600,
+              padding: '9px 22px', borderRadius: 8,
+              background: 'var(--accent)', color: '#000',
+              border: 'none', cursor: 'pointer',
+              transition: 'all 0.15s',
+              boxShadow: '0 2px 8px rgba(232,165,52,0.2)',
             }}
-            onMouseEnter={e => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 14px rgba(232,165,52,0.3)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(232,165,52,0.2)';
+            }}
           >
-            {step === TOUR_STEPS.length - 1 ? 'FINISH' : 'NEXT'}
+            {step === TOUR_STEPS.length - 1 ? 'Get started →' : 'Next →'}
           </button>
         </div>
       </div>
@@ -306,16 +463,15 @@ export default function GuidedTour({ isOpen, onClose, onSwitchTab }: GuidedTourP
   );
 }
 
-/* ── Idle Tour Prompt — shows after 90s of no interaction ── */
+/* ═══════════════════════════════════════════════
+   Idle Tour Prompt — shows after 90s of no interaction
+   ═══════════════════════════════════════════════ */
 export function IdleTourPrompt({ onStartTour }: { onStartTour: () => void }) {
   const [visible, setVisible] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Don't show if already dismissed this session
-    try {
-      if (sessionStorage.getItem(DISMISSAL_KEY)) return;
-    } catch {}
+    if (wasTourDismissed()) return;
 
     const resetTimer = () => {
       if (timerRef.current) clearTimeout(timerRef.current);
@@ -324,17 +480,17 @@ export function IdleTourPrompt({ onStartTour }: { onStartTour: () => void }) {
 
     resetTimer();
     const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(ev => window.addEventListener(ev, resetTimer, { passive: true }));
+    events.forEach((ev) => window.addEventListener(ev, resetTimer, { passive: true }));
 
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      events.forEach(ev => window.removeEventListener(ev, resetTimer));
+      events.forEach((ev) => window.removeEventListener(ev, resetTimer));
     };
   }, []);
 
   const dismiss = () => {
     setVisible(false);
-    try { sessionStorage.setItem(DISMISSAL_KEY, '1'); } catch {}
+    markTourDismissed();
   };
 
   if (!visible) return null;
@@ -342,45 +498,55 @@ export function IdleTourPrompt({ onStartTour }: { onStartTour: () => void }) {
   return (
     <div
       style={{
-        position: 'fixed',
-        bottom: 24,
-        right: 24,
-        zIndex: 99999,
-        background: 'var(--s1)',
-        border: '1px solid rgba(232,165,52,0.3)',
-        padding: '12px 16px',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.5), 0 0 12px rgba(232,165,52,0.1)',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 12,
-        animation: 'tourPromptSlide 300ms ease-out',
+        position: 'fixed', bottom: 24, right: 24, zIndex: 99999,
+        background: 'linear-gradient(145deg, #1A1A1A 0%, #141414 100%)',
+        border: '1px solid rgba(232,165,52,0.25)', borderRadius: 12,
+        padding: '14px 18px',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.4), 0 0 16px rgba(232,165,52,0.06)',
+        display: 'flex', alignItems: 'center', gap: 12,
+        animation: 'tourPromptSlide 400ms cubic-bezier(0.16,1,0.3,1)',
         maxWidth: 320,
       }}
     >
-      <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', animation: 'pulse 2s infinite', flexShrink: 0 }} />
+      <div style={{
+        width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)',
+        animation: 'pulse 2s infinite', flexShrink: 0,
+      }} />
       <div style={{ flex: 1 }}>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--text)', fontWeight: 600, marginBottom: 2 }}>Want a quick tour?</div>
-        <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)' }}>3 steps to get oriented</div>
+        <div style={{ fontFamily: 'var(--sans)', fontSize: 13, color: 'var(--text)', fontWeight: 600, marginBottom: 2 }}>
+          Want a quick tour?
+        </div>
+        <div style={{ fontFamily: 'var(--sans)', fontSize: 11, color: 'var(--muted)' }}>
+          3 quick steps to get oriented
+        </div>
       </div>
       <button
         onClick={() => { dismiss(); onStartTour(); }}
         style={{
-          fontFamily: 'var(--mono)', fontSize: 9, letterSpacing: '0.08em',
-          padding: '6px 12px', background: 'var(--accent)', color: '#000',
-          border: 'none', cursor: 'pointer', fontWeight: 700, flexShrink: 0,
+          fontFamily: 'var(--sans)', fontSize: 11, fontWeight: 600,
+          padding: '7px 14px', background: 'var(--accent)', color: '#000',
+          border: 'none', cursor: 'pointer', flexShrink: 0, borderRadius: 8,
+          transition: 'transform 0.15s',
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-1px)')}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
       >
-        START
+        Start
       </button>
       <button
         onClick={dismiss}
         style={{
           background: 'none', border: 'none', color: 'var(--muted)',
           cursor: 'pointer', fontSize: 14, padding: '0 2px', flexShrink: 0,
+          transition: 'color 0.15s',
         }}
+        onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--text2)')}
+        onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--muted)')}
       >
-        ×
+        ✕
       </button>
     </div>
   );
 }
+
+export { wasTourDismissed };

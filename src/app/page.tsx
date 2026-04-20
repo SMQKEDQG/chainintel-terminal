@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, Suspense, lazy, useMemo } from 'react
 import { useSearchParams } from 'next/navigation';
 import TerminalLayout from '@/components/TerminalLayout';
 import SplashScreen, { hasSplashBeenShown, markSplashShown } from '@/components/SplashScreen';
+import { wasTourDismissed } from '@/components/GuidedTour';
 import { type TabId } from '@/lib/constants';
 import OverviewTab from '@/components/tabs/OverviewTab';
 import UpgradeGate from '@/components/UpgradeGate';
@@ -148,6 +149,7 @@ function CheckoutBanner() {
 export default function Home() {
   const [showSplash, setShowSplash] = useState(() => !hasSplashBeenShown());
   const [activeTab, setActiveTab] = useState<TabId>('mktovr');
+  const [startTourAfterSplash, setStartTourAfterSplash] = useState(false);
   const tier = useSubscription();
   const ActiveComponent = TAB_COMPONENTS[activeTab] || TAB_COMPONENTS['mktovr'];
 
@@ -204,12 +206,17 @@ export default function Home() {
   const handleSplashComplete = useCallback(() => {
     markSplashShown();
     setShowSplash(false);
+    // Auto-launch tour after splash if not previously dismissed
+    if (!wasTourDismissed()) {
+      // Small delay so the layout is fully painted before tour measures elements
+      setTimeout(() => setStartTourAfterSplash(true), 600);
+    }
   }, []);
 
   return (
     <>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
-    <TerminalLayout activeTab={activeTab} onTabChange={setActiveTab}>
+    <TerminalLayout activeTab={activeTab} onTabChange={setActiveTab} autoStartTour={startTourAfterSplash} onTourAutoStarted={() => setStartTourAfterSplash(false)}>
       <Suspense fallback={null}>
         <CheckoutBanner />
       </Suspense>

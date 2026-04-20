@@ -73,3 +73,113 @@ button, [style*="cursor: pointer"] {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE — screens under 768px
+   Targets Next.js component structure (Tailwind + inline styles)
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* ── Tab bar: horizontal scroll, hide scrollbar ── */
+  nav[data-tour="tab-nav"] {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-snap-type: x mandatory;
+  }
+  nav[data-tour="tab-nav"]::-webkit-scrollbar {
+    display: none;
+  }
+  nav[data-tour="tab-nav"] button {
+    font-size: 8px !important;
+    padding: 6px 8px !important;
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* ── Header: hide clock, compress controls ── */
+  .font-mono.text-\[9px\] { display: none !important; } /* clock */
+
+  /* ── ALL 2-column grid sections → stack to 1 column ── */
+  [style*="grid-template-columns: 1fr 1fr"],
+  [style*="gridTemplateColumns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* ── Market table: horizontal scroll wrapper ── */
+  .panel table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .panel table thead,
+  .panel table tbody {
+    display: table;
+    width: 100%;
+    min-width: 600px;
+  }
+  .panel table th,
+  .panel table td {
+    font-size: 10px !important;
+    padding: 5px 6px !important;
+    white-space: nowrap;
+  }
+
+  /* ── Heatmap: reduce row heights ── */
+  .panel .ph .pt { font-size: 13px !important; }
+
+  /* ── Panels: prevent overflow ── */
+  .panel {
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden;
+  }
+
+  /* ── Charts: constrain height ── */
+  canvas {
+    max-width: 100% !important;
+    max-height: 200px !important;
+  }
+
+  /* ── Footer: stack vertically ── */
+  footer.flex {
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+  footer .flex-wrap {
+    justify-content: center;
+  }
+
+  /* ── Main content: tighter padding ── */
+  main.flex-1 {
+    padding: 4px !important;
+  }
+
+  /* ── Daily Brief metric pills: allow wrap ── */
+  [style*="display: flex"][style*="gap: 4px"][style*="flex-wrap: wrap"] {
+    gap: 3px !important;
+  }
+
+  /* ── KPI / Signals bar: 2 columns on mobile ── */
+  .signals-bar-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+}
+
+@media (max-width: 480px) {
+  /* ── Extra small: tab bar even tighter ── */
+  nav[data-tour="tab-nav"] button {
+    font-size: 7px !important;
+    padding: 5px 6px !important;
+  }
+
+  /* ── Header: hide ALERTS text, show only bell ── */
+  button[data-tour="alert-btn"] span.font-mono {
+    display: none !important;
+  }
+
+  /* ── Compress panels further ── */
+  .panel {
+    padding: 6px !important;
+  }
+}

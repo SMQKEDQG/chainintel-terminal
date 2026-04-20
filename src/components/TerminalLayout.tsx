@@ -93,7 +93,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
             <div className="text-sm font-bold tracking-[0.16em]" style={{ color: 'var(--accent)', fontFamily: 'var(--sans)' }}>
               CHAININTEL
             </div>
-            <div className="font-mono text-[9px] tracking-widest" style={{ color: 'var(--muted)' }}>
+            <div className="font-mono text-[9px] tracking-widest hidden sm:block" style={{ color: 'var(--muted)' }}>
               DIGITAL ASSET INTELLIGENCE · {VERSION}
               <span style={{ marginLeft: 6, color: 'var(--accent)', opacity: 0.5, fontSize: 9 }}>▶ TOUR</span>
             </div>
@@ -101,7 +101,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
         </div>
 
         {/* Right controls */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4">
           {!loading && tier === 'free' && user && (
             <button
               onClick={() => onTabChange('pricing' as TabId)}
@@ -157,9 +157,9 @@ export default function TerminalLayout({ children, activeTab, onTabChange }: Ter
           </button>
           <div data-tour="live-indicator" className="flex items-center gap-1.5">
             <div className="w-1.5 h-1.5 rounded-full heartbeat" style={{ background: 'var(--green)' }} />
-            <span className="font-mono text-[10px] tracking-wider live-breathe" style={{ color: 'var(--green)' }}>LIVE</span>
+            <span className="font-mono text-[10px] tracking-wider live-breathe hidden sm:inline" style={{ color: 'var(--green)' }}>LIVE</span>
           </div>
-          <span className="font-mono text-[9px]" style={{ color: 'var(--muted)' }}>{clock}</span>
+          <span className="font-mono text-[9px] hidden sm:inline" style={{ color: 'var(--muted)' }}>{clock}</span>
         </div>
       </div>
 

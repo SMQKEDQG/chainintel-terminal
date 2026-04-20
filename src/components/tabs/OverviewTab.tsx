@@ -853,7 +853,7 @@ function SignalsBar() {
   ];
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+    <div className="signals-bar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
       {cells.map(c => (
         <div key={c.label} style={{
           background: 'var(--s1)', padding: '8px 10px',

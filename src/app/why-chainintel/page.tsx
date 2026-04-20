@@ -828,7 +828,6 @@ export default function WhyChainIntelPage() {
               Explore
             </div>
             {[
-              { label: 'View Pitch Deck', href: '/deck', color: 'var(--accent)' },
               { label: 'See All Features', href: '/promo', color: 'var(--blue)' },
               { label: 'Launch Terminal', href: '/', color: 'var(--green)' },
               { label: 'Pro — $49/mo', href: STRIPE_PRO, color: 'var(--accent)', external: true },
@@ -871,7 +870,7 @@ export default function WhyChainIntelPage() {
           <a href="mailto:support@chainintelterminal.com" style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--accent)', textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
             SUPPORT@CHAININTELTERMINAL.COM
           </a>
-          {[['Terminal', '/'], ['Deck', '/deck'], ['Promo', '/promo']].map(([label, href]) => (
+          {[['Terminal', '/'], ['Promo', '/promo']].map(([label, href]) => (
             <a key={label} href={href} style={{ fontFamily: 'var(--mono)', fontSize: '10px', color: 'var(--muted)', textDecoration: 'none', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
               {label}
             </a>

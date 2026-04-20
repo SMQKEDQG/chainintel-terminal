@@ -299,9 +299,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <a href="mailto:support@chainintelterminal.com" className="hover:text-[var(--accent)] transition-colors">SUPPORT@CHAININTELTERMINAL.COM</a>
-          <a href="/deck" className="hover:text-[var(--accent)] transition-colors">PITCH DECK</a>
           <a href="/why-chainintel" className="hover:text-[var(--accent)] transition-colors">WHY CHAININTEL</a>
-          <a href="/promo" className="hover:text-[var(--accent)] transition-colors">PROMO</a>
           <a href="/tos" className="hover:text-[var(--accent)] transition-colors">TERMS</a>
           <a href="/privacy" className="hover:text-[var(--accent)] transition-colors">PRIVACY</a>
         </div>

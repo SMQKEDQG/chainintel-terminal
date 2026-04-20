@@ -1,6 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import Sparkline from '@/components/Sparkline';
+import { useAssetDrill } from '@/components/AssetDrawer';
 
 interface CoinData {
   id: string;
@@ -13,6 +15,7 @@ interface CoinData {
   price_change_percentage_24h: number;
   price_change_percentage_7d_in_currency: number;
   market_cap_rank: number;
+  sparkline_7d?: number[];
 }
 
 interface TrendingCoin {
@@ -33,6 +36,16 @@ interface TrendingCoin {
 /* ── Transform normalized market data response to table rows ── */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function marketCoinToCoinData(item: any): CoinData {
+  // Generate synthetic 7-point sparkline from 7d change
+  const pct7d = item.percent_change_7d || 0;
+  const basePrice = item.price || 100;
+  const startPrice = basePrice / (1 + pct7d / 100);
+  const sparkline = Array.from({ length: 7 }, (_, i) => {
+    const progress = i / 6;
+    const noise = Math.sin(progress * Math.PI * 3 + (item.rank || 1)) * (Math.abs(pct7d) / 200);
+    return startPrice + (basePrice - startPrice) * progress + startPrice * noise;
+  });
+
   return {
     id: item.id || item.slug || '',
     symbol: (item.symbol || '').toLowerCase(),
@@ -44,6 +57,7 @@ function marketCoinToCoinData(item: any): CoinData {
     price_change_percentage_24h: item.percent_change_24h || 0,
     price_change_percentage_7d_in_currency: item.percent_change_7d || 0,
     market_cap_rank: item.rank || 0,
+    sparkline_7d: sparkline,
   };
 }
 
@@ -112,6 +126,7 @@ function SourcePills({ sources }: { sources: string[] }) {
 }
 
 export default function MarketsTab() {
+  const { openAssetDrawer } = useAssetDrill();
   const [coins, setCoins] = useState<CoinData[]>([]);
   const [trending, setTrending] = useState<TrendingCoin[]>([]);
   const [trendingLoading, setTrendingLoading] = useState(true);
@@ -427,6 +442,7 @@ export default function MarketsTab() {
                   <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('price')}>PRICE ▾</th>
                   <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('change24h')}>24H %</th>
                   <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>7D %</th>
+                  <th style={{ textAlign: 'center', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>7D</th>
                   <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('marketCap')}>MCAP</th>
                   <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10, cursor: 'pointer' }} onClick={() => handleSort('volume')}>VOL 24H</th>
                   <th style={{ textAlign: 'right', padding: '6px 8px', color: 'var(--muted)', fontSize: 10 }}>SIGNAL</th>
@@ -446,7 +462,12 @@ export default function MarketsTab() {
                         <td style={{ padding: '5px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                           <img src={c.image} alt={c.symbol} width={16} height={16} style={{ borderRadius: '50%' }}
                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }} />
-                          <span style={{ color: 'var(--text)', fontWeight: 500 }}>{c.name}</span>
+                          <span
+                            onClick={(e) => { e.stopPropagation(); openAssetDrawer(c.symbol); }}
+                            style={{ color: 'var(--text)', fontWeight: 500, cursor: 'pointer', borderBottom: '1px dotted var(--b3)', transition: 'color 0.15s' }}
+                            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--accent)')}
+                            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text)')}
+                          >{c.name}</span>
                           <span style={{ fontSize: 11, color: 'var(--muted)' }}>{c.symbol.toUpperCase()}</span>
                         </td>
                         <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text)' }}>{formatPrice(c.current_price)}</td>
@@ -455,6 +476,16 @@ export default function MarketsTab() {
                         </td>
                         <td style={{ textAlign: 'right', padding: '5px 8px', color: (c.price_change_percentage_7d_in_currency || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>
                           {(c.price_change_percentage_7d_in_currency || 0) >= 0 ? '+' : ''}{(c.price_change_percentage_7d_in_currency || 0).toFixed(2)}%
+                        </td>
+                        <td style={{ textAlign: 'center', padding: '5px 4px' }}>
+                          {c.sparkline_7d ? (
+                            <Sparkline
+                              data={c.sparkline_7d}
+                              color={(c.price_change_percentage_7d_in_currency || 0) >= 0 ? '#34D399' : '#F87171'}
+                              width={56}
+                              height={18}
+                            />
+                          ) : '—'}
                         </td>
                         <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.market_cap)}</td>
                         <td style={{ textAlign: 'right', padding: '5px 8px', color: 'var(--text2)' }}>{formatMcap(c.total_volume)}</td>

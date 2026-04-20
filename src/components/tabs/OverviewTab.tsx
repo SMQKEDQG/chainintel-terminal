@@ -448,6 +448,8 @@ function HeroCommandBar() {
   const [response, setResponse] = useState('');
   const [loading, setLoading] = useState(false);
   const [responseSource, setResponseSource] = useState('');
+  const [confidence, setConfidence] = useState(0);
+  const [followUps, setFollowUps] = useState<string[]>([]);
   const [queryCount, setQueryCount] = useState(0);
   const limitReached = tier === 'free' && queryCount >= FREE_QUERY_LIMIT;
   const chips = ['Market overview', 'Bitcoin analysis', 'ETF flows today', 'Fear & Greed', 'DeFi TVL', 'ISO 20022 assets', 'Whale signals', 'Altcoin season?'];
@@ -473,6 +475,8 @@ function HeroCommandBar() {
       const data = await res.json();
       setResponse(data.answer || 'No response generated.');
       setResponseSource(data.source || 'cached');
+      setConfidence(data.confidence || 0);
+      setFollowUps(data.followUps || []);
       if (tier === 'free') setQueryCount(prev => prev + 1);
     } catch {
       setResponse('CI·AI is temporarily unavailable. Please try again.');
@@ -559,22 +563,63 @@ function HeroCommandBar() {
       </div>
 
       {/* Response area */}
+      {/* Typing indicator */}
       {loading && (
         <div style={{ padding: '12px 16px', fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ animation: 'pulse 1s ease-in-out infinite' }}>◈</span> CI·AI analyzing your query across 15 live data sources...
+          <span className="typing-dots" style={{ display: 'flex', gap: 3 }}>
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--accent)', animation: 'typingDot 1.2s infinite 0s' }} />
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--accent)', animation: 'typingDot 1.2s infinite 0.2s' }} />
+            <span style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--accent)', animation: 'typingDot 1.2s infinite 0.4s' }} />
+          </span>
+          CI·AI analyzing across 15 live data sources...
         </div>
       )}
       {response && !loading && (
         <div style={{ margin: '8px 16px 0', background: 'var(--s1)', border: '1px solid var(--b2)', borderRadius: 6, padding: '14px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
             <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: 'var(--accent)', letterSpacing: '0.1em', fontWeight: 700 }}>◈ CI·AI RESPONSE</span>
-            <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: responseSource === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
-              {responseSource === 'live' ? '● LIVE AI' : responseSource === 'cached' ? '● CACHED' : '● OFFLINE'}
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              {confidence > 0 && (
+                <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: confidence >= 70 ? 'var(--green)' : confidence >= 40 ? 'var(--gold)' : 'var(--red)', letterSpacing: '0.06em' }}>
+                  {confidence}% CONF
+                </span>
+              )}
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 12, color: responseSource === 'live' ? 'var(--green)' : 'var(--gold)', letterSpacing: '0.06em' }}>
+                {responseSource === 'live' ? '● LIVE AI' : responseSource === 'cached' ? '● CACHED' : '● OFFLINE'}
+              </span>
+            </div>
           </div>
+          {/* Confidence bar */}
+          {confidence > 0 && (
+            <div style={{ height: 3, background: 'var(--b2)', borderRadius: 2, marginBottom: 10, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%', borderRadius: 2,
+                width: `${confidence}%`,
+                background: confidence >= 70 ? 'var(--green)' : confidence >= 40 ? 'var(--gold)' : 'var(--red)',
+                transition: 'width 0.6s ease',
+              }} />
+            </div>
+          )}
           <div style={{ fontFamily: 'var(--sans)', fontSize: 15, color: 'var(--text2)', lineHeight: 1.75 }}
             dangerouslySetInnerHTML={{ __html: response.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text)">$1</strong>') }}
           />
+          {/* Follow-up pills */}
+          {followUps.length > 0 && (
+            <div style={{ display: 'flex', gap: 6, marginTop: 12, flexWrap: 'wrap' }}>
+              <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.08em', alignSelf: 'center' }}>FOLLOW UP:</span>
+              {followUps.map((f) => (
+                <button key={f} onClick={() => { setQuery(f); handleAsk(f); }} style={{
+                  background: 'rgba(232,165,52,0.06)', border: '1px solid rgba(232,165,52,0.2)',
+                  color: 'var(--accent)', fontFamily: 'var(--mono)', fontSize: 11,
+                  padding: '4px 10px', cursor: 'pointer', letterSpacing: '0.04em',
+                  borderRadius: 4, transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = 'rgba(232,165,52,0.12)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'rgba(232,165,52,0.06)'; e.currentTarget.style.borderColor = 'rgba(232,165,52,0.2)'; }}
+                >{f}</button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>

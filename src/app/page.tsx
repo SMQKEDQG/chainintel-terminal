@@ -9,6 +9,7 @@ import { type TabId } from '@/lib/constants';
 import OverviewTab from '@/components/tabs/OverviewTab';
 import UpgradeGate from '@/components/UpgradeGate';
 import { useSubscription } from '@/lib/use-subscription';
+import { AssetDrillProvider } from '@/components/AssetDrawer';
 
 // Lazy-load all tabs except Overview (always visible first)
 const MarketsTab = lazy(() => import('@/components/tabs/MarketsTab'));
@@ -213,7 +214,7 @@ export default function Home() {
   }, []);
 
   return (
-    <>
+    <AssetDrillProvider>
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
     <TerminalLayout activeTab={activeTab} onTabChange={setActiveTab} autoStartTour={startTourAfterSplash} onTourAutoStarted={() => setStartTourAfterSplash(false)}>
       <Suspense fallback={null}>
@@ -221,6 +222,6 @@ export default function Home() {
       </Suspense>
       {renderTab()}
     </TerminalLayout>
-    </>
+    </AssetDrillProvider>
   );
 }

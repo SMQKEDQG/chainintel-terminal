@@ -1,5 +1,5 @@
 // ChainIntel Design Tokens
-export const VERSION = 'v5.18';
+export const VERSION = 'v5.22';
 
 export const TABS = [
   { id: 'mktovr', label: 'OVERVIEW', title: 'Market Overview — real-time prices, AI synthesis, Fear & Greed' },

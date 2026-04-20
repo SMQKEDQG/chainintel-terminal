@@ -9,6 +9,7 @@ import AlertPanel from './AlertPanel';
 import StatusBar from './StatusBar';
 import GuidedTour, { IdleTourPrompt } from './GuidedTour';
 import CommandPalette from './CommandPalette';
+import KeyboardShortcutsOverlay from './KeyboardShortcutsOverlay';
 import { SourceStatusBadge } from './LevelUpModules';
 import Link from 'next/link';
 
@@ -30,6 +31,7 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
   const [alertPanelOpen, setAlertPanelOpen] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const [cmdPaletteOpen, setCmdPaletteOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
 
   // Stable tour callbacks (never change between renders)
   const closeTour = useCallback(() => setTourOpen(false), []);
@@ -55,11 +57,66 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
   }, []);
 
   const handleKeydown = useCallback((e: KeyboardEvent) => {
+    // Don't fire when typing in inputs
+    const tag = (e.target as HTMLElement)?.tagName;
+    const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable;
+
     if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
       e.preventDefault();
       setCmdPaletteOpen(prev => !prev);
+      return;
     }
-  }, []);
+
+    if (e.key === 'Escape') {
+      if (shortcutsOpen) { setShortcutsOpen(false); return; }
+      if (cmdPaletteOpen) { setCmdPaletteOpen(false); return; }
+      if (alertPanelOpen) { setAlertPanelOpen(false); return; }
+      return;
+    }
+
+    if (isInput) return;
+
+    // ? or Shift+/ to toggle shortcuts overlay
+    if (e.key === '?' || (e.shiftKey && e.key === '/')) {
+      e.preventDefault();
+      setShortcutsOpen(prev => !prev);
+      return;
+    }
+
+    // / to open command palette
+    if (e.key === '/' && !e.shiftKey) {
+      e.preventDefault();
+      setCmdPaletteOpen(true);
+      return;
+    }
+
+    // Number keys 1-9, 0 to switch tabs
+    const tabKeys: Record<string, number> = { '1': 0, '2': 1, '3': 2, '4': 3, '5': 4, '6': 5, '7': 6, '8': 7, '9': 8, '0': 11 };
+    if (tabKeys[e.key] !== undefined && !e.metaKey && !e.ctrlKey) {
+      const idx = tabKeys[e.key];
+      if (idx < TABS.length) {
+        e.preventDefault();
+        onTabChange(TABS[idx].id);
+      }
+      return;
+    }
+
+    // Arrow keys for tab navigation
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+      const currentIdx = TABS.findIndex(t => t.id === activeTab);
+      const nextIdx = e.key === 'ArrowRight'
+        ? (currentIdx + 1) % TABS.length
+        : (currentIdx - 1 + TABS.length) % TABS.length;
+      onTabChange(TABS[nextIdx].id);
+      return;
+    }
+
+    // R to refresh (dispatch custom event)
+    if (e.key === 'r' || e.key === 'R') {
+      window.dispatchEvent(new CustomEvent('ci-refresh'));
+      return;
+    }
+  }, [activeTab, onTabChange, shortcutsOpen, cmdPaletteOpen, alertPanelOpen]);
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeydown);
@@ -231,6 +288,14 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
           >
             &#8984;K
           </span>
+          <span
+            onClick={() => setShortcutsOpen(true)}
+            style={{ cursor: 'pointer', padding: '1px 6px', background: 'var(--s2)', border: '1px solid var(--b3)', borderRadius: 3, color: 'var(--muted)', transition: 'color 0.15s, border-color 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.color = 'var(--accent)'; e.currentTarget.style.borderColor = 'var(--accent)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--muted)'; e.currentTarget.style.borderColor = 'var(--b3)'; }}
+          >
+            ?
+          </span>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <a href="mailto:support@chainintelterminal.com" className="hover:text-[var(--accent)] transition-colors">SUPPORT@CHAININTELTERMINAL.COM</a>
@@ -264,6 +329,9 @@ export default function TerminalLayout({ children, activeTab, onTabChange, autoS
         onClose={() => setCmdPaletteOpen(false)}
         onNavigate={(tabId) => { onTabChange(tabId as TabId); setCmdPaletteOpen(false); }}
       />
+
+      {/* Keyboard Shortcuts Overlay */}
+      <KeyboardShortcutsOverlay isOpen={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
     </div>
   );
 }

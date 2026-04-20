@@ -297,8 +297,58 @@ export function SmartAlerts({ compact = false }: { compact?: boolean }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/smart-alerts').then(r => r.json()).then(d => { setAlerts(d.alerts || []); setLoading(false); }).catch(() => setLoading(false));
-    const iv = setInterval(() => { fetch('/api/smart-alerts').then(r => r.json()).then(d => setAlerts(d.alerts || [])).catch(() => {}); }, 30000);
+    // Fetch both smart alerts and anomaly scan in parallel
+    Promise.allSettled([
+      fetch('/api/smart-alerts').then(r => r.json()),
+      fetch('/api/anomaly-scan').then(r => r.json()),
+    ]).then(([smartResult, anomalyResult]) => {
+      const smartAlerts: AlertItem[] = smartResult.status === 'fulfilled' ? (smartResult.value.alerts || []) : [];
+      const anomalies = anomalyResult.status === 'fulfilled' ? (anomalyResult.value.anomalies || []) : [];
+      // Convert anomalies to AlertItem format
+      const anomalyAlerts: AlertItem[] = anomalies.map((a: any, i: number) => ({
+        id: `anomaly-${i}`,
+        type: a.type || 'anomaly',
+        severity: a.severity || 'info',
+        title: `\uD83D\uDD0D ${a.title}`,
+        description: a.detail || '',
+        value: a.value || '',
+        timestamp: Date.now(),
+        source: 'Anomaly Detection',
+      }));
+      // Merge: anomalies first, then smart alerts, dedup by title
+      const seen = new Set<string>();
+      const merged: AlertItem[] = [];
+      for (const a of [...anomalyAlerts, ...smartAlerts]) {
+        if (!seen.has(a.title)) { seen.add(a.title); merged.push(a); }
+      }
+      // Sort by severity
+      const sevOrder: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+      merged.sort((a, b) => (sevOrder[a.severity] || 2) - (sevOrder[b.severity] || 2));
+      setAlerts(merged);
+      setLoading(false);
+    });
+    const iv = setInterval(() => {
+      Promise.allSettled([
+        fetch('/api/smart-alerts').then(r => r.json()),
+        fetch('/api/anomaly-scan').then(r => r.json()),
+      ]).then(([smartResult, anomalyResult]) => {
+        const smartAlerts: AlertItem[] = smartResult.status === 'fulfilled' ? (smartResult.value.alerts || []) : [];
+        const anomalies = anomalyResult.status === 'fulfilled' ? (anomalyResult.value.anomalies || []) : [];
+        const anomalyAlerts: AlertItem[] = anomalies.map((a: any, i: number) => ({
+          id: `anomaly-${i}`, type: a.type || 'anomaly', severity: a.severity || 'info',
+          title: `\uD83D\uDD0D ${a.title}`, description: a.detail || '', value: a.value || '',
+          timestamp: Date.now(), source: 'Anomaly Detection',
+        }));
+        const seen = new Set<string>();
+        const merged: AlertItem[] = [];
+        for (const a of [...anomalyAlerts, ...smartAlerts]) {
+          if (!seen.has(a.title)) { seen.add(a.title); merged.push(a); }
+        }
+        const sevOrder: Record<string, number> = { critical: 0, warning: 1, info: 2 };
+        merged.sort((a, b) => (sevOrder[a.severity] || 2) - (sevOrder[b.severity] || 2));
+        setAlerts(merged);
+      });
+    }, 30000);
     return () => clearInterval(iv);
   }, []);
 
@@ -554,11 +604,10 @@ export function DailyBriefCard({ marketDataFallback }: { marketDataFallback?: { 
   const trending = b.trending || [];
 
   const fmt = (n: number, d = 0) => {
-    if (n === null || n === undefined) return '—';
+    if (n === null || n === undefined || n === 0) return '—';
     if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
     if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
     if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`;
-    if (n === 0) return '$0';
     return `$${n.toLocaleString('en-US', { maximumFractionDigits: d })}`;
   };
 
@@ -614,8 +663,8 @@ export function DailyBriefCard({ marketDataFallback }: { marketDataFallback?: { 
           <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
             <MetricPill label="TOTAL MCAP" value={fmt(snap.totalMcap)} change={snap.mcapChange24h} />
             <MetricPill label="24H VOLUME" value={fmt(snap.totalVol24h)} color="var(--blue)" />
-            <MetricPill label="BTC DOM" value={`${(snap.btcDominance || 0).toFixed(1)}%`} color="var(--accent)" />
-            <MetricPill label="ETH DOM" value={`${(snap.ethDominance || 0).toFixed(1)}%`} color="var(--blue)" />
+            <MetricPill label="BTC DOM" value={snap.btcDominance ? `${snap.btcDominance.toFixed(1)}%` : '—'} color="var(--accent)" />
+            <MetricPill label="ETH DOM" value={snap.ethDominance ? `${snap.ethDominance.toFixed(1)}%` : '—'} color="var(--blue)" />
           </div>
 
           {/* ▸ SENTIMENT */}

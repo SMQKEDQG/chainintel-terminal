@@ -239,11 +239,40 @@ export async function POST(req: NextRequest) {
     const snapshot = await getMarketSnapshot();
     const hasLiveData = snapshot.btcPrice > 0;
     const answer = generateResponse(query.trim(), snapshot);
+    const topic = classifyQuery(query.trim());
+
+    // Calculate confidence score based on data freshness
+    let confidence = 30;
+    if (snapshot.btcPrice > 0) confidence += 25;
+    if (snapshot.ethPrice > 0) confidence += 15;
+    if (snapshot.fearGreed) confidence += 15;
+    if (snapshot.etfNetFlow !== null) confidence += 10;
+    if (snapshot.defiTvl) confidence += 5;
+    confidence = Math.min(100, confidence);
+
+    // Generate context-aware follow-ups
+    const followUpMap: Record<string, string[]> = {
+      btc: ['What\'s the ETF flow today?', 'Show me Fear & Greed history', 'How are whales positioned?'],
+      eth: ['ETH/BTC ratio analysis', 'DeFi TVL breakdown', 'What\'s the gas situation?'],
+      etf: ['Bitcoin price analysis', 'Institutional flow trends', 'What about Solana ETFs?'],
+      fear: ['What drives the current sentiment?', 'BTC analysis', 'Historical fear extreme outcomes'],
+      defi: ['Top DeFi protocols', 'Stablecoin supply trends', 'ETH gas tracker'],
+      iso: ['XRP regulatory update', 'HBAR developments', 'XLM analysis'],
+      sol: ['SOL DeFi ecosystem', 'Network performance', 'How does SOL compare to ETH?'],
+      xrp: ['ISO 20022 compliance status', 'Institutional adoption', 'XRP price outlook'],
+      whale: ['BTC exchange flows', 'Accumulation patterns', 'On-chain metrics'],
+      derivatives: ['BTC funding rates', 'Open interest trends', 'Liquidation data'],
+      altcoin: ['Top altcoin picks', 'BTC dominance trend', 'ETH/BTC ratio'],
+      market: ['Bitcoin deep dive', 'Fear & Greed analysis', 'DeFi overview'],
+    };
+    const followUps = followUpMap[topic] || followUpMap['market'];
 
     return NextResponse.json({
       answer,
       source: hasLiveData ? 'live' : 'cached',
       timestamp: Date.now(),
+      confidence,
+      followUps,
     });
   } catch {
     return NextResponse.json(

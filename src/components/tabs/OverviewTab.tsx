@@ -1731,7 +1731,7 @@ function CapitalFlowMonitor() {
       </div>
 
       {/* Stablecoin breakdown */}
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: '4px 10px', letterSpacing: '0.1em' }}>STABLECOIN SUPPLY DISTRIBUTION</div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', padding: '4px 10px', letterSpacing: '0.1em' }}>STABLECOIN SUPPLY DISTRIBUTION</div>
       {data.stablecoins.map((s, i) => {
         const pct = data.totalStable > 0 ? (s.supply / data.totalStable) * 100 : 0;
         return (
@@ -1747,7 +1747,7 @@ function CapitalFlowMonitor() {
       })}
 
       {/* Chain TVL distribution */}
-      <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', padding: '8px 10px 4px', letterSpacing: '0.1em', borderTop: '1px solid var(--b1)', marginTop: 6 }}>CHAIN TVL DISTRIBUTION</div>
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', padding: '8px 10px 4px', letterSpacing: '0.1em', borderTop: '1px solid var(--b1)', marginTop: 6 }}>CHAIN TVL DISTRIBUTION</div>
       {(() => {
         const totalChainTvl = data.chainFlows.reduce((s, c) => s + c.tvl, 0);
         return data.chainFlows.map((c, i) => {
@@ -1796,13 +1796,13 @@ function MarketBreadthGauge() {
   const breadthColor = gPct >= 65 ? 'var(--green)' : gPct >= 50 ? 'var(--accent)' : gPct >= 35 ? 'var(--gold)' : 'var(--red)';
 
   return (
-    <div className="panel panel-hover">
+    <div className="panel panel-hover" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
       <div className="ph">
         <div className="pt">Market Breadth</div>
         <div className="tag" style={{ background: `${breadthColor}15`, color: breadthColor }}>{breadthLabel}</div>
       </div>
       {/* Breadth bar */}
-      <div style={{ padding: '6px 12px' }}>
+      <div style={{ padding: '6px 12px', flex: 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--green)', fontWeight: 600 }}>{gainers.length} UP</span>
           <span style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'var(--red)', fontWeight: 600 }}>{losers.length} DOWN</span>
@@ -1815,19 +1815,19 @@ function MarketBreadthGauge() {
       {/* Key metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, padding: '4px 12px 8px' }}>
         <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>BTC DOMINANCE</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em' }}>BTC DOMINANCE</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: btcDom > 55 ? 'var(--accent)' : 'var(--text)' }}>{btcDom.toFixed(1)}%</div>
         </div>
         <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>ETH DOMINANCE</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em' }}>ETH DOMINANCE</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{ethDom.toFixed(1)}%</div>
         </div>
         <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>AVG 24H CHANGE</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em' }}>AVG 24H CHANGE</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: avgChange >= 0 ? 'var(--green)' : 'var(--red)' }}>{avgChange >= 0 ? '+' : ''}{avgChange.toFixed(2)}%</div>
         </div>
         <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>VOL / MCAP</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em' }}>VOL / MCAP</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: volMcapRatio > 5 ? 'var(--accent)' : 'var(--text)' }}>{volMcapRatio.toFixed(1)}%</div>
         </div>
       </div>
@@ -1866,15 +1866,15 @@ function DerivativesPulse() {
       {/* Summary row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 4, padding: '4px 12px 8px' }}>
         <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>TOTAL OI</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em' }}>TOTAL OI</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtOI(data.summary?.totalOI || 0)}</div>
         </div>
         <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>24H VOLUME</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em' }}>24H VOLUME</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{fmtOI(data.summary?.totalVolume || 0)}</div>
         </div>
         <div style={{ background: 'var(--s2)', border: '1px solid var(--b2)', padding: '6px 8px' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 8, color: 'var(--muted)', letterSpacing: '0.1em' }}>BTC FUNDING</div>
+          <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--muted)', letterSpacing: '0.1em' }}>BTC FUNDING</div>
           <div style={{ fontFamily: 'var(--mono)', fontSize: 14, fontWeight: 700, color: (data.summary?.btcFunding || 0) >= 0 ? 'var(--green)' : 'var(--red)' }}>{((data.summary?.btcFunding || 0) * 100).toFixed(4)}%</div>
         </div>
       </div>
@@ -2147,16 +2147,16 @@ export default function OverviewTab() {
       </div>
 
       {/* ▬▬▬ SECTION 5: DAILY BRIEF + CORRELATION ENGINE + MARKET BREADTH ▬▬▬ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
-        <div data-tour="daily-brief"><DailyBriefCard marketDataFallback={marketData} /></div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1, alignItems: 'stretch' }}>
+        <div data-tour="daily-brief" style={{ display: 'flex', flexDirection: 'column' }}><DailyBriefCard marketDataFallback={marketData} /></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <CorrelationEngine />
-          <MarketBreadthGauge />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}><MarketBreadthGauge /></div>
         </div>
       </div>
 
       {/* ▬▬▬ SECTION 6: HEATMAP + CHARTS ▬▬▬ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1, alignItems: 'stretch' }}>
         <div data-tour="heatmap"><Heatmap /></div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <BtcChart />
@@ -2165,7 +2165,7 @@ export default function OverviewTab() {
       </div>
 
       {/* ▬▬▬ SECTION 7: MARKET TABLE + ETF FLOWS + DERIVATIVES ▬▬▬ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1, alignItems: 'stretch' }}>
         <MarketTable />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <ETFFlows />
@@ -2175,15 +2175,13 @@ export default function OverviewTab() {
         </div>
       </div>
 
-      {/* ▬▬▬ SECTION 8: WHALE FEED + CHAINSCORE + NETWORK HEALTH ▬▬▬ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
+      {/* ▬▬▬ SECTION 8: WHALE + TRENDING  |  AI SYNTHESIS + CHAINSCORE ▬▬▬ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1, alignItems: 'stretch' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <ModuleGate requiredTier="pro" currentTier={tier} feature="real-time whale alerts" previewLines={3}>
             <WhaleFeed />
           </ModuleGate>
-          <ModuleGate requiredTier="pro" currentTier={tier} feature="capital flow tracking" previewLines={2}>
-            <CapitalFlowMonitor />
-          </ModuleGate>
+          <TrendingMomentum />
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
           <ModuleGate requiredTier="pro" currentTier={tier} feature="AI market synthesis" previewLines={2}>
@@ -2193,16 +2191,22 @@ export default function OverviewTab() {
             </div>
           </ModuleGate>
           <ChainScore />
-          <TrendingMomentum />
         </div>
       </div>
 
-      {/* ▬▬▬ SECTION 9: NETWORK HEALTH + SMART ALERTS ▬▬▬ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1 }}>
-        <NetworkHealthPulse />
-        <ModuleGate requiredTier="enterprise" currentTier={tier} feature="custom smart alerts" previewLines={2}>
-          <SmartAlerts compact />
-        </ModuleGate>
+      {/* ▬▬▬ SECTION 9: NETWORK HEALTH + CAPITAL FLOWS  |  SMART ALERTS ▬▬▬ */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, background: 'var(--b1)', marginBottom: 1, alignItems: 'stretch' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <NetworkHealthPulse />
+          <ModuleGate requiredTier="pro" currentTier={tier} feature="capital flow tracking" previewLines={2}>
+            <CapitalFlowMonitor />
+          </ModuleGate>
+        </div>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+          <ModuleGate requiredTier="enterprise" currentTier={tier} feature="custom smart alerts" previewLines={5}>
+            <SmartAlerts />
+          </ModuleGate>
+        </div>
       </div>
 
       {/* ▬▬▬ SECTION 10: TOKEN UNLOCKS ▬▬▬ */}

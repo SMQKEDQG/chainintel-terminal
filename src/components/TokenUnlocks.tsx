@@ -109,39 +109,47 @@ export default function TokenUnlocks() {
         </span>
       </div>
       
+      <div
+        className="grid font-mono text-[9px] px-3 py-1"
+        style={{ gridTemplateColumns: '50px 70px 1fr 90px 80px 90px', gap: '0 8px', color: 'var(--muted)', letterSpacing: '0.06em', borderBottom: '1px solid var(--b1)' }}
+      >
+        <span>ASSET</span>
+        <span>DATE</span>
+        <span></span>
+        <span style={{ textAlign: 'right' }}>AMOUNT</span>
+        <span style={{ textAlign: 'right' }}>VALUE</span>
+        <span style={{ textAlign: 'right' }}>IMPACT</span>
+      </div>
       <div>
         {unlocks.map((u, i) => (
           <div
             key={u.symbol + u.date}
-            className="flex items-center justify-between px-3 py-2 transition-colors hover:bg-[var(--s2)]"
-            style={{ borderTop: i > 0 ? '1px solid var(--b1)' : undefined }}
+            className="grid items-center px-3 py-2 transition-colors hover:bg-[var(--s2)] font-mono"
+            style={{ gridTemplateColumns: '50px 70px 1fr 90px 80px 90px', gap: '0 8px', borderTop: i > 0 ? '1px solid var(--b1)' : undefined }}
           >
-            <div className="flex items-center gap-3">
-              <span className="font-mono text-[10px] font-bold" style={{ color: 'var(--text)', width: 45 }}>
-                {u.symbol}
-              </span>
-              <span className="font-mono text-[8px]" style={{ color: 'var(--muted)' }}>
-                {new Date(u.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-              </span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="font-mono text-[9px]" style={{ color: 'var(--text2)' }}>
-                {u.amount} tokens
-              </span>
-              <span className="font-mono text-[9px] font-semibold" style={{ color: 'var(--text)' }}>
-                {u.valueUsd}
-              </span>
-              <span
-                className="font-mono text-[7px] tracking-wider px-1.5 py-0.5 rounded"
-                style={{
-                  color: impactColor[u.impact],
-                  background: `${impactColor[u.impact]}12`,
-                  border: `1px solid ${impactColor[u.impact]}30`,
-                }}
-              >
-                {u.impact.toUpperCase()} · {u.percentOfSupply}%
-              </span>
-            </div>
+            <span className="text-[10px] font-bold" style={{ color: 'var(--text)' }}>
+              {u.symbol}
+            </span>
+            <span className="text-[9px]" style={{ color: 'var(--muted)' }}>
+              {new Date(u.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </span>
+            <span></span>
+            <span className="text-[9px] text-right" style={{ color: 'var(--text2)' }}>
+              {u.amount} tokens
+            </span>
+            <span className="text-[10px] font-semibold text-right" style={{ color: 'var(--text)' }}>
+              {u.valueUsd}
+            </span>
+            <span
+              className="text-[8px] tracking-wider px-1.5 py-0.5 rounded text-right"
+              style={{
+                color: impactColor[u.impact],
+                background: `${impactColor[u.impact]}12`,
+                border: `1px solid ${impactColor[u.impact]}30`,
+              }}
+            >
+              {u.impact.toUpperCase()} · {u.percentOfSupply}%
+            </span>
           </div>
         ))}
       </div>
